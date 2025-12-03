@@ -1,9 +1,10 @@
 ﻿using FitnessCenter.Web.Models.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore; //DbContext kullanmak için
 
 namespace FitnessCenter.Web.Data.Context
 {
-    public class AppDbContext : DbContext // --> DbContext = hazır, EF Core’un kendi sınıfı
+    public class AppDbContext : IdentityDbContext<ApplicationUser> 
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
@@ -22,7 +23,7 @@ namespace FitnessCenter.Web.Data.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
+            base.OnModelCreating(modelBuilder); // Identity için şart
 
             // Eğitmen-Hizmet N-N ilişki için birleşik anahtar
             modelBuilder.Entity<EgitmenHizmet>()
