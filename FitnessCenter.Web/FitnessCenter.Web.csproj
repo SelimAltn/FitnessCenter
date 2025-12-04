@@ -10,10 +10,8 @@
     <Folder Include="Areas\Admin\Models\" />
     <Folder Include="Areas\Admin\Views\" />
     <Folder Include="Data\Configurations\" />
-    <Folder Include="Models\ViewModels\" />
     <Folder Include="Services\Interfaces\" />
     <Folder Include="Services\Implementations\" />
-    <Folder Include="Views\" />
   </ItemGroup>
 
   <ItemGroup>

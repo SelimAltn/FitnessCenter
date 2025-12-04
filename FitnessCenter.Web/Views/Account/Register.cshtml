@@ -1,0 +1,33 @@
+﻿@model FitnessCenter.Web.Models.ViewModels.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+<h2>Kayıt Ol</h2>
+
+<form asp-action="Register" method="post">
+    <div>
+        <label asp-for="KullaniciAdi"></label>
+        <input asp-for="KullaniciAdi" />
+    </div>
+
+    <div>
+        <label asp-for="Email"></label>
+        <input asp-for="Email" type="email" />
+    </div>
+
+    <div>
+        <label asp-for="Sifre"></label>
+        <input asp-for="Sifre" type="password" />
+    </div>
+
+    <div>
+        <label asp-for="SifreTekrar"></label>
+        <input asp-for="SifreTekrar" type="password" />
+    </div>
+
+    <button type="submit">Kayıt Ol</button>
+
+    <div asp-validation-summary="All"></div>
+</form>

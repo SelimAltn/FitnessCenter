@@ -1,0 +1,22 @@
+﻿@model FitnessCenter.Web.Models.ViewModels.LoginViewModel
+
+<h2>Giriş Yap</h2>
+
+<form asp-action="Login" method="post">
+    <div>
+        <label asp-for="KullaniciAdiVeyaEmail"></label>
+        <input asp-for="KullaniciAdiVeyaEmail" />
+    </div>
+    <div>
+        <label asp-for="Sifre"></label>
+        <input asp-for="Sifre" type="password" />
+    </div>
+    <div>
+        <input asp-for="BeniHatirla" />
+        <label asp-for="BeniHatirla"></label>
+    </div>
+
+    <button type="submit">Giriş Yap</button>
+
+    <div asp-validation-summary="All"></div>
+</form>
