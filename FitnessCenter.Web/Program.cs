@@ -27,6 +27,18 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+    {
+        policy.RequireRole("Admin");
+    });
+
+    options.AddPolicy("MemberOnly", policy =>
+    {
+        policy.RequireRole("Member");
+    });
+});
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -55,9 +67,14 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-// 🔹 MapStaticAssets ve WithStaticAssets YOK!
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+
 
 app.Run();

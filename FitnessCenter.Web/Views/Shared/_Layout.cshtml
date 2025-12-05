@@ -25,7 +25,9 @@
                         </li>
 
                         @* Giriş yapmış kullanıcıya özel *@
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        @if (User.Identity != null
+                                                && User.Identity.IsAuthenticated
+                                                && User.IsInRole("Member"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Randevu" asp-action="Index">
