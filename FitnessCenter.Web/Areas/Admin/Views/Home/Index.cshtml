@@ -5,3 +5,44 @@
 <h2>Admin Paneli</h2>
 
 <p>Burada sadece Admin rolündeki kullanıcılar bu sayfayı görebilir.</p>
+
+<hr />
+
+<h4>Yönetim Sayfaları</h4>
+
+<div class="list-group" style="max-width: 400px;">
+    <a asp-area="Admin"
+       asp-controller="Salons"
+       asp-action="Index"
+       class="list-group-item list-group-item-action">
+        Salonlar
+    </a>
+
+    <a asp-area="Admin"
+       asp-controller="Hizmet"
+       asp-action="Index"
+       class="list-group-item list-group-item-action">
+        Hizmetler
+    </a>
+
+    <a asp-area="Admin"
+       asp-controller="Egitmen"
+       asp-action="Index"
+       class="list-group-item list-group-item-action">
+        Eğitmenler
+    </a>
+
+    <a asp-area="Admin"
+       asp-controller="Uye"
+       asp-action="Index"
+       class="list-group-item list-group-item-action">
+        Üyeler
+    </a>
+
+    <a asp-area="Admin"
+       asp-controller="Randevu"
+       asp-action="Index"
+       class="list-group-item list-group-item-action">
+        Randevular
+    </a>
+</div>
