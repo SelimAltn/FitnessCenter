@@ -1,0 +1,23 @@
+﻿@model FitnessCenter.Web.Models.Entities.Hizmet
+
+@{
+    ViewData["Title"] = "Hizmet Detay";
+}
+
+<h2>Hizmet Detay</h2>
+
+<div class="mb-3">
+    <strong>Ad:</strong> @Model.Ad
+</div>
+<div class="mb-3">
+    <strong>Süre (dakika):</strong> @Model.SureDakika
+</div>
+<div class="mb-3">
+    <strong>Ücret:</strong> @Model.Ucret
+</div>
+<div class="mb-3">
+    <strong>Açıklama:</strong> @Model.Aciklama
+</div>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Düzenle</a>
+<a asp-action="Index" class="btn btn-secondary">Geri</a>

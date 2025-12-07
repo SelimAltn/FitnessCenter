@@ -1,0 +1,40 @@
+﻿@model FitnessCenter.Web.Models.Entities.Egitmen
+
+@{
+    ViewData["Title"] = "Eğitmen Düzenle";
+}
+
+<h2>Eğitmen Düzenle</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="AdSoyad" class="form-label"></label>
+        <input asp-for="AdSoyad" class="form-control" />
+        <span asp-validation-for="AdSoyad" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Uzmanlik" class="form-label"></label>
+        <input asp-for="Uzmanlik" class="form-control" />
+        <span asp-validation-for="Uzmanlik" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Biyografi" class="form-label"></label>
+        <textarea asp-for="Biyografi" class="form-control"></textarea>
+        <span asp-validation-for="Biyografi" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Kaydet</button>
+    <a asp-action="Index" class="btn btn-secondary">İptal</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

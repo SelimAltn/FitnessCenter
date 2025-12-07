@@ -1,0 +1,28 @@
+﻿@model FitnessCenter.Web.Models.Entities.Hizmet
+
+@{
+    ViewData["Title"] = "Hizmet Sil";
+}
+
+<h2>Hizmet Sil</h2>
+
+<p>Bu hizmeti silmek istediğine emin misin?</p>
+
+<div class="mb-3">
+    <strong>Ad:</strong> @Model.Ad
+</div>
+<div class="mb-3">
+    <strong>Süre (dakika):</strong> @Model.SureDakika
+</div>
+<div class="mb-3">
+    <strong>Ücret:</strong> @Model.Ucret
+</div>
+<div class="mb-3">
+    <strong>Açıklama:</strong> @Model.Aciklama
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Sil</button>
+    <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+</form>

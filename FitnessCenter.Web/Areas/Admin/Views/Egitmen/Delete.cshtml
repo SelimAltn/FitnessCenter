@@ -1,0 +1,25 @@
+﻿@model FitnessCenter.Web.Models.Entities.Egitmen
+
+@{
+    ViewData["Title"] = "Eğitmen Sil";
+}
+
+<h2>Eğitmen Sil</h2>
+
+<p>Bu eğitmeni silmek istediğine emin misin?</p>
+
+<div class="mb-3">
+    <strong>Ad Soyad:</strong> @Model.AdSoyad
+</div>
+<div class="mb-3">
+    <strong>Uzmanlık:</strong> @Model.Uzmanlik
+</div>
+<div class="mb-3">
+    <strong>Biyografi:</strong> @Model.Biyografi
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Sil</button>
+    <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+</form>
