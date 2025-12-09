@@ -1,0 +1,54 @@
+﻿@model FitnessCenter.Web.Models.Entities.Randevu
+
+@{
+    ViewData["Title"] = "Randevu Oluştur";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4>Yeni Randevu Girişi</h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Salon Seç</label>
+                            <select asp-for="SalonId" class="form-control" asp-items="ViewBag.SalonId"></select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Üye Seç</label>
+                            <select asp-for="UyeId" class="form-control" asp-items="ViewBag.UyeId"></select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Hizmet</label>
+                            <select asp-for="HizmetId" class="form-control" asp-items="ViewBag.HizmetId"></select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Eğitmen</label>
+                            <select asp-for="EgitmenId" class="form-control" asp-items="ViewBag.EgitmenId"></select>
+                            <small class="text-muted">Not: İleride sadece seçilen hizmeti verenler listelenecek (JS ile).</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="BaslangicZamani" class="form-label">Randevu Tarihi ve Saati</label>
+                        <input asp-for="BaslangicZamani" class="form-control" type="datetime-local" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Notlar" class="form-label">Notlar</label>
+                        <textarea asp-for="Notlar" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">Randevuyu Kaydet</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

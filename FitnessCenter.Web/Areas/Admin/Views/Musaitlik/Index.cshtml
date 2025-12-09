@@ -1,0 +1,35 @@
+﻿@model IEnumerable<FitnessCenter.Web.Models.Entities.Musaitlik>
+
+@{
+    ViewData["Title"] = "Çalışma Saatleri";
+}
+
+<h3>Eğitmen Çalışma Saatleri</h3>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Yeni Saat Ekle</a>
+</p>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Eğitmen</th>
+            <th>Gün</th>
+            <th>Saat Aralığı</th>
+            <th>İşlem</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Egitmen?.AdSoyad</td>
+                <td>@item.Gun</td>
+                <td>@item.BaslangicSaati.ToString(@"hh\:mm") - @item.BitisSaati.ToString(@"hh\:mm")</td>
+                <td>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Sil</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

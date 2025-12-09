@@ -1,0 +1,20 @@
+﻿@model FitnessCenter.Web.Models.Entities.Uye
+
+@{
+    ViewData["Title"] = "Üye Detayı";
+}
+
+<h2>Üye Detayı</h2>
+
+<div class="mb-2">
+    <strong>Ad Soyad:</strong> @Model.AdSoyad
+</div>
+<div class="mb-2">
+    <strong>E-posta:</strong> @Model.Email
+</div>
+<div class="mb-2">
+    <strong>Telefon:</strong> @Model.Telefon
+</div>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Düzenle</a>
+<a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>

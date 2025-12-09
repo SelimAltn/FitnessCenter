@@ -1,0 +1,46 @@
+﻿@model FitnessCenter.Web.Models.Entities.Musaitlik
+
+@{
+    ViewData["Title"] = "Müsaitlik Ekle";
+}
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4>Eğitmen İçin Çalışma Saati Ekle</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create">
+            <div class="mb-3">
+                <label class="form-label">Eğitmen Seç</label>
+                <select asp-for="EgitmenId" class="form-control" asp-items="ViewBag.EgitmenId"></select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Gun" class="form-label">Gün</label>
+                <select asp-for="Gun" class="form-control">
+                    <option value="1">Pazartesi</option>
+                    <option value="2">Salı</option>
+                    <option value="3">Çarşamba</option>
+                    <option value="4">Perşembe</option>
+                    <option value="5">Cuma</option>
+                    <option value="6">Cumartesi</option>
+                    <option value="0">Pazar</option>
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="BaslangicSaati" class="form-label">Başlangıç Saati</label>
+                    <input asp-for="BaslangicSaati" type="time" class="form-control" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="BitisSaati" class="form-label">Bitiş Saati</label>
+                    <input asp-for="BitisSaati" type="time" class="form-control" />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success">Kaydet</button>
+            <a asp-action="Index" class="btn btn-secondary">İptal</a>
+        </form>
+    </div>
+</div>
