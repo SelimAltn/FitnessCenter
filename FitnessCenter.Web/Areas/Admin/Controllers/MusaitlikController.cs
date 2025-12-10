@@ -13,6 +13,9 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
     {
         private readonly AppDbContext _context;
 
+        // Randevular arasında bırakacağımız min. ara (dk) burada da referans için dursun
+        private const int MinAraDakika = 10;
+
         public MusaitlikController(AppDbContext context)
         {
             _context = context;
@@ -21,21 +24,35 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
         // GET: Admin/Musaitlik
         public async Task<IActionResult> Index()
         {
-            var musaitlikler = await _context.Musaitlikler
+            var liste = await _context.Musaitlikler
                 .Include(m => m.Egitmen)
-                .OrderBy(m => m.Egitmen!.AdSoyad)
+                .OrderBy(m => m.Egitmen.AdSoyad)
                 .ThenBy(m => m.Gun)
                 .ThenBy(m => m.BaslangicSaati)
                 .ToListAsync();
 
-            return View(musaitlikler);
+            return View(liste);
+        }
+
+        // GET: Admin/Musaitlik/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var musaitlik = await _context.Musaitlikler
+                .Include(m => m.Egitmen)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (musaitlik == null) return NotFound();
+
+            return View(musaitlik);
         }
 
         // GET: Admin/Musaitlik/Create
         public async Task<IActionResult> Create()
         {
-            await DoldurEgitmenDropDownAsync();
-            return View();
+            await DoldurEgitmenSelectAsync();
+            return View(new Musaitlik());
         }
 
         // POST: Admin/Musaitlik/Create
@@ -43,26 +60,12 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Musaitlik musaitlik)
         {
-            await DoldurEgitmenDropDownAsync(musaitlik.EgitmenId);
+            await DoldurEgitmenSelectAsync(musaitlik.EgitmenId);
 
-            // Basit mantık kontrolleri
-            if (musaitlik.BitisSaati <= musaitlik.BaslangicSaati)
-            {
-                ModelState.AddModelError(string.Empty, "Bitiş saati, başlangıç saatinden sonra olmalıdır.");
-            }
+            TemelKontroller(musaitlik);
 
-            // Aynı eğitmen + aynı gün için çakışan blok var mı?
-            bool cakisanKayitVar = await _context.Musaitlikler.AnyAsync(m =>
-                m.EgitmenId == musaitlik.EgitmenId &&
-                m.Gun == musaitlik.Gun &&
-                // saat aralığı örtüşüyor mu?
-                !(musaitlik.BitisSaati <= m.BaslangicSaati || musaitlik.BaslangicSaati >= m.BitisSaati));
-
-            if (cakisanKayitVar)
-            {
-                ModelState.AddModelError(string.Empty,
-                    "Bu saat aralığı, seçilen eğitmenin mevcut başka bir müsaitlik kaydıyla çakışıyor.");
-            }
+            // Aynı eğitmen + gün için çakışan blok var mı?
+            CakismaKontrolu(musaitlik, isEdit: false);
 
             if (!ModelState.IsValid)
             {
@@ -71,6 +74,8 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
 
             _context.Musaitlikler.Add(musaitlik);
             await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Müsaitlik kaydı eklendi.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -82,7 +87,7 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             var musaitlik = await _context.Musaitlikler.FindAsync(id);
             if (musaitlik == null) return NotFound();
 
-            await DoldurEgitmenDropDownAsync(musaitlik.EgitmenId);
+            await DoldurEgitmenSelectAsync(musaitlik.EgitmenId);
             return View(musaitlik);
         }
 
@@ -93,24 +98,10 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
         {
             if (id != musaitlik.Id) return NotFound();
 
-            await DoldurEgitmenDropDownAsync(musaitlik.EgitmenId);
+            await DoldurEgitmenSelectAsync(musaitlik.EgitmenId);
 
-            if (musaitlik.BitisSaati <= musaitlik.BaslangicSaati)
-            {
-                ModelState.AddModelError(string.Empty, "Bitiş saati, başlangıç saatinden sonra olmalıdır.");
-            }
-
-            bool cakisanKayitVar = await _context.Musaitlikler.AnyAsync(m =>
-                m.Id != musaitlik.Id &&
-                m.EgitmenId == musaitlik.EgitmenId &&
-                m.Gun == musaitlik.Gun &&
-                !(musaitlik.BitisSaati <= m.BaslangicSaati || musaitlik.BaslangicSaati >= m.BitisSaati));
-
-            if (cakisanKayitVar)
-            {
-                ModelState.AddModelError(string.Empty,
-                    "Bu saat aralığı, seçilen eğitmenin mevcut başka bir müsaitlik kaydıyla çakışıyor.");
-            }
+            TemelKontroller(musaitlik);
+            CakismaKontrolu(musaitlik, isEdit: true);
 
             if (!ModelState.IsValid)
             {
@@ -121,12 +112,12 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             {
                 _context.Update(musaitlik);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Müsaitlik kaydı güncellendi.";
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!MusaitlikExists(musaitlik.Id))
                     return NotFound();
-
                 throw;
             }
 
@@ -157,12 +148,20 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             {
                 _context.Musaitlikler.Remove(musaitlik);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Müsaitlik kaydı silindi.";
             }
 
             return RedirectToAction(nameof(Index));
         }
 
-        private async Task DoldurEgitmenDropDownAsync(int? seciliEgitmenId = null)
+        // ----------------- Helper metodlar -----------------
+
+        private bool MusaitlikExists(int id)
+        {
+            return _context.Musaitlikler.Any(e => e.Id == id);
+        }
+
+        private async Task DoldurEgitmenSelectAsync(int? seciliEgitmenId = null)
         {
             var egitmenler = await _context.Egitmenler
                 .OrderBy(e => e.AdSoyad)
@@ -171,9 +170,40 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             ViewData["EgitmenId"] = new SelectList(egitmenler, "Id", "AdSoyad", seciliEgitmenId);
         }
 
-        private bool MusaitlikExists(int id)
+        // Başlangıç < Bitiş gibi temel doğrulamalar
+        private void TemelKontroller(Musaitlik m)
         {
-            return _context.Musaitlikler.Any(e => e.Id == id);
+            if (m.BaslangicSaati >= m.BitisSaati)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Başlangıç saati bitiş saatinden küçük olmalıdır.");
+            }
+        }
+
+        // Aynı eğitmen + gün için saat çakışması var mı?
+        private void CakismaKontrolu(Musaitlik m, bool isEdit)
+        {
+            var query = _context.Musaitlikler
+                .Where(x => x.EgitmenId == m.EgitmenId && x.Gun == m.Gun);
+
+            if (isEdit)
+            {
+                // Kendini hariç tut
+                query = query.Where(x => x.Id != m.Id);
+            }
+
+            var liste = query.ToList();
+
+            bool cakismaVar = liste.Any(x =>
+                !(m.BitisSaati <= x.BaslangicSaati || m.BaslangicSaati >= x.BitisSaati));
+
+            if (cakismaVar)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Bu eğitmen için bu gün/saat aralığında zaten bir çalışma bloğu tanımlı.");
+            }
+
+            // İstersen burada da arka arkaya bloklar için MinAraDakika kuralını ekleyebilirsin.
         }
     }
 }

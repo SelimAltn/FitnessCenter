@@ -1,0 +1,50 @@
+﻿@model IEnumerable<FitnessCenter.Web.Models.Entities.Uyelik>
+
+@{
+    ViewData["Title"] = "Üyeliklerim";
+}
+
+<h2>Üyeliklerim</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+@if (ViewBag.Mesaj != null)
+{
+    <div class="alert alert-info">@ViewBag.Mesaj</div>
+}
+
+<p>
+    <a asp-action="UyeOl" class="btn btn-primary">Yeni Şubeye Üye Ol</a>
+</p>
+
+@if (!Model.Any())
+{
+    <p>Henüz bir üyeliğiniz yok.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Şube</th>
+                <th>Başlangıç</th>
+                <th>Bitiş</th>
+                <th>Durum</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in Model)
+            {
+                <tr>
+                    <td>@u.Salon.Ad</td>
+                    <td>@u.BaslangicTarihi.ToString("dd.MM.yyyy")</td>
+                    <td>@(u.BitisTarihi?.ToString("dd.MM.yyyy") ?? "-")</td>
+                    <td>@u.Durum</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

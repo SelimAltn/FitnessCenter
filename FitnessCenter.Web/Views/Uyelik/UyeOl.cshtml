@@ -1,0 +1,40 @@
+﻿@model FitnessCenter.Web.Models.ViewModels.UyelikOlViewModel
+
+@{
+    ViewData["Title"] = "Üye Ol";
+}
+
+<h2>Yeni Şubeye Üye Ol</h2>
+
+<form asp-action="UyeOl" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="SalonId" class="form-label"></label>
+        <select asp-for="SalonId" asp-items="@(ViewData["SalonId"] as SelectList)" class="form-control">
+            <option value="">Şube seçiniz</option>
+        </select>
+        <span asp-validation-for="SalonId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="AdSoyad" class="form-label"></label>
+        <input asp-for="AdSoyad" class="form-control" />
+        <span asp-validation-for="AdSoyad" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Telefon" class="form-label"></label>
+        <input asp-for="Telefon" class="form-control" />
+        <span asp-validation-for="Telefon" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Üyeliği Başlat</button>
+    <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

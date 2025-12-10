@@ -21,7 +21,17 @@ namespace FitnessCenter.Web.Models.Entities
         [Display(Name = "Telefon")]
         public string? Telefon { get; set; }
 
+        // 🔗 Bu üye hangi Identity kullanıcısına bağlı?
+        // (Bir user = bir uye olacak)
+        public string? ApplicationUserId { get; set; }
+        public ApplicationUser? ApplicationUser { get; set; }
+
+        // İlişkiler
         public ICollection<Randevu>? Randevular { get; set; }
         public ICollection<AiLog>? AiLoglar { get; set; }
+
+        // 🔗 Bir üyenin birden fazla şubede üyeliği olabilir
+        public ICollection<Uyelik>? Uyelikler { get; set; }
+
     }
 }

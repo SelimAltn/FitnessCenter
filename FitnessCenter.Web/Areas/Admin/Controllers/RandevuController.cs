@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace FitnessCenter.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    //[Authorize(Policy = "AdminOnly")]
+    [Authorize(Roles = "Admin")]
     public class RandevuController : Controller
     {
         private readonly AppDbContext _context;
@@ -18,62 +18,110 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             _context = context;
         }
 
-        // 1. LİSTELEME
-        public async Task<IActionResult> Index()
+        // GET: Admin/Randevu
+        public async Task<IActionResult> Index(
+            DateTime? tarih,
+            int? salonId,
+            int? egitmenId,
+            int? uyeId,
+            string? durum)
         {
-            // Randevuları getirirken ilişkili tabloları (Salon, Hizmet, Egitmen, Uye) dahil ediyoruz
-            var randevular = await _context.Randevular
+            var query = _context.Randevular
                 .Include(r => r.Salon)
                 .Include(r => r.Hizmet)
                 .Include(r => r.Egitmen)
                 .Include(r => r.Uye)
-                .OrderByDescending(r => r.BaslangicZamani) // En yeni randevu en üstte
+                .AsQueryable();
+
+            if (tarih.HasValue)
+            {
+                var d = tarih.Value.Date;
+                query = query.Where(r => r.BaslangicZamani.Date == d);
+            }
+
+            if (salonId.HasValue)
+                query = query.Where(r => r.SalonId == salonId.Value);
+
+            if (egitmenId.HasValue)
+                query = query.Where(r => r.EgitmenId == egitmenId.Value);
+
+            if (uyeId.HasValue)
+                query = query.Where(r => r.UyeId == uyeId.Value);
+
+            if (!string.IsNullOrWhiteSpace(durum))
+                query = query.Where(r => r.Durum == durum);
+
+            var liste = await query
+                .OrderByDescending(r => r.BaslangicZamani)
                 .ToListAsync();
 
-            return View(randevular);
+            // Filtre dropdown’ları
+            ViewData["SalonId"] = new SelectList(
+                await _context.Salonlar.OrderBy(s => s.Ad).ToListAsync(),
+                "Id", "Ad", salonId);
+
+            ViewData["EgitmenId"] = new SelectList(
+                await _context.Egitmenler.OrderBy(e => e.AdSoyad).ToListAsync(),
+                "Id", "AdSoyad", egitmenId);
+
+            ViewData["UyeId"] = new SelectList(
+                await _context.Uyeler.OrderBy(u => u.AdSoyad).ToListAsync(),
+                "Id", "AdSoyad", uyeId);
+
+            var durumlar = new List<string> { "Beklemede", "Onaylandı", "İptal" };
+            ViewData["Durum"] = new SelectList(durumlar, durum);
+
+            ViewData["SeciliTarih"] = tarih?.ToString("yyyy-MM-dd");
+
+            return View(liste);
         }
 
-        // 2. YENİ RANDEVU SAYFASI (GET)
-        public IActionResult Create()
+        // GET: Admin/Randevu/Details/5
+        public async Task<IActionResult> Details(int id)
         {
-            // Dropdownlar için verileri hazırlayıp View'a (Bag) atıyoruz
-            ViewData["SalonId"] = new SelectList(_context.Salonlar, "Id", "Ad");
-            ViewData["HizmetId"] = new SelectList(_context.Hizmetler, "Id", "Ad");
-            ViewData["EgitmenId"] = new SelectList(_context.Egitmenler, "Id", "AdSoyad");
-            ViewData["UyeId"] = new SelectList(_context.Uyeler, "Id", "AdSoyad");
+            var r = await _context.Randevular
+                .Include(x => x.Salon)
+                .Include(x => x.Hizmet)
+                .Include(x => x.Egitmen)
+                .Include(x => x.Uye)
+                .FirstOrDefaultAsync(x => x.Id == id);
 
-            return View();
+            if (r == null) return NotFound();
+
+            return View(r);
         }
 
-        // 3. RANDEVU KAYDETME (POST) - Şimdilik boş, bir sonraki adımda mantığı kuracağız
+        // POST: Admin/Randevu/DurumDegistir
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Randevu randevu)
+        public async Task<IActionResult> DurumDegistir(int id, string yeniDurum)
         {
-            // Buraya "Hoca bu saatte müsait mi?" ve "Başka randevusu var mı?" kontrolünü yazacağız.
-            // Şimdilik basit kayıt yapalım test için.
-
-            if (ModelState.IsValid)
+            var r = await _context.Randevular.FindAsync(id);
+            if (r == null)
             {
-                // Randevu bitiş saatini otomatik hesaplayalım (Hizmet süresine göre)
-                var hizmet = await _context.Hizmetler.FindAsync(randevu.HizmetId);
-                if (hizmet != null)
-                {
-                    randevu.BitisZamani = randevu.BaslangicZamani.AddMinutes(hizmet.SureDakika);
-                }
-
-                _context.Add(randevu);
-                await _context.SaveChangesAsync();
+                TempData["Error"] = "Randevu bulunamadı.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Hata varsa listeleri tekrar doldur
-            ViewData["SalonId"] = new SelectList(_context.Salonlar, "Id", "Ad", randevu.SalonId);
-            ViewData["HizmetId"] = new SelectList(_context.Hizmetler, "Id", "Ad", randevu.HizmetId);
-            ViewData["EgitmenId"] = new SelectList(_context.Egitmenler, "Id", "AdSoyad", randevu.EgitmenId);
-            ViewData["UyeId"] = new SelectList(_context.Uyeler, "Id", "AdSoyad", randevu.UyeId);
+            var izinliDurumlar = new[] { "Beklemede", "Onaylandı", "İptal" };
+            if (!izinliDurumlar.Contains(yeniDurum))
+            {
+                TempData["Error"] = "Geçersiz durum isteği.";
+                return RedirectToAction(nameof(Index));
+            }
 
-            return View(randevu);
+            // Zaten aynı durumdaysa boşuna kaydetmeyelim
+            if (r.Durum == yeniDurum)
+            {
+                TempData["Info"] = "Randevu zaten bu durumda.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            r.Durum = yeniDurum;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Randevu durumu '{yeniDurum}' olarak güncellendi.";
+            return RedirectToAction(nameof(Index));
         }
     }
 }

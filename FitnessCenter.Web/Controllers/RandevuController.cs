@@ -26,24 +26,48 @@ namespace FitnessCenter.Web.Controllers
             _userManager = userManager;
         }
 
-        // Üye bilgisini, login olan kullanıcının mail adresi üzerinden bul
+        // Login olan kullanıcının Uye kaydını, ApplicationUserId üzerinden bul
         private async Task<Uye?> GetCurrentMemberAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return null;
 
-            // Email eşleşmesi üzerinden Uye kaydını buluyoruz
             var uye = await _context.Uyeler
-                .FirstOrDefaultAsync(u => u.Email == user.Email);
+                .Include(u => u.Uyelikler!)
+                    .ThenInclude(u => u.Salon)
+                .FirstOrDefaultAsync(u => u.ApplicationUserId == user.Id);
 
             return uye;
         }
 
-        // Dropdown’lar için ortak helper
-        private async Task DoldurSelectListelerAsync(int? salonId = null, int? hizmetId = null, int? egitmenId = null)
+        // Dropdown’lar için helper (üyenin aktif olduğu şubeleri doldur)
+        private async Task DoldurSelectListelerAsync(
+            Uye uye,
+            int? salonId = null,
+            int? hizmetId = null,
+            int? egitmenId = null)
         {
-            var salonlar = await _context.Salonlar
+            // Üyenin aktif üyelikleri olan şube id’leri
+            var aktifSalonIdler = await _context.Uyelikler
+                .Where(x => x.UyeId == uye.Id && x.Durum == "Aktif")
+                .Select(x => x.SalonId)
+                .Distinct()
+                .ToListAsync();
+
+            var salonQuery = _context.Salonlar.AsQueryable();
+
+            if (aktifSalonIdler.Any())
+            {
+                salonQuery = salonQuery.Where(s => aktifSalonIdler.Contains(s.Id));
+            }
+            else
+            {
+                // Hiç aktif salon yoksa, liste boş gelsin
+                salonQuery = salonQuery.Where(s => false);
+            }
+
+            var salonlar = await salonQuery
                 .OrderBy(s => s.Ad)
                 .ToListAsync();
 
@@ -67,7 +91,7 @@ namespace FitnessCenter.Web.Controllers
             var uye = await GetCurrentMemberAsync();
             if (uye == null)
             {
-                TempData["Error"] = "Sistemde üye kaydınız bulunamadı. Lütfen yetkili ile iletişime geçin.";
+                TempData["Error"] = "Sistemde size bağlı bir üye kaydı bulunamadı. Önce bir şubeye üye olmanız gerekiyor.";
                 return View(Enumerable.Empty<Randevu>());
             }
 
@@ -84,14 +108,10 @@ namespace FitnessCenter.Web.Controllers
             }
 
             if (egitmenId.HasValue)
-            {
                 query = query.Where(r => r.EgitmenId == egitmenId.Value);
-            }
 
             if (hizmetId.HasValue)
-            {
                 query = query.Where(r => r.HizmetId == hizmetId.Value);
-            }
 
             var liste = await query
                 .OrderByDescending(r => r.BaslangicZamani)
@@ -114,16 +134,27 @@ namespace FitnessCenter.Web.Controllers
         }
 
         // GET: /Randevu/Create
+        [HttpGet]
         public async Task<IActionResult> Create()
         {
             var uye = await GetCurrentMemberAsync();
             if (uye == null)
             {
-                TempData["Error"] = "Sistemde üye kaydınız bulunamadı. Lütfen yetkili ile iletişime geçin.";
-                return RedirectToAction(nameof(Index));
+                TempData["Error"] = "Sistemde size bağlı bir üye kaydı bulunamadı. Önce bir şubeye üye olmanız gerekiyor.";
+                return RedirectToAction("UyeOl", "Uyelik");
             }
 
-            await DoldurSelectListelerAsync();
+            // Bu üyenin en az bir aktif şubesi var mı?
+            bool aktifUyelikVar = await _context.Uyelikler.AnyAsync(u =>
+                u.UyeId == uye.Id && u.Durum == "Aktif");
+
+            if (!aktifUyelikVar)
+            {
+                TempData["Error"] = "Randevu oluşturabilmek için en az bir şubede aktif üyeliğiniz olması gerekiyor.";
+                return RedirectToAction("UyeOl", "Uyelik");
+            }
+
+            await DoldurSelectListelerAsync(uye);
 
             // Varsayılan: bugün + 1 gün, saat 10:00 gibi
             var model = new Randevu
@@ -146,7 +177,7 @@ namespace FitnessCenter.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            await DoldurSelectListelerAsync(randevu.SalonId, randevu.HizmetId, randevu.EgitmenId);
+            await DoldurSelectListelerAsync(uye, randevu.SalonId, randevu.HizmetId, randevu.EgitmenId);
 
             // Temel model doğrulaması
             if (!ModelState.IsValid)
@@ -168,10 +199,10 @@ namespace FitnessCenter.Web.Controllers
             var bitis = baslangic.AddMinutes(hizmet.SureDakika);
 
             randevu.BitisZamani = bitis;
-            randevu.UyeId = uye.Id;            // güvenlik için formdan gelen değeri değil, login üyeyi kullan
-            randevu.Durum = "Beklemede";       // onay akışı için başlangıç durumu
+            randevu.UyeId = uye.Id;            // güvenlik için
+            randevu.Durum = "Beklemede";
 
-            // 1) Eğitmenin bu gün/saat için müsaitlik kaydı var mı?
+            // ---------------- 1) Eğitmenin müsaitliği ----------------
             var gun = baslangic.DayOfWeek;
             var baslangicTime = baslangic.TimeOfDay;
             var bitisTime = bitis.TimeOfDay;
@@ -189,7 +220,7 @@ namespace FitnessCenter.Web.Controllers
                     "Seçilen eğitmen bu tarih ve saatte çalışmıyor. Lütfen eğitmenin müsait olduğu bir zaman seçin.");
             }
 
-            // 2) Aynı eğitmen için aynı gün çakışan randevu var mı?
+            // ---------------- 2) Aynı eğitmen için çakışan randevu var mı? ----------------
             var ayniGundekiRandevular = await _context.Randevular
                 .Where(r =>
                     r.EgitmenId == randevu.EgitmenId &&
@@ -197,16 +228,34 @@ namespace FitnessCenter.Web.Controllers
                     r.Durum != "İptal")
                 .ToListAsync();
 
-            bool cakismaVar = ayniGundekiRandevular.Any(r =>
+            bool egitmenCakismaVar = ayniGundekiRandevular.Any(r =>
                 !(bitis <= r.BaslangicZamani || baslangic >= r.BitisZamani));
 
-            if (cakismaVar)
+            if (egitmenCakismaVar)
             {
                 ModelState.AddModelError(string.Empty,
                     "Bu saat aralığında seçilen eğitmenin başka bir randevusu zaten var.");
             }
 
-            // 3) Arka arkaya randevu yok kuralı
+            // ---------------- 3) Aynı üyenin aynı saat aralığında başka randevusu var mı? ----------------
+            var uyeRandevularAyniGun = await _context.Randevular
+                .Where(r =>
+                    r.UyeId == uye.Id &&
+                    r.BaslangicZamani.Date == baslangic.Date &&
+                    r.Durum != "İptal")
+                .ToListAsync();
+
+            bool uyeCakismaVar = uyeRandevularAyniGun.Any(r =>
+                !(bitis <= r.BaslangicZamani || baslangic >= r.BitisZamani));
+
+            if (uyeCakismaVar)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Bu saat aralığında size ait başka bir randevu zaten var. " +
+                    "Aynı anda birden fazla eğitmenden randevu alınamaz.");
+            }
+
+            // ---------------- 4) Arka arkaya randevu yok kuralı (eğitmen için) ----------------
             bool araYok = ayniGundekiRandevular.Any(r =>
                 Math.Abs((r.BaslangicZamani - bitis).TotalMinutes) < MinAraDakika ||
                 Math.Abs((baslangic - r.BitisZamani).TotalMinutes) < MinAraDakika);
@@ -217,9 +266,9 @@ namespace FitnessCenter.Web.Controllers
                     $"Randevular arasında en az {MinAraDakika} dakika ara olmalıdır.");
             }
 
+            // Hata varsa formu geri göster
             if (!ModelState.IsValid)
             {
-                // Formu aynı değerlerle tekrar göster
                 return View(randevu);
             }
 

@@ -5,44 +5,52 @@
 }
 
 <h2>Müsaitlik Düzenle</h2>
+<hr />
+
+<div>
+    <a asp-action="Index">← Listeye Dön</a>
+</div>
 
 <form asp-action="Edit" method="post">
     <input type="hidden" asp-for="Id" />
-
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-    <div class="mb-3">
-        <label asp-for="EgitmenId" class="form-label"></label>
-        <select asp-for="EgitmenId" asp-items="ViewBag.EgitmenId" class="form-control"></select>
+    <div class="form-group" style="margin-top:0.5rem;">
+        <label asp-for="EgitmenId"></label>
+        <select asp-for="EgitmenId"
+                asp-items="@(ViewData["EgitmenId"] as SelectList)"
+                class="form-control">
+        </select>
         <span asp-validation-for="EgitmenId" class="text-danger"></span>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Gun" class="form-label"></label>
-        <select asp-for="Gun" class="form-control"
-                asp-items="Html.GetEnumSelectList<DayOfWeek>()">
+    <div class="form-group" style="margin-top:0.5rem;">
+        <label asp-for="Gun"></label>
+        <select asp-for="Gun"
+                asp-items="Html.GetEnumSelectList<DayOfWeek>()"
+                class="form-control">
         </select>
         <span asp-validation-for="Gun" class="text-danger"></span>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="BaslangicSaati" class="form-label"></label>
-        <input asp-for="BaslangicSaati" class="form-control" type="time" />
+    <div class="form-group" style="margin-top:0.5rem;">
+        <label asp-for="BaslangicSaati"></label>
+        <input asp-for="BaslangicSaati" type="time" class="form-control" />
         <span asp-validation-for="BaslangicSaati" class="text-danger"></span>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="BitisSaati" class="form-label"></label>
-        <input asp-for="BitisSaati" class="form-control" type="time" />
+    <div class="form-group" style="margin-top:0.5rem;">
+        <label asp-for="BitisSaati"></label>
+        <input asp-for="BitisSaati" type="time" class="form-control" />
         <span asp-validation-for="BitisSaati" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Kaydet</button>
-    <a asp-action="Index" class="btn btn-secondary">Geri</a>
+    <div style="margin-top:0.75rem;">
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+        <a asp-action="Index" class="btn btn-secondary">İptal</a>
+    </div>
 </form>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
 }

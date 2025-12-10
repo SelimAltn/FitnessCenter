@@ -1,13 +1,11 @@
 ﻿@model FitnessCenter.Web.Models.Entities.Musaitlik
 
 @{
-    ViewData["Title"] = "Müsaitlik Sil";
+    ViewData["Title"] = "Müsaitlik Detay";
 }
 
-<h2>Müsaitlik Sil</h2>
+<h2>Müsaitlik Detay</h2>
 <hr />
-
-<h4>Bu müsaitlik kaydını silmek istediğinizden emin misiniz?</h4>
 
 <div>
     <dl class="row">
@@ -26,8 +24,7 @@
     </dl>
 </div>
 
-<form asp-action="Delete" method="post">
-    <input type="hidden" asp-for="Id" />
-    <button type="submit" class="btn btn-danger">Sil</button>
-    <a asp-action="Index" class="btn btn-secondary">İptal</a>
-</form>
+<p>
+    <a asp-action="Edit" asp-route-id="@Model.Id">Düzenle</a> |
+    <a asp-action="Index">Listeye Dön</a>
+</p>

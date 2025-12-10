@@ -5,34 +5,52 @@
 }
 
 <h2>Eğitmen Müsaitlikleri</h2>
+<hr />
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Yeni Müsaitlik Ekle</a>
+    <a asp-action="Create">Yeni Müsaitlik Ekle</a>
 </p>
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Eğitmen</th>
-            <th>Gün</th>
-            <th>Başlangıç</th>
-            <th>Bitiş</th>
-            <th style="width: 150px;">İşlemler</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Egitmen?.AdSoyad</td>
-                <td>@item.Gun</td>
-                <td>@item.BaslangicSaati</td>
-                <td>@item.BitisSaati</td>
-                <td class="text-end">
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Düzenle</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Sil</a>
-                </td>
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        Henüz tanımlı bir müsaitlik kaydı yok.
+    </div>
+}
+else
+{
+    <table class="table" style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr style="border-bottom:1px solid #ccc;">
+                <th style="padding:0.4rem;">Eğitmen</th>
+                <th style="padding:0.4rem;">Gün</th>
+                <th style="padding:0.4rem;">Saat</th>
+                <th style="padding:0.4rem;">İşlemler</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:0.4rem;">@item.Egitmen?.AdSoyad</td>
+                    <td style="padding:0.4rem;">@item.Gun</td>
+                    <td style="padding:0.4rem;">
+                        @item.BaslangicSaati.ToString(@"hh\:mm")
+                        -
+                        @item.BitisSaati.ToString(@"hh\:mm")
+                    </td>
+                    <td style="padding:0.4rem;">
+                        <a asp-action="Details" asp-route-id="@item.Id">Detay</a> |
+                        <a asp-action="Edit" asp-route-id="@item.Id">Düzenle</a> |
+                        <a asp-action="Delete" asp-route-id="@item.Id">Sil</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
