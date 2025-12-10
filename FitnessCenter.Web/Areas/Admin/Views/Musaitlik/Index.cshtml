@@ -1,13 +1,13 @@
 ﻿@model IEnumerable<FitnessCenter.Web.Models.Entities.Musaitlik>
 
 @{
-    ViewData["Title"] = "Çalışma Saatleri";
+    ViewData["Title"] = "Eğitmen Müsaitlikleri";
 }
 
-<h3>Eğitmen Çalışma Saatleri</h3>
+<h2>Eğitmen Müsaitlikleri</h2>
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Yeni Saat Ekle</a>
+    <a asp-action="Create" class="btn btn-primary">Yeni Müsaitlik Ekle</a>
 </p>
 
 <table class="table table-bordered table-striped">
@@ -15,8 +15,9 @@
         <tr>
             <th>Eğitmen</th>
             <th>Gün</th>
-            <th>Saat Aralığı</th>
-            <th>İşlem</th>
+            <th>Başlangıç</th>
+            <th>Bitiş</th>
+            <th style="width: 150px;">İşlemler</th>
         </tr>
     </thead>
     <tbody>
@@ -25,8 +26,10 @@
             <tr>
                 <td>@item.Egitmen?.AdSoyad</td>
                 <td>@item.Gun</td>
-                <td>@item.BaslangicSaati.ToString(@"hh\:mm") - @item.BitisSaati.ToString(@"hh\:mm")</td>
-                <td>
+                <td>@item.BaslangicSaati</td>
+                <td>@item.BitisSaati</td>
+                <td class="text-end">
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Düzenle</a>
                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Sil</a>
                 </td>
             </tr>

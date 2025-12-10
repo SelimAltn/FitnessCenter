@@ -1,7 +1,102 @@
-﻿@{
+﻿@model IEnumerable<FitnessCenter.Web.Models.Entities.Randevu>
+
+@{
     ViewData["Title"] = "Randevularım";
+    var seciliTarih = ViewData["SeciliTarih"] as string;
 }
 
 <h2>Randevularım</h2>
 
-<p>Bu sayfayı sadece <strong>Member</strong> rolündeki kullanıcılar görebilir.</p>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Info"] != null)
+{
+    <div class="alert alert-info">@TempData["Info"]</div>
+}
+
+<form method="get" class="mb-3">
+    <div class="row g-2">
+        <div class="col-md-3">
+            <label class="form-label">Tarih</label>
+            <input type="date"
+                   name="tarih"
+                   value="@seciliTarih"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Eğitmen</label>
+            <select name="egitmenId" class="form-control" asp-items="@(ViewData["EgitmenId"] as SelectList)">
+                <option value="">Tümü</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Hizmet</label>
+            <select name="hizmetId" class="form-control" asp-items="@(ViewData["HizmetId"] as SelectList)">
+                <option value="">Tümü</option>
+            </select>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary me-2">Filtrele</button>
+            <a asp-action="Index" class="btn btn-secondary">Temizle</a>
+        </div>
+    </div>
+</form>
+
+<p>
+    <a asp-action="Create" class="btn btn-success">Yeni Randevu Oluştur</a>
+</p>
+
+@if (!Model.Any())
+{
+    <p>Henüz bir randevunuz yok.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Tarih</th>
+                <th>Saat</th>
+                <th>Salon</th>
+                <th>Hizmet</th>
+                <th>Eğitmen</th>
+                <th>Durum</th>
+                <th style="width: 130px;">İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@r.BaslangicZamani.ToString("dd.MM.yyyy")</td>
+                    <td>@r.BaslangicZamani.ToString("HH\\:mm") - @r.BitisZamani.ToString("HH\\:mm")</td>
+                    <td>@r.Salon?.Ad</td>
+                    <td>@r.Hizmet?.Ad</td>
+                    <td>@r.Egitmen?.AdSoyad</td>
+                    <td>@r.Durum</td>
+                    <td class="text-end">
+                        @if (r.Durum != "İptal")
+                        {
+                            <form asp-action="IptalEt" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@r.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Bu randevuyu iptal etmek istediğinize emin misiniz?');">
+                                    İptal Et
+                                </button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
