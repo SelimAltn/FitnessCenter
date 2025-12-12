@@ -4,52 +4,75 @@
     ViewData["Title"] = "Yeni Müsaitlik";
 }
 
-<h2>Yeni Müsaitlik Ekle</h2>
-<hr />
-
-<div>
-    <a asp-action="Index">← Listeye Dön</a>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div>
+            <h1>Yeni Müsaitlik</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Müsaitlikler</a></li>
+                    <li class="breadcrumb-item active">Yeni Müsaitlik</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
 </div>
 
-<form asp-action="Create" method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    Müsaitlik Bilgileri
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert-fc alert-fc-danger mb-4"></div>
 
-    <div class="form-group" style="margin-top:0.5rem;">
-        <label asp-for="EgitmenId"></label>
-        <select asp-for="EgitmenId"
-                asp-items="@(ViewData["EgitmenId"] as SelectList)"
-                class="form-control">
-            <option value="">Eğitmen seçiniz</option>
-        </select>
-        <span asp-validation-for="EgitmenId" class="text-danger"></span>
-    </div>
+                        <div class="form-fc-group">
+                            <label asp-for="EgitmenId" class="form-fc-label">Eğitmen</label>
+                            <select asp-for="EgitmenId" asp-items="@(ViewData["EgitmenId"] as SelectList)" class="form-fc-control">
+                                <option value="">Eğitmen seçiniz</option>
+                            </select>
+                            <span asp-validation-for="EgitmenId" class="form-fc-error"></span>
+                        </div>
 
-    <div class="form-group" style="margin-top:0.5rem;">
-        <label asp-for="Gun"></label>
-        <select asp-for="Gun"
-                asp-items="Html.GetEnumSelectList<DayOfWeek>()"
-                class="form-control">
-        </select>
-        <span asp-validation-for="Gun" class="text-danger"></span>
-    </div>
+                        <div class="form-fc-group">
+                            <label asp-for="Gun" class="form-fc-label">Gün</label>
+                            <select asp-for="Gun" asp-items="Html.GetEnumSelectList<DayOfWeek>()" class="form-fc-control"></select>
+                            <span asp-validation-for="Gun" class="form-fc-error"></span>
+                        </div>
 
-    <div class="form-group" style="margin-top:0.5rem;">
-        <label asp-for="BaslangicSaati"></label>
-        <input asp-for="BaslangicSaati" type="time" class="form-control" />
-        <span asp-validation-for="BaslangicSaati" class="text-danger"></span>
-    </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="BaslangicSaati" class="form-fc-label">Başlangıç Saati</label>
+                                    <input asp-for="BaslangicSaati" type="time" class="form-fc-control" />
+                                    <span asp-validation-for="BaslangicSaati" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="BitisSaati" class="form-fc-label">Bitiş Saati</label>
+                                    <input asp-for="BitisSaati" type="time" class="form-fc-control" />
+                                    <span asp-validation-for="BitisSaati" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                        </div>
 
-    <div class="form-group" style="margin-top:0.5rem;">
-        <label asp-for="BitisSaati"></label>
-        <input asp-for="BitisSaati" type="time" class="form-control" />
-        <span asp-validation-for="BitisSaati" class="text-danger"></span>
+                        <div class="d-flex gap-3 pt-3">
+                            <button type="submit" class="btn-fc btn-fc-success">Kaydet</button>
+                            <a asp-action="Index" class="btn-fc btn-fc-secondary">İptal</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div style="margin-top:0.75rem;">
-        <button type="submit" class="btn btn-primary">Kaydet</button>
-        <a asp-action="Index" class="btn btn-secondary">İptal</a>
-    </div>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

@@ -2,32 +2,91 @@
 
 @{
     ViewData["Title"] = "Kayıt Ol";
+    Layout = null;
 }
 
-<h2>Kayıt Ol</h2>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - Fitness Center</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Logo -->
+            <div class="auth-logo">
+                <a href="/" style="text-decoration: none;">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--fc-primary);">
+                            <path d="M6.5 6.5a2.5 2.5 0 0 1 5 0v11a2.5 2.5 0 0 1-5 0v-11z"/>
+                            <path d="M17.5 6.5a2.5 2.5 0 0 0-5 0v11a2.5 2.5 0 0 0 5 0v-11z"/>
+                            <path d="M4 12h4"/>
+                            <path d="M16 12h4"/>
+                        </svg>
+                        <h1>Fitness Center</h1>
+                    </div>
+                </a>
+            </div>
 
-<form asp-action="Register" method="post">
-    <div>
-        <label asp-for="KullaniciAdi"></label>
-        <input asp-for="KullaniciAdi" />
+            <!-- Title -->
+            <div class="auth-title">
+                <h2>Hesap Oluşturun</h2>
+                <p>Fitness Center ailesine katılın</p>
+            </div>
+
+            <!-- Form -->
+            <form asp-action="Register" method="post">
+                <div asp-validation-summary="All" class="alert-fc alert-fc-danger mb-4"></div>
+
+                <div class="form-fc-group">
+                    <label asp-for="KullaniciAdi" class="form-fc-label">Kullanıcı Adı</label>
+                    <input asp-for="KullaniciAdi" class="form-fc-control" placeholder="kullaniciadi" autofocus />
+                </div>
+
+                <div class="form-fc-group">
+                    <label asp-for="Email" class="form-fc-label">E-posta Adresi</label>
+                    <input asp-for="Email" type="email" class="form-fc-control" placeholder="ornek@email.com" />
+                </div>
+
+                <div class="form-fc-group">
+                    <label asp-for="Sifre" class="form-fc-label">Şifre</label>
+                    <input asp-for="Sifre" type="password" class="form-fc-control" placeholder="En az 6 karakter" />
+                </div>
+
+                <div class="form-fc-group">
+                    <label asp-for="SifreTekrar" class="form-fc-label">Şifre Tekrar</label>
+                    <input asp-for="SifreTekrar" type="password" class="form-fc-control" placeholder="Şifrenizi tekrar girin" />
+                </div>
+
+                <button type="submit" class="btn-fc btn-fc-primary btn-fc-lg w-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
+                    Kayıt Ol
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="auth-footer">
+                Zaten hesabınız var mı? <a asp-controller="Account" asp-action="Login">Giriş yapın</a>
+            </div>
+        </div>
     </div>
 
-    <div>
-        <label asp-for="Email"></label>
-        <input asp-for="Email" type="email" />
-    </div>
-
-    <div>
-        <label asp-for="Sifre"></label>
-        <input asp-for="Sifre" type="password" />
-    </div>
-
-    <div>
-        <label asp-for="SifreTekrar"></label>
-        <input asp-for="SifreTekrar" type="password" />
-    </div>
-
-    <button type="submit">Kayıt Ol</button>
-
-    <div asp-validation-summary="All"></div>
-</form>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

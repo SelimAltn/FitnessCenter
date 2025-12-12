@@ -1,20 +1,62 @@
 ﻿@model FitnessCenter.Web.Models.Entities.Uye
 
 @{
-    ViewData["Title"] = "Üye Detayı";
+    ViewData["Title"] = "Üye Detay";
 }
 
-<h2>Üye Detayı</h2>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1>Üye Detay</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                        <li class="breadcrumb-item"><a asp-action="Index">Üyeler</a></li>
+                        <li class="breadcrumb-item active">Detay</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="page-header-actions">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
+            </div>
+        </div>
+    </div>
+</div>
 
-<div class="mb-2">
-    <strong>Ad Soyad:</strong> @Model.AdSoyad
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                    @Model.AdSoyad
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Ad Soyad</div>
+                            <div class="fw-semibold">@Model.AdSoyad</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">E-posta</div>
+                            <div>@(Model.Email ?? "—")</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Telefon</div>
+                            <div>@(Model.Telefon ?? "—")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex gap-3">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-fc btn-fc-danger">Sil</a>
+                        <a asp-action="Index" class="btn-fc btn-fc-secondary">Geri</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="mb-2">
-    <strong>E-posta:</strong> @Model.Email
-</div>
-<div class="mb-2">
-    <strong>Telefon:</strong> @Model.Telefon
-</div>
-
-<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Düzenle</a>
-<a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>

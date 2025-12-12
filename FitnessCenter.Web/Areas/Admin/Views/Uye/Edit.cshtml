@@ -4,41 +4,71 @@
     ViewData["Title"] = "Üye Düzenle";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-warning text-dark">
-                <h4>Üye Düzenle</h4>
-            </div>
-            <div class="card-body">
-                <form asp-action="Edit">
-                    <input type="hidden" asp-for="Id" />
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div>
+            <h1>Üye Düzenle</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Üyeler</a></li>
+                    <li class="breadcrumb-item active">Düzenle</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
 
-                    <div class="mb-3">
-                        <label asp-for="AdSoyad" class="form-label">Ad Soyad</label>
-                        <input asp-for="AdSoyad" class="form-control" />
-                        <span asp-validation-for="AdSoyad" class="text-danger"></span>
-                    </div>
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+                    Üye Bilgilerini Düzenle
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="alert-fc alert-fc-danger mb-4"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label">Email</label>
-                        <input asp-for="Email" class="form-control" type="email" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
+                        <div class="form-fc-group">
+                            <label asp-for="AdSoyad" class="form-fc-label">Ad Soyad</label>
+                            <input asp-for="AdSoyad" class="form-fc-control" />
+                            <span asp-validation-for="AdSoyad" class="form-fc-error"></span>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Telefon" class="form-label">Telefon</label>
-                        <input asp-for="Telefon" class="form-control" />
-                        <span asp-validation-for="Telefon" class="text-danger"></span>
-                    </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="Email" class="form-fc-label">E-posta</label>
+                                    <input asp-for="Email" class="form-fc-control" type="email" />
+                                    <span asp-validation-for="Email" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="Telefon" class="form-fc-label">Telefon</label>
+                                    <input asp-for="Telefon" class="form-fc-control" />
+                                    <span asp-validation-for="Telefon" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Güncelle</button>
-                        <a asp-action="Index" class="btn btn-secondary">İptal</a>
-                    </div>
-                </form>
+                        <div class="d-flex gap-3 pt-3">
+                            <button type="submit" class="btn-fc btn-fc-primary">Güncelle</button>
+                            <a asp-action="Index" class="btn-fc btn-fc-secondary">İptal</a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

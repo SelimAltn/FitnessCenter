@@ -4,34 +4,66 @@
     ViewData["Title"] = "Eğitmen Düzenle";
 }
 
-<h2>Eğitmen Düzenle</h2>
-
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="Id" />
-
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-    <div class="mb-3">
-        <label asp-for="AdSoyad" class="form-label"></label>
-        <input asp-for="AdSoyad" class="form-control" />
-        <span asp-validation-for="AdSoyad" class="text-danger"></span>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div>
+            <h1>Eğitmen Düzenle</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Eğitmenler</a></li>
+                    <li class="breadcrumb-item active">Düzenle</li>
+                </ol>
+            </nav>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Uzmanlik" class="form-label"></label>
-        <input asp-for="Uzmanlik" class="form-control" />
-        <span asp-validation-for="Uzmanlik" class="text-danger"></span>
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+                    Eğitmen Bilgilerini Düzenle
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="alert-fc alert-fc-danger mb-4"></div>
+
+                        <div class="form-fc-group">
+                            <label asp-for="AdSoyad" class="form-fc-label">Ad Soyad</label>
+                            <input asp-for="AdSoyad" class="form-fc-control" />
+                            <span asp-validation-for="AdSoyad" class="form-fc-error"></span>
+                        </div>
+
+                        <div class="form-fc-group">
+                            <label asp-for="Uzmanlik" class="form-fc-label">Uzmanlık Alanı</label>
+                            <input asp-for="Uzmanlik" class="form-fc-control" />
+                            <span asp-validation-for="Uzmanlik" class="form-fc-error"></span>
+                        </div>
+
+                        <div class="form-fc-group">
+                            <label asp-for="Biyografi" class="form-fc-label">Biyografi</label>
+                            <textarea asp-for="Biyografi" class="form-fc-control" rows="4"></textarea>
+                            <span asp-validation-for="Biyografi" class="form-fc-error"></span>
+                        </div>
+
+                        <div class="d-flex gap-3 pt-3">
+                            <button type="submit" class="btn-fc btn-fc-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
+                                Güncelle
+                            </button>
+                            <a asp-action="Index" class="btn-fc btn-fc-secondary">İptal</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="Biyografi" class="form-label"></label>
-        <textarea asp-for="Biyografi" class="form-control"></textarea>
-        <span asp-validation-for="Biyografi" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Kaydet</button>
-    <a asp-action="Index" class="btn btn-secondary">İptal</a>
-</form>
+</div>
 
 @section Scripts {
     @{

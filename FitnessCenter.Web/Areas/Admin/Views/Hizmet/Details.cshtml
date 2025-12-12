@@ -4,20 +4,60 @@
     ViewData["Title"] = "Hizmet Detay";
 }
 
-<h2>Hizmet Detay</h2>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1>Hizmet Detay</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                        <li class="breadcrumb-item"><a asp-action="Index">Hizmetler</a></li>
+                        <li class="breadcrumb-item active">Detay</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="page-header-actions">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
+            </div>
+        </div>
+    </div>
+</div>
 
-<div class="mb-3">
-    <strong>Ad:</strong> @Model.Ad
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">@Model.Ad</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Hizmet Adı</div>
+                            <div class="fw-semibold">@Model.Ad</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Süre</div>
+                            <div><span class="badge-fc badge-fc-secondary">@Model.SureDakika dakika</span></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Ücret</div>
+                            <div><span class="badge-fc badge-fc-success">@Model.Ucret ₺</span></div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Açıklama</div>
+                            <div>@(Model.Aciklama ?? "—")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex gap-3">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-fc btn-fc-danger">Sil</a>
+                        <a asp-action="Index" class="btn-fc btn-fc-secondary">Geri</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="mb-3">
-    <strong>Süre (dakika):</strong> @Model.SureDakika
-</div>
-<div class="mb-3">
-    <strong>Ücret:</strong> @Model.Ucret
-</div>
-<div class="mb-3">
-    <strong>Açıklama:</strong> @Model.Aciklama
-</div>
-
-<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Düzenle</a>
-<a asp-action="Index" class="btn btn-secondary">Geri</a>

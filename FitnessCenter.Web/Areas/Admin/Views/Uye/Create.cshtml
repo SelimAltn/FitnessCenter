@@ -1,43 +1,73 @@
 ﻿@model FitnessCenter.Web.Models.Entities.Uye
 
 @{
-    ViewData["Title"] = "Yeni Üye Ekle";
+    ViewData["Title"] = "Yeni Üye";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4>Yeni Üye Ekle</h4>
-            </div>
-            <div class="card-body">
-                <form asp-action="Create">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div>
+            <h1>Yeni Üye</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Üyeler</a></li>
+                    <li class="breadcrumb-item active">Yeni Üye</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
 
-                    <div class="mb-3">
-                        <label asp-for="AdSoyad" class="form-label">Ad Soyad</label>
-                        <input asp-for="AdSoyad" class="form-control" />
-                        <span asp-validation-for="AdSoyad" class="text-danger"></span>
-                    </div>
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></svg>
+                    Üye Bilgileri
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert-fc alert-fc-danger mb-4"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label">Email</label>
-                        <input asp-for="Email" class="form-control" type="email" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
+                        <div class="form-fc-group">
+                            <label asp-for="AdSoyad" class="form-fc-label">Ad Soyad</label>
+                            <input asp-for="AdSoyad" class="form-fc-control" placeholder="Üyenin adı ve soyadı" />
+                            <span asp-validation-for="AdSoyad" class="form-fc-error"></span>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Telefon" class="form-label">Telefon</label>
-                        <input asp-for="Telefon" class="form-control" />
-                        <span asp-validation-for="Telefon" class="text-danger"></span>
-                    </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="Email" class="form-fc-label">E-posta</label>
+                                    <input asp-for="Email" class="form-fc-control" type="email" placeholder="ornek@email.com" />
+                                    <span asp-validation-for="Email" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="Telefon" class="form-fc-label">Telefon</label>
+                                    <input asp-for="Telefon" class="form-fc-control" placeholder="05XX XXX XX XX" />
+                                    <span asp-validation-for="Telefon" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success">Kaydet</button>
-                        <a asp-action="Index" class="btn btn-secondary">İptal</a>
-                    </div>
-                </form>
+                        <div class="d-flex gap-3 pt-3">
+                            <button type="submit" class="btn-fc btn-fc-success">Kaydet</button>
+                            <a asp-action="Index" class="btn-fc btn-fc-secondary">İptal</a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

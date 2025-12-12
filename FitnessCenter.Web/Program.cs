@@ -1,11 +1,24 @@
 ﻿using FitnessCenter.Web.Data.Context;
-using Microsoft.EntityFrameworkCore;
 using FitnessCenter.Web.Models.Entities;
 using Microsoft.AspNetCore.Identity;
-
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
+    
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllersWithViews();
 
+// Swagger servisleri:
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "FitnessCenter API",
+        Version = "v1",
+        Description = "Eğitmen, üye ve randevu işlemleri için REST API"
+    });
+});
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -43,6 +56,23 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+
+    // Swagger UI
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "FitnessCenter API v1");
+        c.RoutePrefix = "swagger"; // https://localhost:xxxx/swagger
+    });
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

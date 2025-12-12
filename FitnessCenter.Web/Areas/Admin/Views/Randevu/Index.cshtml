@@ -4,173 +4,175 @@
     ViewData["Title"] = "Randevular";
 }
 
-<h2>Randevular</h2>
-<hr />
-
-<!-- Bilgi / hata mesajları -->
+<!-- Toast Data -->
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div data-toast-message="@TempData["Success"]" data-toast-type="success" style="display:none;"></div>
 }
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger">@TempData["Error"]</div>
+    <div data-toast-message="@TempData["Error"]" data-toast-type="danger" style="display:none;"></div>
 }
 @if (TempData["Info"] != null)
 {
-    <div class="alert alert-info">@TempData["Info"]</div>
+    <div data-toast-message="@TempData["Info"]" data-toast-type="info" style="display:none;"></div>
 }
 
-<!-- FİLTRE BLOĞU -->
-<section style="margin-bottom:1rem; padding:0.75rem; border:1px solid #ddd; border-radius:4px;">
-    <h4 style="margin-top:0;">Filtreler</h4>
-
-    <form asp-action="Index" method="get">
-        <div style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">
-
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
             <div>
-                <label for="tarih">Tarih</label><br />
-                <input type="date"
-                       id="tarih"
-                       name="tarih"
-                       value="@(ViewData["SeciliTarih"] as string)"
-                       style="min-width:150px;" />
+                <h1>Randevular</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                        <li class="breadcrumb-item active">Randevular</li>
+                    </ol>
+                </nav>
             </div>
-
-            <div>
-                <label for="salonId">Salon</label><br />
-                <select id="salonId"
-                        name="salonId"
-                        asp-items="@(ViewData["SalonId"] as SelectList)"
-                        style="min-width:150px;">
-                    <option value="">Tümü</option>
-                </select>
-            </div>
-
-            <div>
-                <label for="egitmenId">Eğitmen</label><br />
-                <select id="egitmenId"
-                        name="egitmenId"
-                        asp-items="@(ViewData["EgitmenId"] as SelectList)"
-                        style="min-width:170px;">
-                    <option value="">Tümü</option>
-                </select>
-            </div>
-
-            <div>
-                <label for="uyeId">Üye</label><br />
-                <select id="uyeId"
-                        name="uyeId"
-                        asp-items="@(ViewData["UyeId"] as SelectList)"
-                        style="min-width:170px;">
-                    <option value="">Tümü</option>
-                </select>
-            </div>
-
-            <div>
-                <label for="durum">Durum</label><br />
-                <select id="durum"
-                        name="durum"
-                        asp-items="@(ViewData["Durum"] as SelectList)"
-                        style="min-width:130px;">
-                    <option value="">Tümü</option>
-                </select>
-            </div>
-
-            <div>
-                <button type="submit">Filtrele</button>
-                <a asp-action="Index" style="margin-left:0.5rem;">Temizle</a>
+            <div class="page-header-actions">
+                <a asp-action="Create" class="btn-fc btn-fc-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    Yeni Randevu
+                </a>
             </div>
         </div>
-    </form>
-</section>
-
-<!-- LİSTE -->
-@if (!Model.Any())
-{
-    <div class="alert alert-info">
-        Henüz sistemde randevu bulunmuyor.
     </div>
-}
-else
-{
-    <table class="table" style="width:100%; border-collapse:collapse;">
-        <thead>
-            <tr style="border-bottom:1px solid #ccc;">
-                <th style="padding:0.4rem;">Tarih</th>
-                <th style="padding:0.4rem;">Saat</th>
-                <th style="padding:0.4rem;">Salon</th>
-                <th style="padding:0.4rem;">Hizmet</th>
-                <th style="padding:0.4rem;">Eğitmen</th>
-                <th style="padding:0.4rem;">Üye</th>
-                <th style="padding:0.4rem;">Durum</th>
-                <th style="padding:0.4rem; width:210px;">İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr style="border-bottom:1px solid #eee;">
-                    <td style="padding:0.4rem;">
-                        @item.BaslangicZamani.ToString("dd.MM.yyyy")
-                    </td>
-                    <td style="padding:0.4rem;">
-                        @item.BaslangicZamani.ToString("HH:mm")
-                        -
-                        @item.BitisZamani.ToString("HH:mm")
-                    </td>
-                    <td style="padding:0.4rem;">@item.Salon?.Ad</td>
-                    <td style="padding:0.4rem;">@item.Hizmet?.Ad</td>
-                    <td style="padding:0.4rem;">@item.Egitmen?.AdSoyad</td>
-                    <td style="padding:0.4rem;">@item.Uye?.AdSoyad</td>
+</div>
 
-                    <td style="padding:0.4rem;">
-                        @if (item.Durum == "Onaylandı")
-                        {
-                            <span style="color:#0a7c20; font-weight:bold;">Onaylandı</span>
-                        }
-                        else if (item.Durum == "İptal")
-                        {
-                            <span style="color:#b30000; font-weight:bold;">İptal</span>
-                        }
-                        else
-                        {
-                            <span style="color:#a66b00; font-weight:bold;">Beklemede</span>
-                        }
-                    </td>
+<div class="container pb-5">
+    <!-- Filter Bar -->
+    <div class="filter-bar mb-4">
+        <form asp-action="Index" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <div class="form-fc-group mb-0">
+                        <label for="tarih" class="form-fc-label">Tarih</label>
+                        <input type="date" id="tarih" name="tarih" class="form-fc-control" value="@(ViewData["SeciliTarih"] as string)" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-fc-group mb-0">
+                        <label for="salonId" class="form-fc-label">Salon</label>
+                        <select id="salonId" name="salonId" class="form-fc-control" asp-items="@(ViewData["SalonId"] as SelectList)">
+                            <option value="">Tümü</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-fc-group mb-0">
+                        <label for="egitmenId" class="form-fc-label">Eğitmen</label>
+                        <select id="egitmenId" name="egitmenId" class="form-fc-control" asp-items="@(ViewData["EgitmenId"] as SelectList)">
+                            <option value="">Tümü</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-fc-group mb-0">
+                        <label for="uyeId" class="form-fc-label">Üye</label>
+                        <select id="uyeId" name="uyeId" class="form-fc-control" asp-items="@(ViewData["UyeId"] as SelectList)">
+                            <option value="">Tümü</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-fc-group mb-0">
+                        <label for="durum" class="form-fc-label">Durum</label>
+                        <select id="durum" name="durum" class="form-fc-control" asp-items="@(ViewData["Durum"] as SelectList)">
+                            <option value="">Tümü</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-fc btn-fc-primary">Filtrele</button>
+                        <a asp-action="Index" class="btn-fc btn-fc-secondary">Temizle</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 
-                    <td style="padding:0.4rem;">
-                        <a asp-action="Details"
-                           asp-route-id="@item.Id"
-                           style="margin-right:0.5rem;">
-                            Detay
-                        </a>
+    @if (!Model.Any())
+    {
+        <div class="card-fc">
+            <div class="card-body">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                    </div>
+                    <h3 class="empty-state-title">Randevu bulunamadı</h3>
+                    <p class="empty-state-text">Filtreleri değiştirmeyi deneyin veya yeni randevu oluşturun.</p>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card-fc">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table-fc">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Saat</th>
+                                <th>Salon</th>
+                                <th>Hizmet</th>
+                                <th>Eğitmen</th>
+                                <th>Üye</th>
+                                <th>Durum</th>
+                                <th style="width: 220px;">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.BaslangicZamani.ToString("dd.MM.yyyy")</td>
+                                    <td><span class="badge-fc badge-fc-secondary">@item.BaslangicZamani.ToString("HH:mm") - @item.BitisZamani.ToString("HH:mm")</span></td>
+                                    <td>@item.Salon?.Ad</td>
+                                    <td>@item.Hizmet?.Ad</td>
+                                    <td>@item.Egitmen?.AdSoyad</td>
+                                    <td>@item.Uye?.AdSoyad</td>
+                                    <td>
+                                        @if (item.Durum == "Onaylandı")
+                                        {
+                                            <span class="badge-fc badge-fc-success">Onaylandı</span>
+                                        }
+                                        else if (item.Durum == "İptal")
+                                        {
+                                            <span class="badge-fc badge-fc-danger">İptal</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-fc badge-fc-warning">Beklemede</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn-fc btn-fc-secondary btn-fc-sm">Detay</a>
 
-                        <form asp-action="DurumDegistir"
-                              method="post"
-                              style="display:inline;">
-                            <input type="hidden" name="id" value="@item.Id" />
-                            <input type="hidden" name="yeniDurum" value="Onaylandı" />
-                            <button type="submit"
-                                    @(item.Durum == "Onaylandı" ? "disabled" : "")
-                                    style="margin-right:0.3rem;">
-                                Onayla
-                            </button>
-                        </form>
+                                            <form asp-action="DurumDegistir" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <input type="hidden" name="yeniDurum" value="Onaylandı" />
+                                                <button type="submit" class="btn-fc btn-fc-success btn-fc-sm" @(item.Durum == "Onaylandı" ? "disabled" : "")>Onayla</button>
+                                            </form>
 
-                        <form asp-action="DurumDegistir"
-                              method="post"
-                              style="display:inline;">
-                            <input type="hidden" name="id" value="@item.Id" />
-                            <input type="hidden" name="yeniDurum" value="İptal" />
-                            <button type="submit"
-                                    @(item.Durum == "İptal" ? "disabled" : "")>
-                                İptal Et
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+                                            <form asp-action="DurumDegistir" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <input type="hidden" name="yeniDurum" value="İptal" />
+                                                <button type="submit" class="btn-fc btn-fc-danger btn-fc-sm" @(item.Durum == "İptal" ? "disabled" : "")>İptal</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

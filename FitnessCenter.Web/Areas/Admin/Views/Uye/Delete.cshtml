@@ -4,31 +4,53 @@
     ViewData["Title"] = "Üye Sil";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card border-danger">
-            <div class="card-header bg-danger text-white">
-                <h4>Üyeyi Silmek İstediğine Emin misin?</h4>
-            </div>
-            <div class="card-body">
-                <dl class="row">
-                    <dt class="col-sm-4">Ad Soyad:</dt>
-                    <dd class="col-sm-8">@Model.AdSoyad</dd>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div>
+            <h1>Üye Sil</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Üyeler</a></li>
+                    <li class="breadcrumb-item active">Sil</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
 
-                    <dt class="col-sm-4">Email:</dt>
-                    <dd class="col-sm-8">@Model.Email</dd>
-
-                    <dt class="col-sm-4">Telefon:</dt>
-                    <dd class="col-sm-8">@Model.Telefon</dd>
-                </dl>
-
-                <form asp-action="Delete">
-                    <input type="hidden" asp-for="Id" />
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-danger">Evet, Sil</button>
-                        <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card-fc" style="border-color: var(--fc-danger);">
+                <div class="card-header" style="background-color: var(--fc-danger-light); color: var(--fc-danger);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /></svg>
+                    Silme Onayı
+                </div>
+                <div class="card-body">
+                    <div class="alert-fc alert-fc-warning mb-4">
+                        <strong>Dikkat!</strong> Bu üyeyi silmek istediğinize emin misiniz? Üyelik ve randevu kayıtları etkilenebilir.
                     </div>
-                </form>
+
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Ad Soyad</div>
+                        <div class="fw-semibold">@Model.AdSoyad</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">E-posta</div>
+                        <div>@Model.Email</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn-fc btn-fc-danger">Evet, Sil</button>
+                            <a asp-action="Index" class="btn-fc btn-fc-secondary">Vazgeç</a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

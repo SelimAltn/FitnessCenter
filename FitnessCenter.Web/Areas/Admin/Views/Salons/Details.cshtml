@@ -4,17 +4,59 @@
     ViewData["Title"] = "Salon Detay";
 }
 
-<h2>Salon Detay</h2>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1>Salon Detay</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                        <li class="breadcrumb-item"><a asp-action="Index">Salonlar</a></li>
+                        <li class="breadcrumb-item active">Detay</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="page-header-actions">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
+            </div>
+        </div>
+    </div>
+</div>
 
-<div class="mb-3">
-    <strong>@Html.DisplayNameFor(m => m.Ad):</strong> @Model.Ad
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
+                    @Model.Ad
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Salon Adı</div>
+                            <div class="fw-semibold">@Model.Ad</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Adres</div>
+                            <div>@(Model.Adress ?? "—")</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Açıklama</div>
+                            <div>@(Model.Aciklama ?? "—")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex gap-3">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-fc btn-fc-danger">Sil</a>
+                        <a asp-action="Index" class="btn-fc btn-fc-secondary">Geri</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="mb-3">
-    <strong>@Html.DisplayNameFor(m => m.Adress):</strong> @Model.Adress
-</div>
-<div class="mb-3">
-    <strong>@Html.DisplayNameFor(m => m.Aciklama):</strong> @Model.Aciklama
-</div>
-
-<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Düzenle</a>
-<a asp-action="Index" class="btn btn-secondary">Geri</a>

@@ -4,51 +4,104 @@
     ViewData["Title"] = "Randevu Oluştur";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <h4>Yeni Randevu Girişi</h4>
-            </div>
-            <div class="card-body">
-                <form asp-action="Create">
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div>
+            <h1>Yeni Randevu</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Randevular</a></li>
+                    <li class="breadcrumb-item active">Yeni Randevu</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Salon Seç</label>
-                            <select asp-for="SalonId" class="form-control" asp-items="ViewBag.SalonId"></select>
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                    Randevu Bilgileri
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert-fc alert-fc-danger mb-4"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="SalonId" class="form-fc-label">Salon</label>
+                                    <select asp-for="SalonId" class="form-fc-control" asp-items="ViewBag.SalonId">
+                                        <option value="">Salon seçiniz</option>
+                                    </select>
+                                    <span asp-validation-for="SalonId" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="UyeId" class="form-fc-label">Üye</label>
+                                    <select asp-for="UyeId" class="form-fc-control" asp-items="ViewBag.UyeId">
+                                        <option value="">Üye seçiniz</option>
+                                    </select>
+                                    <span asp-validation-for="UyeId" class="form-fc-error"></span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Üye Seç</label>
-                            <select asp-for="UyeId" class="form-control" asp-items="ViewBag.UyeId"></select>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="HizmetId" class="form-fc-label">Hizmet</label>
+                                    <select asp-for="HizmetId" class="form-fc-control" asp-items="ViewBag.HizmetId">
+                                        <option value="">Hizmet seçiniz</option>
+                                    </select>
+                                    <span asp-validation-for="HizmetId" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="EgitmenId" class="form-fc-label">Eğitmen</label>
+                                    <select asp-for="EgitmenId" class="form-fc-control" asp-items="ViewBag.EgitmenId">
+                                        <option value="">Eğitmen seçiniz</option>
+                                    </select>
+                                    <span class="form-fc-hint">Seçilen hizmete uygun eğitmenler listelenir.</span>
+                                    <span asp-validation-for="EgitmenId" class="form-fc-error"></span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Hizmet</label>
-                            <select asp-for="HizmetId" class="form-control" asp-items="ViewBag.HizmetId"></select>
+                        <div class="form-fc-group">
+                            <label asp-for="BaslangicZamani" class="form-fc-label">Randevu Tarihi ve Saati</label>
+                            <input asp-for="BaslangicZamani" class="form-fc-control" type="datetime-local" />
+                            <span asp-validation-for="BaslangicZamani" class="form-fc-error"></span>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Eğitmen</label>
-                            <select asp-for="EgitmenId" class="form-control" asp-items="ViewBag.EgitmenId"></select>
-                            <small class="text-muted">Not: İleride sadece seçilen hizmeti verenler listelenecek (JS ile).</small>
+
+                        <div class="form-fc-group">
+                            <label asp-for="Notlar" class="form-fc-label">Notlar (Opsiyonel)</label>
+                            <textarea asp-for="Notlar" class="form-fc-control" rows="2" placeholder="Randevu ile ilgili ek notlar..."></textarea>
                         </div>
-                    </div>
 
-                    <div class="mb-3">
-                        <label asp-for="BaslangicZamani" class="form-label">Randevu Tarihi ve Saati</label>
-                        <input asp-for="BaslangicZamani" class="form-control" type="datetime-local" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Notlar" class="form-label">Notlar</label>
-                        <textarea asp-for="Notlar" class="form-control" rows="2"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-success w-100">Randevuyu Kaydet</button>
-                </form>
+                        <div class="d-flex gap-3 pt-3">
+                            <button type="submit" class="btn-fc btn-fc-success">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
+                                Randevuyu Kaydet
+                            </button>
+                            <a asp-action="Index" class="btn-fc btn-fc-secondary">İptal</a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

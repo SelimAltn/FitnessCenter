@@ -4,37 +4,90 @@
     ViewData["Title"] = "Randevu Detayı";
 }
 
-<h2>Randevu Detayı</h2>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1>Randevu Detayı</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                        <li class="breadcrumb-item"><a asp-action="Index">Randevular</a></li>
+                        <li class="breadcrumb-item active">Detay</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
 
-<hr />
-
-<dl class="row">
-    <dt class="col-sm-2">Tarih</dt>
-    <dd class="col-sm-10">@Model.BaslangicZamani.ToString("dd.MM.yyyy")</dd>
-
-    <dt class="col-sm-2">Saat</dt>
-    <dd class="col-sm-10">@Model.BaslangicZamani.ToString("HH:mm") - @Model.BitisZamani.ToString("HH:mm")</dd>
-
-    <dt class="col-sm-2">Salon</dt>
-    <dd class="col-sm-10">@Model.Salon?.Ad</dd>
-
-    <dt class="col-sm-2">Hizmet</dt>
-    <dd class="col-sm-10">@Model.Hizmet?.Ad</dd>
-
-    <dt class="col-sm-2">Eğitmen</dt>
-    <dd class="col-sm-10">@Model.Egitmen?.AdSoyad</dd>
-
-    <dt class="col-sm-2">Üye</dt>
-    <dd class="col-sm-10">@Model.Uye?.AdSoyad (@Model.Uye?.Email)</dd>
-
-    <dt class="col-sm-2">Durum</dt>
-    <dd class="col-sm-10">@Model.Durum</dd>
-
-    @if (!string.IsNullOrWhiteSpace(Model.Notlar))
-    {
-        <dt class="col-sm-2">Notlar</dt>
-        <dd class="col-sm-10">@Model.Notlar</dd>
-    }
-</dl>
-
-<a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                    Randevu #@Model.Id
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Tarih</div>
+                            <div class="fw-semibold">@Model.BaslangicZamani.ToString("dd MMMM yyyy")</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Saat Aralığı</div>
+                            <div><span class="badge-fc badge-fc-secondary">@Model.BaslangicZamani.ToString("HH:mm") - @Model.BitisZamani.ToString("HH:mm")</span></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Salon</div>
+                            <div>@Model.Salon?.Ad</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Hizmet</div>
+                            <div>@Model.Hizmet?.Ad</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Eğitmen</div>
+                            <div>@Model.Egitmen?.AdSoyad</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Üye</div>
+                            <div>@Model.Uye?.AdSoyad <span class="text-muted-fc">(@Model.Uye?.Email)</span></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Durum</div>
+                            <div>
+                                @if (Model.Durum == "Onaylandı")
+                                {
+                                    <span class="badge-fc badge-fc-success">Onaylandı</span>
+                                }
+                                else if (Model.Durum == "İptal")
+                                {
+                                    <span class="badge-fc badge-fc-danger">İptal</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-fc badge-fc-warning">Beklemede</span>
+                                }
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.Notlar))
+                        {
+                            <div class="col-12">
+                                <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Notlar</div>
+                                <div>@Model.Notlar</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex gap-3">
+                        <a asp-action="Index" class="btn-fc btn-fc-secondary">Listeye Dön</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

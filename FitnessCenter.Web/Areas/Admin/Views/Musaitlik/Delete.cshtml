@@ -4,30 +4,54 @@
     ViewData["Title"] = "Müsaitlik Sil";
 }
 
-<h2>Müsaitlik Sil</h2>
-<hr />
-
-<h4>Bu müsaitlik kaydını silmek istediğinizden emin misiniz?</h4>
-
-<div>
-    <dl class="row">
-        <dt class="col-sm-2">Eğitmen</dt>
-        <dd class="col-sm-10">@Model.Egitmen?.AdSoyad</dd>
-
-        <dt class="col-sm-2">Gün</dt>
-        <dd class="col-sm-10">@Model.Gun</dd>
-
-        <dt class="col-sm-2">Saat</dt>
-        <dd class="col-sm-10">
-            @Model.BaslangicSaati.ToString(@"hh\:mm")
-            -
-            @Model.BitisSaati.ToString(@"hh\:mm")
-        </dd>
-    </dl>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div>
+            <h1>Müsaitlik Sil</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Müsaitlikler</a></li>
+                    <li class="breadcrumb-item active">Sil</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
 </div>
 
-<form asp-action="Delete" method="post">
-    <input type="hidden" asp-for="Id" />
-    <button type="submit" class="btn btn-danger">Sil</button>
-    <a asp-action="Index" class="btn btn-secondary">İptal</a>
-</form>
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card-fc" style="border-color: var(--fc-danger);">
+                <div class="card-header" style="background-color: var(--fc-danger-light); color: var(--fc-danger);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /></svg>
+                    Silme Onayı
+                </div>
+                <div class="card-body">
+                    <div class="alert-fc alert-fc-warning mb-4">
+                        <strong>Dikkat!</strong> Bu müsaitlik kaydını silmek istediğinize emin misiniz?
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Eğitmen</div>
+                        <div class="fw-semibold">@Model.Egitmen?.AdSoyad</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Gün / Saat</div>
+                        <div>@Model.Gun • @Model.BaslangicSaati.ToString(@"hh\:mm") - @Model.BitisSaati.ToString(@"hh\:mm")</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn-fc btn-fc-danger">Evet, Sil</button>
+                            <a asp-action="Index" class="btn-fc btn-fc-secondary">Vazgeç</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

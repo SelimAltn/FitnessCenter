@@ -4,17 +4,62 @@
     ViewData["Title"] = "Eğitmen Detay";
 }
 
-<h2>Eğitmen Detay</h2>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1>Eğitmen Detay</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                        <li class="breadcrumb-item"><a asp-action="Index">Eğitmenler</a></li>
+                        <li class="breadcrumb-item active">Detay</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="page-header-actions">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+                    Düzenle
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
-<div class="mb-3">
-    <strong>Ad Soyad:</strong> @Model.AdSoyad
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                    @Model.AdSoyad
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Ad Soyad</div>
+                            <div class="fw-semibold">@Model.AdSoyad</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Uzmanlık Alanı</div>
+                            <div><span class="badge-fc badge-fc-info">@Model.Uzmanlik</span></div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Biyografi</div>
+                            <div>@(Model.Biyografi ?? "—")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex gap-3">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-fc btn-fc-danger">Sil</a>
+                        <a asp-action="Index" class="btn-fc btn-fc-secondary">Geri</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="mb-3">
-    <strong>Uzmanlık:</strong> @Model.Uzmanlik
-</div>
-<div class="mb-3">
-    <strong>Biyografi:</strong> @Model.Biyografi
-</div>
-
-<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Düzenle</a>
-<a asp-action="Index" class="btn btn-secondary">Geri</a>

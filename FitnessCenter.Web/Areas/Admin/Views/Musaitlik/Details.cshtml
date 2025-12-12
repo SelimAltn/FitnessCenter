@@ -4,27 +4,63 @@
     ViewData["Title"] = "Müsaitlik Detay";
 }
 
-<h2>Müsaitlik Detay</h2>
-<hr />
-
-<div>
-    <dl class="row">
-        <dt class="col-sm-2">Eğitmen</dt>
-        <dd class="col-sm-10">@Model.Egitmen?.AdSoyad</dd>
-
-        <dt class="col-sm-2">Gün</dt>
-        <dd class="col-sm-10">@Model.Gun</dd>
-
-        <dt class="col-sm-2">Saat</dt>
-        <dd class="col-sm-10">
-            @Model.BaslangicSaati.ToString(@"hh\:mm")
-            -
-            @Model.BitisSaati.ToString(@"hh\:mm")
-        </dd>
-    </dl>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1>Müsaitlik Detay</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                        <li class="breadcrumb-item"><a asp-action="Index">Müsaitlikler</a></li>
+                        <li class="breadcrumb-item active">Detay</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="page-header-actions">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
+            </div>
+        </div>
+    </div>
 </div>
 
-<p>
-    <a asp-action="Edit" asp-route-id="@Model.Id">Düzenle</a> |
-    <a asp-action="Index">Listeye Dön</a>
-</p>
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    Müsaitlik Bilgileri
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Eğitmen</div>
+                            <div class="fw-semibold">@Model.Egitmen?.AdSoyad</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Gün</div>
+                            <div><span class="badge-fc badge-fc-info">@Model.Gun</span></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Başlangıç Saati</div>
+                            <div>@Model.BaslangicSaati.ToString(@"hh\:mm")</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Bitiş Saati</div>
+                            <div>@Model.BitisSaati.ToString(@"hh\:mm")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex gap-3">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-fc btn-fc-danger">Sil</a>
+                        <a asp-action="Index" class="btn-fc btn-fc-secondary">Geri</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

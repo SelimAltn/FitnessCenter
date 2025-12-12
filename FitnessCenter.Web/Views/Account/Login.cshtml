@@ -1,22 +1,88 @@
 ﻿@model FitnessCenter.Web.Models.ViewModels.LoginViewModel
 
-<h2>Giriş Yap</h2>
+@{
+    ViewData["Title"] = "Giriş Yap";
+    Layout = null;
+}
 
-<form asp-action="Login" method="post">
-    <div>
-        <label asp-for="KullaniciAdiVeyaEmail"></label>
-        <input asp-for="KullaniciAdiVeyaEmail" />
-    </div>
-    <div>
-        <label asp-for="Sifre"></label>
-        <input asp-for="Sifre" type="password" />
-    </div>
-    <div>
-        <input asp-for="BeniHatirla" />
-        <label asp-for="BeniHatirla"></label>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - Fitness Center</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Logo -->
+            <div class="auth-logo">
+                <a href="/" style="text-decoration: none;">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--fc-primary);">
+                            <path d="M6.5 6.5a2.5 2.5 0 0 1 5 0v11a2.5 2.5 0 0 1-5 0v-11z"/>
+                            <path d="M17.5 6.5a2.5 2.5 0 0 0-5 0v11a2.5 2.5 0 0 0 5 0v-11z"/>
+                            <path d="M4 12h4"/>
+                            <path d="M16 12h4"/>
+                        </svg>
+                        <h1>Fitness Center</h1>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Title -->
+            <div class="auth-title">
+                <h2>Hoş Geldiniz</h2>
+                <p>Hesabınıza giriş yapın</p>
+            </div>
+
+            <!-- Form -->
+            <form asp-action="Login" method="post">
+                <div asp-validation-summary="All" class="alert-fc alert-fc-danger mb-4"></div>
+
+                <div class="form-fc-group">
+                    <label asp-for="KullaniciAdiVeyaEmail" class="form-fc-label">Kullanıcı Adı veya E-posta</label>
+                    <input asp-for="KullaniciAdiVeyaEmail" class="form-fc-control" placeholder="ornek@email.com" autofocus />
+                </div>
+
+                <div class="form-fc-group">
+                    <label asp-for="Sifre" class="form-fc-label">Şifre</label>
+                    <input asp-for="Sifre" type="password" class="form-fc-control" placeholder="••••••••" />
+                </div>
+
+                <div class="form-fc-group">
+                    <div class="form-fc-check">
+                        <input asp-for="BeniHatirla" type="checkbox" id="BeniHatirla" />
+                        <label asp-for="BeniHatirla" class="form-fc-label mb-0">Beni hatırla</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-fc btn-fc-primary btn-fc-lg w-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    Giriş Yap
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="auth-footer">
+                Hesabınız yok mu? <a asp-controller="Account" asp-action="Register">Kayıt olun</a>
+            </div>
+        </div>
     </div>
 
-    <button type="submit">Giriş Yap</button>
-
-    <div asp-validation-summary="All"></div>
-</form>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

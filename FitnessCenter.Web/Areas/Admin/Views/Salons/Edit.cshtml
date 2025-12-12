@@ -4,34 +4,63 @@
     ViewData["Title"] = "Salon Düzenle";
 }
 
-<h2>Salon Düzenle</h2>
-
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="Id" />
-
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-    <div class="mb-3">
-        <label asp-for="Ad" class="form-label"></label>
-        <input asp-for="Ad" class="form-control" />
-        <span asp-validation-for="Ad" class="text-danger"></span>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div>
+            <h1>Salon Düzenle</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Salonlar</a></li>
+                    <li class="breadcrumb-item active">Düzenle</li>
+                </ol>
+            </nav>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Adress" class="form-label"></label>
-        <input asp-for="Adress" class="form-control" />
-        <span asp-validation-for="Adress" class="text-danger"></span>
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+                    Salon Bilgilerini Düzenle
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="alert-fc alert-fc-danger mb-4"></div>
+
+                        <div class="form-fc-group">
+                            <label asp-for="Ad" class="form-fc-label">Salon Adı</label>
+                            <input asp-for="Ad" class="form-fc-control" />
+                            <span asp-validation-for="Ad" class="form-fc-error"></span>
+                        </div>
+
+                        <div class="form-fc-group">
+                            <label asp-for="Adress" class="form-fc-label">Adres</label>
+                            <input asp-for="Adress" class="form-fc-control" />
+                            <span asp-validation-for="Adress" class="form-fc-error"></span>
+                        </div>
+
+                        <div class="form-fc-group">
+                            <label asp-for="Aciklama" class="form-fc-label">Açıklama</label>
+                            <textarea asp-for="Aciklama" class="form-fc-control" rows="3"></textarea>
+                            <span asp-validation-for="Aciklama" class="form-fc-error"></span>
+                        </div>
+
+                        <div class="d-flex gap-3 pt-3">
+                            <button type="submit" class="btn-fc btn-fc-primary">Güncelle</button>
+                            <a asp-action="Index" class="btn-fc btn-fc-secondary">İptal</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="Aciklama" class="form-label"></label>
-        <textarea asp-for="Aciklama" class="form-control"></textarea>
-        <span asp-validation-for="Aciklama" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Kaydet</button>
-    <a asp-action="Index" class="btn btn-secondary">İptal</a>
-</form>
+</div>
 
 @section Scripts {
     @{

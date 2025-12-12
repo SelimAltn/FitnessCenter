@@ -2,6 +2,161 @@
     ViewData["Title"] = "Ana Sayfa";
 }
 
-<h1>Fitness Center</h1>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1>Fitness Center'a Hoş Geldiniz</h1>
+        <p>
+            Profesyonel eğitmenlerimiz ve modern tesislerimizle sağlıklı yaşam yolculuğunuzda size eşlik ediyoruz.
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <br /><strong>Merhaba, @User.Identity.Name!</strong>
+            }
+        </p>
+        <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                @if (User.IsInRole("Member"))
+                {
+                    <a asp-controller="Randevu" asp-action="Create" class="btn-fc btn-fc-lg hero-btn-light">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        Randevu Oluştur
+                    </a>
+                    <a asp-controller="Randevu" asp-action="Index" class="btn-fc btn-fc-lg btn-fc-outline-primary" style="border-color: rgba(255,255,255,0.5); color: white;">
+                        Randevularımı Görüntüle
+                    </a>
+                }
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="btn-fc btn-fc-lg hero-btn-light">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg>
+                        Admin Paneli
+                    </a>
+                }
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Register" class="btn-fc btn-fc-lg hero-btn-light">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
+                    Üye Ol
+                </a>
+                <a asp-controller="Account" asp-action="Login" class="btn-fc btn-fc-lg btn-fc-outline-primary" style="border-color: rgba(255,255,255,0.5); color: white;">
+                    Giriş Yap
+                </a>
+            }
+        </div>
+    </div>
+</section>
 
-<p>Hoş geldin @(User.Identity?.Name ?? "Ziyaretçi")</p>
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2>Neden Fitness Center?</h2>
+            <p class="text-muted-fc">Size en iyi hizmeti sunmak için buradayız</p>
+        </div>
+        
+        <div class="row g-4">
+            <!-- Feature 1 -->
+            <div class="col-md-4">
+                <div class="card-fc h-100">
+                    <div class="card-body text-center p-5">
+                        <div class="mb-4">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--fc-primary-light), var(--fc-primary)); color: white;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </span>
+                        </div>
+                        <h4>Profesyonel Eğitmenler</h4>
+                        <p class="text-muted-fc mb-0">
+                            Alanında uzman, sertifikalı eğitmenlerimizle kişisel hedeflerinize ulaşın.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="col-md-4">
+                <div class="card-fc h-100">
+                    <div class="card-body text-center p-5">
+                        <div class="mb-4">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--fc-success-light), var(--fc-success)); color: white;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <h4>Kolay Randevu Sistemi</h4>
+                        <p class="text-muted-fc mb-0">
+                            Online randevu sistemiyle dilediğiniz zaman kolayca randevu alın.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="col-md-4">
+                <div class="card-fc h-100">
+                    <div class="card-body text-center p-5">
+                        <div class="mb-4">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--fc-warning-light), var(--fc-warning)); color: white;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </span>
+                        </div>
+                        <h4>Modern Tesisler</h4>
+                        <p class="text-muted-fc mb-0">
+                            Son teknoloji ekipmanlarla donatılmış, ferah ve temiz spor salonları.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="bg-light-fc py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h3 class="mb-2">Sağlıklı yaşam için ilk adımı atın</h3>
+                <p class="text-muted-fc mb-0">Hemen üye olun ve ilk antrenmanınızı planlayın.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                @if (User.Identity == null || !User.Identity.IsAuthenticated)
+                {
+                    <a asp-controller="Account" asp-action="Register" class="btn-fc btn-fc-primary btn-fc-lg">
+                        Hemen Başla
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Randevu" asp-action="Create" class="btn-fc btn-fc-primary btn-fc-lg">
+                        Randevu Al
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</section>

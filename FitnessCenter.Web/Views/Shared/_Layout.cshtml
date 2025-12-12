@@ -4,17 +4,41 @@
     <meta charset="utf-8" />
     <title>@ViewData["Title"] - Fitness Center</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Fitness Center - Profesyonel spor salonu yönetim sistemi" />
 
+    <!-- 
+        Google Fonts - Inter
+        ÖNEMLİ: Eğer CDN bağımlılığı istemiyorsanız aşağıdaki 3 satırı silin.
+        CSS fallback olarak system-ui kullanılacaktır (site.css'de tanımlı).
+        Lokal font için: https://fonts.google.com/specimen/Inter adresinden
+        WOFF2 dosyalarını indirip wwwroot/fonts klasörüne ekleyin.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <!-- Site CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="@(ViewContext.RouteData.Values["area"]?.ToString() == "Admin" ? "admin-area" : "")">
+    <!-- Navbar -->
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">Fitness Center</a>
+        <nav class="navbar navbar-expand-lg navbar-fc">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6.5 6.5a2.5 2.5 0 0 1 5 0v11a2.5 2.5 0 0 1-5 0v-11z"/>
+                        <path d="M17.5 6.5a2.5 2.5 0 0 0-5 0v11a2.5 2.5 0 0 0 5 0v-11z"/>
+                        <path d="M4 12h4"/>
+                        <path d="M16 12h4"/>
+                    </svg>
+                    Fitness Center
+                </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
@@ -24,46 +48,70 @@
                             <a class="nav-link" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
                         </li>
 
-                        @* Giriş yapmış kullanıcıya özel *@
-                        @if (User.Identity != null
-                                                && User.Identity.IsAuthenticated
-                                                && User.IsInRole("Member"))
+                        @* Giriş yapmış üyeye özel menüler *@
+                        @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Member"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Randevu" asp-action="Index">
                                     Randevularım
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Uyelik" asp-action="Index">
+                                    Üyeliklerim
+                                </a>
+                            </li>
                         }
 
-                        @* Sadece Admin rolü *@
+                        @* Admin paneli linki *@
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link"
-                                   asp-area="Admin"
-                                   asp-controller="Home"
-                                   asp-action="Index">
+                                <a class="nav-link" asp-area="Admin" asp-controller="Home" asp-action="Index">
                                     Admin Paneli
                                 </a>
                             </li>
                         }
                     </ul>
 
-                    @* Sağ taraftaki login/register kısmı artık partial *@
+                    @* Login/Register partial *@
                     @await Html.PartialAsync("_LoginPartial")
                 </div>
             </div>
         </nav>
     </header>
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <!-- Main Content -->
+    <main role="main">
+        @RenderBody()
+    </main>
 
+    <!-- Footer -->
+    <footer class="footer-fc">
+        <div class="container">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <div class="mb-2 mb-md-0">
+                    &copy; @DateTime.Now.Year Fitness Center. Tüm hakları saklıdır.
+                </div>
+                <div class="d-flex gap-4">
+                    <a href="#">Gizlilik Politikası</a>
+                    <a href="#">Kullanım Koşulları</a>
+                    <a href="#">İletişim</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Container (for JS notifications) -->
+    <div id="toast-container" class="toast-container-fc"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    @RenderSection("Scripts", required: false)
+    
+    <!-- Site JS -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

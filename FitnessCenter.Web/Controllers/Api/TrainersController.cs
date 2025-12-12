@@ -5,11 +5,13 @@ using FitnessCenter.Web.Data.Context;
 using FitnessCenter.Web.Models.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FitnessCenter.Web.Controllers.Api
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TrainersController : ControllerBase
     {
         private readonly AppDbContext _context;

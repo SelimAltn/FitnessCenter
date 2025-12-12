@@ -5,18 +5,26 @@ using FitnessCenter.Web.Data.Context;
 using FitnessCenter.Web.Models.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using FitnessCenter.Web.Models.Entities;
 
 namespace FitnessCenter.Web.Controllers.Api
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize] // Admin + Member
+
     public class MembersController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public MembersController(AppDbContext context)
+        public MembersController(AppDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
+
         }
 
         /// <summary>
@@ -32,6 +40,25 @@ namespace FitnessCenter.Web.Controllers.Api
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
+            // ---- Kullanıcı bu veriyi görmeye yetkili mi? ----
+            // Admin ise herkesin randevusunu görebilir
+            if (!User.IsInRole("Admin"))
+            {
+                // Giriş yapmış Identity kullanıcısının Id'si
+                var currentUserId = _userManager.GetUserId(User);
+
+                // Bu Identity user'a bağlı Uye kaydı
+                var currentUye = await _context.Uyeler
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(u => u.ApplicationUserId == currentUserId);
+
+                // Uye bulunamadıysa veya istenen id kendisine ait değilse → 403
+                if (currentUye == null || currentUye.Id != id)
+                {
+                    return Forbid(); // 403 Forbidden
+                }
+            }
+
             // ---- Üye var mı? ----
             var uyeExists = await _context.Uyeler.AnyAsync(u => u.Id == id);
             if (!uyeExists)
