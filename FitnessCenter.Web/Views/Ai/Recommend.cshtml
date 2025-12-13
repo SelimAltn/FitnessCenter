@@ -1,0 +1,443 @@
+@model FitnessCenter.Web.Models.ViewModels.AiRecommendVm
+@{
+    ViewData["Title"] = "AI Fitness Önerisi";
+}
+
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" 
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                         class="me-2" style="color: var(--fc-primary);">
+                        <path d="M12 8V4H8"/>
+                        <rect width="16" height="12" x="4" y="8" rx="2"/>
+                        <path d="M2 14h2"/>
+                        <path d="M20 14h2"/>
+                        <path d="M15 13v2"/>
+                        <path d="M9 13v2"/>
+                    </svg>
+                    AI Fitness Önerisi
+                </h1>
+                <p class="text-muted mb-0">Kişisel ölçülerinize ve hedeflerinize göre akıllı öneri alın</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    @* Uyarı ve Hata Mesajları *@
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-fc alert-fc-danger mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" 
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>@TempData["Error"]</span>
+        </div>
+    }
+
+    @if (TempData["Warning"] != null)
+    {
+        <div class="alert-fc alert-fc-warning mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" 
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>@TempData["Warning"]</span>
+        </div>
+    }
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <span class="d-flex align-items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" 
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Kişisel Bilgiler ve Hedefler
+                    </span>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Recommend" method="post" enctype="multipart/form-data" id="aiRecommendForm">
+                        @Html.AntiForgeryToken()
+
+                        @* Fiziksel Ölçüler *@
+                        <h5 class="mb-4" style="color: var(--fc-gray-700);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" 
+                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                                <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+                                <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+                            </svg>
+                            Fiziksel Ölçüler
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-fc-group">
+                                    <label asp-for="Boy" class="form-fc-label"></label>
+                                    <input asp-for="Boy" class="form-fc-control" type="number" min="100" max="250" placeholder="175" />
+                                    <span asp-validation-for="Boy" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-fc-group">
+                                    <label asp-for="Kilo" class="form-fc-label"></label>
+                                    <input asp-for="Kilo" class="form-fc-control" type="number" step="any" min="30" max="300" placeholder="70" />
+                                    <span asp-validation-for="Kilo" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-fc-group">
+                                    <label asp-for="Yas" class="form-fc-label"></label>
+                                    <input asp-for="Yas" class="form-fc-control" type="number" min="10" max="100" placeholder="30" />
+                                    <span asp-validation-for="Yas" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="Cinsiyet" class="form-fc-label"></label>
+                                    <select asp-for="Cinsiyet" class="form-fc-control">
+                                        <option value="">Seçiniz (Opsiyonel)</option>
+                                        @foreach (var option in FitnessCenter.Web.Models.ViewModels.AiRecommendVm.CinsiyetSecenekleri)
+                                        {
+                                            <option value="@option">@option</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="Cinsiyet" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        @* Hedef ve Tercihler *@
+                        <h5 class="mb-4" style="color: var(--fc-gray-700);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" 
+                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <circle cx="12" cy="12" r="6"/>
+                                <circle cx="12" cy="12" r="2"/>
+                            </svg>
+                            Hedef ve Tercihler
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="Hedef" class="form-fc-label"></label>
+                                    <select asp-for="Hedef" class="form-fc-control">
+                                        @foreach (var option in FitnessCenter.Web.Models.ViewModels.AiRecommendVm.HedefSecenekleri)
+                                        {
+                                            <option value="@option" selected="@(Model.Hedef == option)">@option</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="Hedef" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="Ekipman" class="form-fc-label"></label>
+                                    <select asp-for="Ekipman" class="form-fc-control">
+                                        @foreach (var option in FitnessCenter.Web.Models.ViewModels.AiRecommendVm.EkipmanSecenekleri)
+                                        {
+                                            <option value="@option" selected="@(Model.Ekipman == option)">@option</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="Ekipman" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="AntrenmanGunu" class="form-fc-label"></label>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <input asp-for="AntrenmanGunu" class="form-fc-control" type="range" 
+                                               min="1" max="7" id="antrenmanSlider" style="flex: 1;" />
+                                        <span id="antrenmanValue" class="badge-fc badge-fc-info" style="min-width: 60px; text-align: center;">
+                                            @Model.AntrenmanGunu gün
+                                        </span>
+                                    </div>
+                                    <span asp-validation-for="AntrenmanGunu" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-fc-group">
+                            <label asp-for="SaglikKisiti" class="form-fc-label"></label>
+                            <textarea asp-for="SaglikKisiti" class="form-fc-control" rows="3" 
+                                      placeholder="Örn: Bel ağrısı, diz problemi, kalp rahatsızlığı..."></textarea>
+                            <span class="form-fc-hint">Bu bilgi önerilerinizi kişiselleştirmek için kullanılacaktır.</span>
+                            <span asp-validation-for="SaglikKisiti" class="form-fc-error"></span>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        @* Fotoğraf Yükleme (Opsiyonel) *@
+                        <h5 class="mb-4" style="color: var(--fc-gray-700);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" 
+                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                                <circle cx="9" cy="9" r="2"/>
+                                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                            </svg>
+                            Fotoğraf (Opsiyonel)
+                        </h5>
+
+                        <div class="form-fc-group">
+                            <label asp-for="Photo" class="form-fc-label"></label>
+                            <div class="photo-upload-zone" id="photoUploadZone">
+                                <input asp-for="Photo" type="file" class="d-none" id="photoInput" 
+                                       accept="image/jpeg,image/png" />
+                                <div class="photo-upload-content" id="photoUploadContent">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" 
+                                         stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                                         style="color: var(--fc-gray-400);">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    <p class="mt-2 mb-1" style="color: var(--fc-gray-600);">
+                                        Fotoğraf yüklemek için tıklayın veya sürükleyin
+                                    </p>
+                                    <small style="color: var(--fc-gray-400);">
+                                        JPG veya PNG, maksimum 2 MB
+                                    </small>
+                                </div>
+                                <div class="photo-preview d-none" id="photoPreview">
+                                    <img id="previewImage" src="" alt="Önizleme" />
+                                    <button type="button" class="btn-remove-photo" id="removePhotoBtn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" 
+                                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18"/>
+                                            <line x1="6" y1="6" x2="18" y2="18"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <span asp-validation-for="Photo" class="form-fc-error"></span>
+                            <span class="form-fc-hint">Fotoğraf zorunlu değildir, yalnızca loglama amaçlı kullanılacaktır.</span>
+                        </div>
+
+                        @* Validation Summary *@
+                        <div asp-validation-summary="ModelOnly" class="alert-fc alert-fc-danger mb-4" style="display: none;"></div>
+
+                        @* Submit Button *@
+                        <div class="d-flex justify-content-end gap-3 mt-4">
+                            <a asp-controller="Home" asp-action="Index" class="btn-fc btn-fc-secondary">
+                                İptal
+                            </a>
+                            <button type="submit" class="btn-fc btn-fc-primary btn-fc-lg" id="submitBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" 
+                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 8V4H8"/>
+                                    <rect width="16" height="12" x="4" y="8" rx="2"/>
+                                    <path d="M2 14h2"/>
+                                    <path d="M20 14h2"/>
+                                    <path d="M15 13v2"/>
+                                    <path d="M9 13v2"/>
+                                </svg>
+                                Öneri Al
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <style>
+        .photo-upload-zone {
+            border: 2px dashed var(--fc-gray-300);
+            border-radius: var(--fc-radius-lg);
+            padding: var(--fc-spacing-8);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--fc-transition-fast);
+            background-color: var(--fc-gray-50);
+        }
+
+        .photo-upload-zone:hover,
+        .photo-upload-zone.dragover {
+            border-color: var(--fc-primary);
+            background-color: var(--fc-primary-light);
+        }
+
+        .photo-preview {
+            position: relative;
+            display: inline-block;
+        }
+
+        .photo-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: var(--fc-radius-lg);
+            object-fit: cover;
+        }
+
+        .btn-remove-photo {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: var(--fc-danger);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--fc-transition-fast);
+        }
+
+        .btn-remove-photo:hover {
+            background-color: #dc2626;
+        }
+
+        /* Loading state for submit button */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .btn-loading span,
+        .btn-loading svg {
+            opacity: 0;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Antrenman günü slider
+            const slider = document.getElementById('antrenmanSlider');
+            const valueDisplay = document.getElementById('antrenmanValue');
+            
+            if (slider && valueDisplay) {
+                slider.addEventListener('input', function() {
+                    valueDisplay.textContent = this.value + ' gün';
+                });
+            }
+
+            // Photo upload
+            const uploadZone = document.getElementById('photoUploadZone');
+            const photoInput = document.getElementById('photoInput');
+            const uploadContent = document.getElementById('photoUploadContent');
+            const photoPreview = document.getElementById('photoPreview');
+            const previewImage = document.getElementById('previewImage');
+            const removeBtn = document.getElementById('removePhotoBtn');
+
+            if (uploadZone && photoInput) {
+                uploadZone.addEventListener('click', function() {
+                    photoInput.click();
+                });
+
+                uploadZone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
+                });
+
+                uploadZone.addEventListener('dragleave', function() {
+                    this.classList.remove('dragover');
+                });
+
+                uploadZone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        photoInput.files = files;
+                        showPreview(files[0]);
+                    }
+                });
+
+                photoInput.addEventListener('change', function() {
+                    if (this.files.length > 0) {
+                        showPreview(this.files[0]);
+                    }
+                });
+
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        photoInput.value = '';
+                        uploadContent.classList.remove('d-none');
+                        photoPreview.classList.add('d-none');
+                    });
+                }
+
+                function showPreview(file) {
+                    // Validate file
+                    const validTypes = ['image/jpeg', 'image/png'];
+                    const maxSize = 2 * 1024 * 1024; // 2MB
+
+                    if (!validTypes.includes(file.type)) {
+                        alert('Sadece JPG ve PNG formatları kabul edilmektedir.');
+                        return;
+                    }
+
+                    if (file.size > maxSize) {
+                        alert('Dosya boyutu en fazla 2 MB olabilir.');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        uploadContent.classList.add('d-none');
+                        photoPreview.classList.remove('d-none');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // Form submit loading state
+            const form = document.getElementById('aiRecommendForm');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (form && submitBtn) {
+                form.addEventListener('submit', function() {
+                    submitBtn.classList.add('btn-loading');
+                    submitBtn.innerHTML = '<span>Öneri Alınıyor...</span>';
+                    submitBtn.disabled = true;
+                });
+            }
+        });
+    </script>
+}

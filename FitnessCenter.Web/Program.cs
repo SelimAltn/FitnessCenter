@@ -1,5 +1,8 @@
 ﻿using FitnessCenter.Web.Data.Context;
+using FitnessCenter.Web.Models;
 using FitnessCenter.Web.Models.Entities;
+using FitnessCenter.Web.Services.Implementations;
+using FitnessCenter.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -52,8 +55,17 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("Member");
     });
 });
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+
+// ===== AI Servis Yapılandırması =====
+// AiSettings binding (appsettings.json + User Secrets + Environment Variables)
+builder.Services.Configure<AiSettings>(
+    builder.Configuration.GetSection("AiSettings"));
+
+// IMemoryCache (opsiyonel ikincil cache)
+builder.Services.AddMemoryCache();
+
+// HttpClient ile AI Recommendation Service
+builder.Services.AddHttpClient<IAiRecommendationService, AiRecommendationService>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
