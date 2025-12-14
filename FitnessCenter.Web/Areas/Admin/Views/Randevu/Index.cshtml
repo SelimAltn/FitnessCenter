@@ -33,7 +33,7 @@
             </div>
             <div class="page-header-actions">
                 <a asp-action="Create" class="btn-fc btn-fc-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     Yeni Randevu
                 </a>
             </div>
@@ -100,7 +100,7 @@
             <div class="card-body">
                 <div class="empty-state">
                     <div class="empty-state-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     </div>
                     <h3 class="empty-state-title">Randevu bulunamadı</h3>
                     <p class="empty-state-text">Filtreleri değiştirmeyi deneyin veya yeni randevu oluşturun.</p>
@@ -153,13 +153,13 @@
                                     <td>
                                         <div class="d-flex gap-2 flex-wrap">
                                             <a asp-action="Details" asp-route-id="@item.Id" class="btn-fc btn-fc-secondary btn-fc-sm">Detay</a>
-
+                                            
                                             <form asp-action="DurumDegistir" method="post" class="d-inline">
                                                 <input type="hidden" name="id" value="@item.Id" />
                                                 <input type="hidden" name="yeniDurum" value="Onaylandı" />
                                                 <button type="submit" class="btn-fc btn-fc-success btn-fc-sm" @(item.Durum == "Onaylandı" ? "disabled" : "")>Onayla</button>
                                             </form>
-
+                                            
                                             <form asp-action="DurumDegistir" method="post" class="d-inline">
                                                 <input type="hidden" name="id" value="@item.Id" />
                                                 <input type="hidden" name="yeniDurum" value="İptal" />

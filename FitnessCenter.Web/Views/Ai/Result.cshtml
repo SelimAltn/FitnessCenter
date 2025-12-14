@@ -30,16 +30,10 @@
                         Önbellekten
                     </span>
                 }
-                @if (Model.IsFallback)
+                @if (!string.IsNullOrEmpty(Model.RecommendationType))
                 {
-                    <span class="badge-fc badge-fc-warning">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" 
-                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                            <line x1="12" y1="9" x2="12" y2="13"/>
-                            <line x1="12" y1="17" x2="12.01" y2="17"/>
-                        </svg>
-                        Otomatik Öneri
+                    <span class="badge-fc badge-fc-primary ms-1">
+                        @Model.RecommendationType
                     </span>
                 }
             </div>
@@ -48,6 +42,57 @@
 </div>
 
 <div class="container pb-5">
+    @* ===== AI/Fallback Durum Bildirimi (ÇOK ÖNEMLİ) ===== *@
+    @if (Model.IsFallback)
+    {
+        <div class="alert-fc alert-fc-warning mb-4" style="border-left: 4px solid #f59e0b; background-color: #fffbeb;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" 
+                         stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div>
+                    <strong style="color: #b45309; font-size: 1.1rem;">⚠️ AI Erişilemedi - Sistem Otomatik Öneri (Fallback)</strong>
+                    <p class="mb-0 mt-1" style="color: #92400e;">
+                        AI servisi şu an kullanılamıyor. Aşağıdaki öneriler sistem tarafından otomatik olarak oluşturuldu.
+                        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                        {
+                            <br/><small>Detay: @Model.ErrorMessage</small>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert-fc alert-fc-success mb-4" style="border-left: 4px solid #10b981; background-color: #ecfdf5;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" 
+                         stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <div>
+                    <strong style="color: #059669; font-size: 1.1rem;">✅ Öneri AI Tarafından Üretildi</strong>
+                    <p class="mb-0 mt-1" style="color: #047857;">
+                        Bu öneri @(Model.ModelUsed ?? "Gemini AI") modeli tarafından kişiselleştirilmiş olarak oluşturuldu.
+                        @if (!string.IsNullOrEmpty(Model.RecommendationType))
+                        {
+                            <span class="ms-2 badge" style="background-color: #d1fae5; color: #065f46;">@Model.RecommendationType</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+
     @* Hata durumu *@
     @if (!Model.IsSuccess)
     {

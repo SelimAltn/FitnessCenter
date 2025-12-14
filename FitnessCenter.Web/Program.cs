@@ -3,6 +3,7 @@ using FitnessCenter.Web.Models;
 using FitnessCenter.Web.Models.Entities;
 using FitnessCenter.Web.Services.Implementations;
 using FitnessCenter.Web.Services.Interfaces;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -10,6 +11,17 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
+
+// ===== Upload Size Limit (foto yüklemede crash önleme) =====
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10 MB
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB
+});
 
 // Swagger servisleri:
 builder.Services.AddEndpointsApiExplorer();

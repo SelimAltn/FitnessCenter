@@ -51,8 +51,18 @@ namespace FitnessCenter.Web.Models.ViewModels
         public string? ErrorMessage { get; set; }
 
         /// <summary>
-        /// Fallback yanıt mı? (API key yoksa)
+        /// Fallback yanıt mı? (API key yoksa veya hata durumunda)
         /// </summary>
         public bool IsFallback { get; set; }
+
+        /// <summary>
+        /// Öneri türü: "PhotoBased", "MeasurementBased", "Combined"
+        /// </summary>
+        public string? RecommendationType { get; set; }
+
+        /// <summary>
+        /// Kullanılan AI model adı (örn: gemini-2.0-flash, fallback)
+        /// </summary>
+        public string? ModelUsed { get; set; }
     }
 }

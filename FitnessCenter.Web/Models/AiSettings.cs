@@ -7,9 +7,9 @@ namespace FitnessCenter.Web.Models
     public class AiSettings
     {
         /// <summary>
-        /// AI API endpoint URL'i (OpenAI uyumlu)
+        /// Gemini API base endpoint URL'i
         /// </summary>
-        public string Endpoint { get; set; } = "https://api.openai.com/v1/chat/completions";
+        public string Endpoint { get; set; } = "https://generativelanguage.googleapis.com/v1beta/models";
 
         /// <summary>
         /// API Key - User Secrets veya Environment Variable'dan gelecek
@@ -18,9 +18,9 @@ namespace FitnessCenter.Web.Models
         public string ApiKey { get; set; } = "";
 
         /// <summary>
-        /// Kullanılacak model adı
+        /// Kullanılacak Gemini model adı
         /// </summary>
-        public string Model { get; set; } = "gpt-4o-mini";
+        public string Model { get; set; } = "gemini-2.0-flash";
 
         /// <summary>
         /// API çağrı timeout süresi (saniye)

@@ -24,7 +24,7 @@ namespace FitnessCenter.Web.Controllers
         // İzin verilen foto formatları ve max boyut
         private static readonly string[] AllowedPhotoExtensions = { ".jpg", ".jpeg", ".png" };
         private static readonly string[] AllowedPhotoContentTypes = { "image/jpeg", "image/png" };
-        private const long MaxPhotoSize = 2 * 1024 * 1024; // 2 MB
+        private const long MaxPhotoSize = 5 * 1024 * 1024; // 5 MB (artırıldı)
 
         public AiController(
             IAiRecommendationService aiService,
@@ -100,34 +100,38 @@ namespace FitnessCenter.Web.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequestSizeLimit(10 * 1024 * 1024)] // 10 MB limit
         public async Task<IActionResult> Recommend(AiRecommendVm model)
         {
-            // 1. Üye kontrolü
-            var uye = await GetCurrentMemberAsync();
-            if (uye == null)
-            {
-                TempData["Error"] = "Sistemde size bağlı bir üye kaydı bulunamadı.";
-                return RedirectToAction("UyeOl", "Uyelik");
-            }
-
-            // 2. Foto validasyonu (opsiyonel ama varsa doğrula)
-            if (model.Photo != null && model.Photo.Length > 0)
-            {
-                var photoValidation = ValidatePhoto(model.Photo);
-                if (!photoValidation.isValid)
-                {
-                    ModelState.AddModelError(nameof(model.Photo), photoValidation.error!);
-                }
-            }
-
-            // 3. Model validasyonu
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             try
             {
+                // 1. Üye kontrolü
+                var uye = await GetCurrentMemberAsync();
+                if (uye == null)
+                {
+                    TempData["Error"] = "Sistemde size bağlı bir üye kaydı bulunamadı.";
+                    return RedirectToAction("UyeOl", "Uyelik");
+                }
+
+                // 2. Foto validasyonu (opsiyonel ama varsa doğrula)
+                if (model.Photo != null && model.Photo.Length > 0)
+                {
+                    var photoValidation = ValidatePhoto(model.Photo);
+                    if (!photoValidation.isValid)
+                    {
+                        ModelState.AddModelError(nameof(model.Photo), photoValidation.error!);
+                    }
+                }
+
+                // 3. Model validasyonu (IValidatableObject dahil)
+                if (!ModelState.IsValid)
+                {
+                    // Validation hatalarını logla
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                    _logger.LogWarning("AI Recommend validation failed: {Errors}", string.Join(", ", errors));
+                    return View(model);
+                }
+
                 // 4. AI servisi çağrısı (cache kontrolü dahil)
                 var result = await _aiService.GetRecommendationAsync(model, uye.Id);
 
@@ -138,9 +142,39 @@ namespace FitnessCenter.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "AI recommendation error for UyeId: {UyeId}", uye.Id);
-                TempData["Error"] = "Öneri alınırken bir hata oluştu. Lütfen tekrar deneyin.";
-                return View(model);
+                _logger.LogError(ex, "AI recommendation error - unhandled exception");
+                
+                // Fallback response oluştur
+                var fallbackResult = new AiResultVm
+                {
+                    IsSuccess = true,
+                    IsFallback = true,
+                    Summary = "Bir hata oluştu ancak size genel öneriler sunuyoruz.",
+                    WorkoutPlan = new List<string>
+                    {
+                        "Haftada 3-4 gün düzenli egzersiz yapın",
+                        "Kardiyo ve güç antrenmanlarını dengeli kombine edin",
+                        "Her antrenmandan önce ısınma ve sonra soğuma yapın"
+                    },
+                    NutritionTips = new List<string>
+                    {
+                        "Dengeli ve çeşitli beslenin",
+                        "Günde en az 2-3 litre su için",
+                        "İşlenmiş gıdalardan kaçının"
+                    },
+                    Warnings = new List<string>
+                    {
+                        "Bu öneriler genel niteliktedir",
+                        "Yeni bir programa başlamadan önce doktorunuza danışın"
+                    },
+                    ErrorMessage = "Sistem geçici olarak AI servisine ulaşamadı. Otomatik öneriler gösterilmektedir.",
+                    GeneratedAt = DateTime.UtcNow,
+                    RecommendationType = "Fallback",
+                    ModelUsed = "fallback"
+                };
+
+                TempData["AiResult"] = System.Text.Json.JsonSerializer.Serialize(fallbackResult);
+                return RedirectToAction(nameof(Result));
             }
         }
 
@@ -187,7 +221,7 @@ namespace FitnessCenter.Web.Controllers
             // Boyut kontrolü
             if (photo.Length > MaxPhotoSize)
             {
-                return (false, "Fotoğraf boyutu en fazla 2 MB olabilir.");
+                return (false, "Fotoğraf boyutu en fazla 5 MB olabilir.");
             }
 
             // Uzantı kontrolü

@@ -14,7 +14,7 @@ using System.Text.Json;
 namespace FitnessCenter.Web.Services.Implementations
 {
     /// <summary>
-    /// AI tabanlı fitness önerisi servisi implementasyonu
+    /// Gemini AI tabanlı fitness önerisi servisi implementasyonu
     /// </summary>
     public class AiRecommendationService : IAiRecommendationService
     {
@@ -51,17 +51,22 @@ namespace FitnessCenter.Web.Services.Implementations
             {
                 // 1. Foto byte'larını al (varsa)
                 byte[]? photoBytes = null;
+                string? photoMimeType = null;
                 if (input.Photo != null && input.Photo.Length > 0)
                 {
                     using var ms = new MemoryStream();
                     await input.Photo.CopyToAsync(ms);
                     photoBytes = ms.ToArray();
+                    photoMimeType = input.Photo.ContentType;
                 }
 
-                // 2. Input hash üret
+                // 2. Input senaryosunu belirle
+                var inputScenario = input.GetInputScenario();
+
+                // 3. Input hash üret
                 var inputHash = GenerateInputHash(input, photoBytes);
 
-                // 3. Cache kontrol (DB ana kaynak)
+                // 4. Cache kontrol (DB ana kaynak)
                 var cachedResult = await CheckDbCacheAsync(inputHash, uyeId);
                 if (cachedResult != null)
                 {
@@ -74,25 +79,34 @@ namespace FitnessCenter.Web.Services.Implementations
                     return cachedResult;
                 }
 
-                // 4. API yapılandırılmış mı?
+                // 5. API yapılandırılmış mı?
                 AiResultVm result;
                 if (!_settings.IsConfigured)
                 {
                     _logger.LogWarning("AI API key not configured, returning fallback response");
-                    result = GenerateFallbackResponse(input);
+                    result = GenerateFallbackResponse(input, inputScenario);
                 }
                 else
                 {
-                    // 5. AI API çağrısı
-                    result = await CallAiApiAsync(input);
+                    // 6. Gemini API çağrısı
+                    try
+                    {
+                        result = await CallGeminiApiAsync(input, photoBytes, photoMimeType, inputScenario);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Gemini API call failed, returning fallback");
+                        result = GenerateFallbackResponse(input, inputScenario);
+                        result.ErrorMessage = "AI servisine ulaşılamadı, otomatik öneri sunuldu.";
+                    }
                 }
 
                 stopwatch.Stop();
 
-                // 6. Sonucu DB'ye kaydet
-                await LogToDbAsync(input, result, uyeId, inputHash, stopwatch.ElapsedMilliseconds);
+                // 7. Sonucu DB'ye kaydet
+                await LogToDbAsync(input, result, uyeId, inputHash, stopwatch.ElapsedMilliseconds, inputScenario);
 
-                // 7. IMemoryCache'e ekle
+                // 8. IMemoryCache'e ekle
                 _memoryCache.Set(GetMemoryCacheKey(inputHash, uyeId), result, 
                     TimeSpan.FromHours(_settings.CacheHours));
 
@@ -103,12 +117,9 @@ namespace FitnessCenter.Web.Services.Implementations
                 stopwatch.Stop();
                 _logger.LogError(ex, "AI recommendation error for UyeId: {UyeId}", uyeId);
 
-                var errorResult = new AiResultVm
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "Öneri alınırken bir hata oluştu. Lütfen tekrar deneyin.",
-                    GeneratedAt = DateTime.UtcNow
-                };
+                var errorResult = GenerateFallbackResponse(input, "Error");
+                errorResult.IsSuccess = true;
+                errorResult.ErrorMessage = "Öneri alınırken bir hata oluştu. Sistem otomatik öneriler sunar.";
 
                 // Hatayı da logla
                 await LogErrorToDbAsync(input, ex.Message, uyeId, stopwatch.ElapsedMilliseconds);
@@ -120,19 +131,19 @@ namespace FitnessCenter.Web.Services.Implementations
         public string GenerateInputHash(AiRecommendVm input, byte[]? photoBytes = null)
         {
             var sb = new StringBuilder();
-            sb.Append(input.Boy);
+            sb.Append(input.Boy?.ToString() ?? "null");
             sb.Append('|');
-            sb.Append(input.Kilo);
+            sb.Append(input.Kilo?.ToString() ?? "null");
             sb.Append('|');
-            sb.Append(input.Yas);
+            sb.Append(input.Yas?.ToString() ?? "null");
             sb.Append('|');
             sb.Append(input.Cinsiyet ?? "");
             sb.Append('|');
-            sb.Append(input.Hedef);
+            sb.Append(input.Hedef ?? "");
             sb.Append('|');
-            sb.Append(input.AntrenmanGunu);
+            sb.Append(input.AntrenmanGunu?.ToString() ?? "null");
             sb.Append('|');
-            sb.Append(input.Ekipman);
+            sb.Append(input.Ekipman ?? "");
             sb.Append('|');
             sb.Append(input.SaglikKisiti ?? "");
 
@@ -191,40 +202,76 @@ namespace FitnessCenter.Web.Services.Implementations
         private static string GetMemoryCacheKey(string inputHash, int uyeId) 
             => $"ai_recommend_{uyeId}_{inputHash}";
 
-        private async Task<AiResultVm> CallAiApiAsync(AiRecommendVm input)
+        private async Task<AiResultVm> CallGeminiApiAsync(AiRecommendVm input, byte[]? photoBytes, string? mimeType, string inputScenario)
         {
-            var prompt = BuildPrompt(input);
+            // Gemini API URL oluştur
+            var apiUrl = $"{_settings.Endpoint}/{_settings.Model}:generateContent?key={_settings.ApiKey}";
 
-            var requestBody = new
-            {
-                model = _settings.Model,
-                messages = new[]
-                {
-                    new { role = "system", content = GetSystemPrompt() },
-                    new { role = "user", content = prompt }
-                },
-                temperature = 0.7,
-                max_tokens = 1500
-            };
+            // Request body oluştur
+            var requestBody = BuildGeminiRequest(input, photoBytes, mimeType, inputScenario);
 
             var jsonContent = JsonSerializer.Serialize(requestBody);
             var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_settings.ApiKey}");
+            _logger.LogInformation("Calling Gemini API with scenario: {Scenario}", inputScenario);
 
-            var response = await _httpClient.PostAsync(_settings.Endpoint, httpContent);
-            response.EnsureSuccessStatusCode();
+            var response = await _httpClient.PostAsync(apiUrl, httpContent);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Gemini API error: {StatusCode} - {Error}", response.StatusCode, errorContent);
+                throw new HttpRequestException($"Gemini API returned {response.StatusCode}");
+            }
 
             var responseJson = await response.Content.ReadAsStringAsync();
-            return ParseAiResponse(responseJson, input);
+            return ParseGeminiResponse(responseJson, input, inputScenario);
+        }
+
+        private object BuildGeminiRequest(AiRecommendVm input, byte[]? photoBytes, string? mimeType, string inputScenario)
+        {
+            var parts = new List<object>();
+
+            // System prompt + user prompt
+            var systemPrompt = GetSystemPrompt();
+            var userPrompt = BuildPrompt(input, inputScenario);
+            
+            parts.Add(new { text = systemPrompt + "\n\n" + userPrompt });
+
+            // Eğer fotoğraf varsa ekle
+            if (photoBytes != null && photoBytes.Length > 0 && !string.IsNullOrEmpty(mimeType))
+            {
+                var base64Image = Convert.ToBase64String(photoBytes);
+                parts.Add(new
+                {
+                    inline_data = new
+                    {
+                        mime_type = mimeType,
+                        data = base64Image
+                    }
+                });
+            }
+
+            return new
+            {
+                contents = new[]
+                {
+                    new { parts }
+                },
+                generationConfig = new
+                {
+                    temperature = 0.7,
+                    maxOutputTokens = 1500,
+                    responseMimeType = "application/json"
+                }
+            };
         }
 
         private static string GetSystemPrompt()
         {
-            return @"Sen bir fitness ve beslenme uzmanısın. Kullanıcının fiziksel özelliklerine ve hedeflerine göre kişiselleştirilmiş antrenman ve beslenme önerisi veriyorsun.
+            return @"Sen bir fitness ve beslenme uzmanısın. Kullanıcının fiziksel özelliklerine, hedeflerine ve/veya fotoğrafına göre kişiselleştirilmiş antrenman ve beslenme önerisi veriyorsun.
 
-Yanıtını SADECE aşağıdaki JSON formatında ver, başka hiçbir şey ekleme:
+SADECE aşağıdaki JSON formatında yanıt ver, başka hiçbir şey ekleme, markdown kullanma, code block kullanma:
 {
   ""summary"": ""2-3 cümlelik özet"",
   ""workoutPlan"": [""madde1"", ""madde2"", ...],
@@ -236,31 +283,96 @@ Kurallar:
 - Türkçe yaz
 - Her liste maksimum 6 madde olsun
 - Kısa ve net cümleler kullan
-- Sağlık kısıtlarını dikkate al";
+- Sağlık kısıtlarını dikkate al
+- Fotoğraf varsa vücut tipini analiz et ama kesin boy/kilo tahmini yapma";
         }
 
-        private static string BuildPrompt(AiRecommendVm input)
+        private static string BuildPrompt(AiRecommendVm input, string inputScenario)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("Kullanıcı Bilgileri:");
-            sb.AppendLine($"- Boy: {input.Boy} cm");
-            sb.AppendLine($"- Kilo: {input.Kilo} kg");
-            sb.AppendLine($"- Yaş: {input.Yas}");
-            
-            if (!string.IsNullOrEmpty(input.Cinsiyet))
-                sb.AppendLine($"- Cinsiyet: {input.Cinsiyet}");
-            
-            sb.AppendLine($"- Hedef: {input.Hedef}");
-            sb.AppendLine($"- Haftalık Antrenman Günü: {input.AntrenmanGunu}");
-            sb.AppendLine($"- Ekipman: {input.Ekipman}");
 
-            if (!string.IsNullOrEmpty(input.SaglikKisiti))
-                sb.AppendLine($"- Sağlık Kısıtları: {input.SaglikKisiti}");
+            switch (inputScenario)
+            {
+                case "PhotoOnly":
+                    sb.AppendLine("📷 FOTOĞRAF ANALİZİ MODU");
+                    sb.AppendLine("Kullanıcı sadece fotoğraf yükledi, ölçü bilgisi vermedi.");
+                    sb.AppendLine("Fotoğraftan vücut tipini analiz ederek genel öneri ver.");
+                    sb.AppendLine("DİKKAT: Kesin boy/kilo tahmini yapma, sadece görsel değerlendirme yap.");
+                    sb.AppendLine();
+                    
+                    if (!string.IsNullOrEmpty(input.Hedef))
+                        sb.AppendLine($"- Hedef: {input.Hedef}");
+                    else
+                        sb.AppendLine("- Hedef: Genel fitness");
+                    
+                    if (input.AntrenmanGunu.HasValue)
+                        sb.AppendLine($"- Haftalık Antrenman Günü: {input.AntrenmanGunu}");
+                    
+                    if (!string.IsNullOrEmpty(input.Ekipman))
+                        sb.AppendLine($"- Ekipman: {input.Ekipman}");
+                    
+                    if (!string.IsNullOrEmpty(input.Cinsiyet))
+                        sb.AppendLine($"- Cinsiyet: {input.Cinsiyet}");
+                    
+                    if (!string.IsNullOrEmpty(input.SaglikKisiti))
+                        sb.AppendLine($"- Sağlık Kısıtları: {input.SaglikKisiti}");
+                    break;
 
-            // BMI hesapla
-            var heightM = input.Boy / 100m;
-            var bmi = input.Kilo / (heightM * heightM);
-            sb.AppendLine($"- BMI: {bmi:F1}");
+                case "Combined":
+                    sb.AppendLine("📷📊 KOMBİNE ANALİZ MODU");
+                    sb.AppendLine("Kullanıcı hem fotoğraf hem ölçü bilgileri verdi.");
+                    sb.AppendLine("Fotoğraf + ölçüler birlikte değerlendirilerek en iyi öneri verilecek.");
+                    sb.AppendLine();
+                    sb.AppendLine("Kullanıcı Bilgileri:");
+                    sb.AppendLine($"- Boy: {input.Boy} cm");
+                    sb.AppendLine($"- Kilo: {input.Kilo} kg");
+                    sb.AppendLine($"- Yaş: {input.Yas}");
+                    
+                    if (!string.IsNullOrEmpty(input.Cinsiyet))
+                        sb.AppendLine($"- Cinsiyet: {input.Cinsiyet}");
+                    
+                    sb.AppendLine($"- Hedef: {input.Hedef ?? "Genel fitness"}");
+                    sb.AppendLine($"- Haftalık Antrenman Günü: {input.AntrenmanGunu ?? 3}");
+                    sb.AppendLine($"- Ekipman: {input.Ekipman ?? "Gym"}");
+
+                    if (!string.IsNullOrEmpty(input.SaglikKisiti))
+                        sb.AppendLine($"- Sağlık Kısıtları: {input.SaglikKisiti}");
+
+                    // BMI hesapla
+                    if (input.Boy.HasValue && input.Kilo.HasValue)
+                    {
+                        var heightM = input.Boy.Value / 100m;
+                        var bmi = input.Kilo.Value / (heightM * heightM);
+                        sb.AppendLine($"- BMI: {bmi:F1}");
+                    }
+                    break;
+
+                default: // DataOnly
+                    sb.AppendLine("📊 ÖLÇÜ BİLGİSİ MODU");
+                    sb.AppendLine("Kullanıcı Bilgileri:");
+                    sb.AppendLine($"- Boy: {input.Boy} cm");
+                    sb.AppendLine($"- Kilo: {input.Kilo} kg");
+                    sb.AppendLine($"- Yaş: {input.Yas}");
+                    
+                    if (!string.IsNullOrEmpty(input.Cinsiyet))
+                        sb.AppendLine($"- Cinsiyet: {input.Cinsiyet}");
+                    
+                    sb.AppendLine($"- Hedef: {input.Hedef ?? "Genel fitness"}");
+                    sb.AppendLine($"- Haftalık Antrenman Günü: {input.AntrenmanGunu ?? 3}");
+                    sb.AppendLine($"- Ekipman: {input.Ekipman ?? "Gym"}");
+
+                    if (!string.IsNullOrEmpty(input.SaglikKisiti))
+                        sb.AppendLine($"- Sağlık Kısıtları: {input.SaglikKisiti}");
+
+                    // BMI hesapla
+                    if (input.Boy.HasValue && input.Kilo.HasValue)
+                    {
+                        var heightM = input.Boy.Value / 100m;
+                        var bmi = input.Kilo.Value / (heightM * heightM);
+                        sb.AppendLine($"- BMI: {bmi:F1}");
+                    }
+                    break;
+            }
 
             sb.AppendLine();
             sb.AppendLine("Bu bilgilere göre kişiselleştirilmiş antrenman planı ve beslenme önerisi ver.");
@@ -268,27 +380,38 @@ Kurallar:
             return sb.ToString();
         }
 
-        private AiResultVm ParseAiResponse(string responseJson, AiRecommendVm input)
+        private AiResultVm ParseGeminiResponse(string responseJson, AiRecommendVm input, string inputScenario)
         {
             try
             {
                 using var doc = JsonDocument.Parse(responseJson);
                 var root = doc.RootElement;
 
-                // OpenAI response yapısı: choices[0].message.content
-                var content = root
-                    .GetProperty("choices")[0]
-                    .GetProperty("message")
-                    .GetProperty("content")
-                    .GetString();
+                // Gemini response yapısı: candidates[0].content.parts[0].text
+                string? content = null;
+                
+                if (root.TryGetProperty("candidates", out var candidates) && 
+                    candidates.GetArrayLength() > 0)
+                {
+                    var firstCandidate = candidates[0];
+                    if (firstCandidate.TryGetProperty("content", out var contentObj) &&
+                        contentObj.TryGetProperty("parts", out var partsArray) &&
+                        partsArray.GetArrayLength() > 0)
+                    {
+                        var firstPart = partsArray[0];
+                        if (firstPart.TryGetProperty("text", out var textProp))
+                        {
+                            content = textProp.GetString();
+                        }
+                    }
+                }
 
                 if (string.IsNullOrEmpty(content))
                 {
-                    throw new InvalidOperationException("Empty AI response");
+                    throw new InvalidOperationException("Empty Gemini response");
                 }
 
                 // Content içindeki JSON'u parse et
-                // Bazen markdown code block içinde gelebilir
                 content = ExtractJsonFromContent(content);
 
                 using var contentDoc = JsonDocument.Parse(content);
@@ -304,15 +427,17 @@ Kurallar:
                     IsCached = false,
                     IsFallback = false,
                     GeneratedAt = DateTime.UtcNow,
-                    InputSummary = BuildInputSummary(input)
+                    InputSummary = BuildInputSummary(input, inputScenario),
+                    RecommendationType = GetRecommendationTypeLabel(inputScenario),
+                    ModelUsed = _settings.Model
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to parse AI response: {Response}", responseJson);
+                _logger.LogError(ex, "Failed to parse Gemini response: {Response}", responseJson);
                 
                 // Parse hatası olursa fallback döndür
-                var fallback = GenerateFallbackResponse(input);
+                var fallback = GenerateFallbackResponse(input, inputScenario);
                 fallback.ErrorMessage = "AI yanıtı işlenirken hata oluştu, alternatif öneri sunuldu.";
                 return fallback;
             }
@@ -349,7 +474,18 @@ Kurallar:
             return list;
         }
 
-        private AiResultVm GenerateFallbackResponse(AiRecommendVm input)
+        private static string GetRecommendationTypeLabel(string inputScenario)
+        {
+            return inputScenario switch
+            {
+                "PhotoOnly" => "Fotoğraf Analizi",
+                "Combined" => "Fotoğraf + Ölçüler",
+                "DataOnly" => "Ölçü Bilgileri",
+                _ => "Genel Öneri"
+            };
+        }
+
+        private AiResultVm GenerateFallbackResponse(AiRecommendVm input, string inputScenario)
         {
             var result = new AiResultVm
             {
@@ -357,27 +493,65 @@ Kurallar:
                 IsCached = false,
                 IsFallback = true,
                 GeneratedAt = DateTime.UtcNow,
-                InputSummary = BuildInputSummary(input)
+                InputSummary = BuildInputSummary(input, inputScenario),
+                RecommendationType = GetRecommendationTypeLabel(inputScenario) + " (Fallback)",
+                ModelUsed = "fallback"
             };
 
-            // BMI hesapla
-            var heightM = input.Boy / 100m;
-            var bmi = input.Kilo / (heightM * heightM);
-
-            // Özet oluştur
-            var bmiCategory = bmi switch
+            // Senaryoya göre özet
+            if (inputScenario == "PhotoOnly")
             {
-                < 18.5m => "düşük kilolu",
-                < 25m => "normal kilolu",
-                < 30m => "fazla kilolu",
-                _ => "obez sınıfında"
-            };
+                result.Summary = "Fotoğrafınız değerlendirildi. Genel fitness düzeyinize göre öneriler sunuyoruz. " +
+                    "Daha doğru sonuçlar için boy, kilo ve yaş bilgilerinizi de girebilirsiniz.";
+                
+                result.Warnings = new List<string>
+                {
+                    "Bu öneriler fotoğraf analizi yapılamadığı için genel niteliktedir",
+                    "Kesin sonuçlar için ölçü bilgilerinizi de girmenizi öneririz",
+                    "Yeni bir egzersiz programına başlamadan önce doktorunuza danışın"
+                };
+            }
+            else if (input.Boy.HasValue && input.Kilo.HasValue)
+            {
+                // BMI hesapla
+                var heightM = input.Boy.Value / 100m;
+                var bmi = input.Kilo.Value / (heightM * heightM);
 
-            result.Summary = $"BMI değeriniz {bmi:F1} olup {bmiCategory} kategorisinde yer almaktasınız. " +
-                           $"{input.Hedef} hedefinize ulaşmak için haftada {input.AntrenmanGunu} gün düzenli antrenman yapmanızı öneriyoruz.";
+                var bmiCategory = bmi switch
+                {
+                    < 18.5m => "düşük kilolu",
+                    < 25m => "normal kilolu",
+                    < 30m => "fazla kilolu",
+                    _ => "obez sınıfında"
+                };
+
+                var hedef = input.Hedef ?? "Fit Kalma";
+                var antrenmanGunu = input.AntrenmanGunu ?? 3;
+
+                result.Summary = $"BMI değeriniz {bmi:F1} olup {bmiCategory} kategorisinde yer almaktasınız. " +
+                               $"{hedef} hedefinize ulaşmak için haftada {antrenmanGunu} gün düzenli antrenman yapmanızı öneriyoruz.";
+                
+                result.Warnings = new List<string>
+                {
+                    "Bu öneriler genel niteliktedir, kişisel sağlık durumunuza göre değişebilir",
+                    "Yeni bir egzersiz programına başlamadan önce doktorunuza danışın"
+                };
+            }
+            else
+            {
+                result.Summary = "Genel fitness önerileri sunuyoruz. Daha kişiselleştirilmiş öneriler için " +
+                    "boy, kilo ve yaş bilgilerinizi girmenizi öneririz.";
+                
+                result.Warnings = new List<string>
+                {
+                    "Bu öneriler genel niteliktedir",
+                    "Yeni bir programa başlamadan önce doktorunuza danışın"
+                };
+            }
 
             // Hedef bazlı antrenman planı
-            result.WorkoutPlan = input.Hedef switch
+            var targetHedef = input.Hedef ?? "Fit Kalma";
+            result.WorkoutPlan = targetHedef switch
             {
                 "Kilo Verme" => new List<string>
                 {
@@ -393,7 +567,7 @@ Kurallar:
                     "Her kas grubunu haftada 2 kez çalıştırın",
                     "8-12 tekrar aralığında çalışın (hipertrofi)",
                     "Progresif yüklenme prensibini uygulayın",
-                    "Dinlenme günlerini atlamamın, kaslar dinlenirken büyür"
+                    "Dinlenme günlerini atlamayın, kaslar dinlenirken büyür"
                 },
                 _ => new List<string>
                 {
@@ -406,7 +580,8 @@ Kurallar:
             };
 
             // Ekipmana göre notlar ekle
-            var ekipmanNotu = input.Ekipman switch
+            var ekipman = input.Ekipman ?? "Gym (Salon erişimi)";
+            var ekipmanNotu = ekipman switch
             {
                 "Bodyweight (Alet yok)" => "Vücut ağırlığı egzersizleri: şınav, mekik, squat, plank",
                 "Dumbbell (Evde ağırlık)" => "Dumbbell ile: biceps curl, shoulder press, goblet squat",
@@ -415,7 +590,7 @@ Kurallar:
             result.WorkoutPlan.Add(ekipmanNotu);
 
             // Beslenme önerileri
-            result.NutritionTips = input.Hedef switch
+            result.NutritionTips = targetHedef switch
             {
                 "Kilo Verme" => new List<string>
                 {
@@ -445,13 +620,6 @@ Kurallar:
                 }
             };
 
-            // Uyarılar
-            result.Warnings = new List<string>
-            {
-                "Bu öneriler genel niteliktedir, kişisel sağlık durumunuza göre değişebilir",
-                "Yeni bir egzersiz programına başlamadan önce doktorunuza danışın"
-            };
-
             // Sağlık kısıtı varsa ekle
             if (!string.IsNullOrEmpty(input.SaglikKisiti))
             {
@@ -460,31 +628,64 @@ Kurallar:
             }
 
             // Yaşa göre uyarı
-            if (input.Yas > 50)
+            if (input.Yas.HasValue)
             {
-                result.Warnings.Add("50 yaş üstü için düşük etkili egzersizler tercih edilebilir");
-            }
-            else if (input.Yas < 18)
-            {
-                result.Warnings.Add("18 yaş altı için ağır ağırlık antrenmanları önerilmez");
+                if (input.Yas > 50)
+                {
+                    result.Warnings.Add("50 yaş üstü için düşük etkili egzersizler tercih edilebilir");
+                }
+                else if (input.Yas < 18)
+                {
+                    result.Warnings.Add("18 yaş altı için ağır ağırlık antrenmanları önerilmez");
+                }
             }
 
             return result;
         }
 
-        private static string BuildInputSummary(AiRecommendVm input)
+        private static string BuildInputSummary(AiRecommendVm input, string inputScenario)
         {
-            return $"{input.Boy}cm, {input.Kilo}kg, {input.Yas} yaş | Hedef: {input.Hedef} | " +
-                   $"Antrenman: Haftada {input.AntrenmanGunu} gün | Ekipman: {input.Ekipman}";
+            var sb = new StringBuilder();
+
+            if (inputScenario == "PhotoOnly")
+            {
+                sb.Append("📷 Fotoğraf ile analiz");
+            }
+            else if (input.Boy.HasValue && input.Kilo.HasValue && input.Yas.HasValue)
+            {
+                sb.Append($"{input.Boy}cm, {input.Kilo}kg, {input.Yas} yaş");
+            }
+
+            if (!string.IsNullOrEmpty(input.Hedef))
+            {
+                sb.Append($" | Hedef: {input.Hedef}");
+            }
+
+            if (input.AntrenmanGunu.HasValue)
+            {
+                sb.Append($" | Haftada {input.AntrenmanGunu} gün");
+            }
+
+            if (!string.IsNullOrEmpty(input.Ekipman))
+            {
+                sb.Append($" | {input.Ekipman}");
+            }
+
+            if (inputScenario == "Combined")
+            {
+                sb.Append(" | 📷+📊");
+            }
+
+            return sb.ToString();
         }
 
         private async Task LogToDbAsync(AiRecommendVm input, AiResultVm result, int uyeId, 
-            string inputHash, long durationMs)
+            string inputHash, long durationMs, string inputScenario)
         {
             var log = new AiLog
             {
                 UyeId = uyeId,
-                SoruMetni = BuildInputSummary(input),
+                SoruMetni = BuildInputSummary(input, inputScenario),
                 CevapMetni = result.Summary,
                 OlusturulmaZamani = DateTime.UtcNow,
                 InputHash = inputHash,
@@ -492,7 +693,8 @@ Kurallar:
                 ResponseJson = JsonSerializer.Serialize(result),
                 ModelName = result.IsFallback ? "fallback" : _settings.Model,
                 DurationMs = (int)durationMs,
-                IsSuccess = result.IsSuccess
+                IsSuccess = result.IsSuccess,
+                ErrorMessage = result.ErrorMessage
             };
 
             _context.AiLoglar.Add(log);
@@ -505,7 +707,7 @@ Kurallar:
             var log = new AiLog
             {
                 UyeId = uyeId,
-                SoruMetni = BuildInputSummary(input),
+                SoruMetni = BuildInputSummary(input, input.GetInputScenario()),
                 CevapMetni = "Hata oluştu",
                 OlusturulmaZamani = DateTime.UtcNow,
                 InputHash = null,
