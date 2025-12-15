@@ -20,7 +20,7 @@ namespace FitnessCenter.Web.Models
         /// <summary>
         /// Kullanılacak Gemini model adı
         /// </summary>
-        public string Model { get; set; } = "gemini-2.0-flash";
+        public string Model { get; set; } = "gemini-1.5-pro";
 
         /// <summary>
         /// API çağrı timeout süresi (saniye)

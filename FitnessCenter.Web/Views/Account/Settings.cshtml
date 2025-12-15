@@ -1,0 +1,127 @@
+@model FitnessCenter.Web.Models.ViewModels.SettingsViewModel
+
+@{
+    ViewData["Title"] = "Ayarlar";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Page Header -->
+            <div class="mb-4">
+                <h1 class="mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" style="color: var(--fc-primary);">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Ayarlar
+                </h1>
+                <p class="text-muted">Hesap tercihlerinizi yönetin</p>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert-fc alert-fc-success mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            <!-- Tema Ayarları -->
+            <div class="card-fc mb-4">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                    </svg>
+                    Görünüm
+                </div>
+                <div class="card-body">
+                    <form asp-action="Settings" method="post">
+                        <div class="form-fc-group">
+                            <label class="form-fc-label">Tema Seçimi</label>
+                            <div class="d-flex gap-4 mt-2">
+                                <div class="form-fc-check">
+                                    <input type="radio" asp-for="ThemePreference" value="Light" id="themeLight" />
+                                    <label for="themeLight" class="form-fc-label mb-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                            <circle cx="12" cy="12" r="4"/>
+                                            <path d="M12 2v2"/>
+                                            <path d="M12 20v2"/>
+                                            <path d="m4.93 4.93 1.41 1.41"/>
+                                            <path d="m17.66 17.66 1.41 1.41"/>
+                                            <path d="M2 12h2"/>
+                                            <path d="M20 12h2"/>
+                                            <path d="m6.34 17.66-1.41 1.41"/>
+                                            <path d="m19.07 4.93-1.41 1.41"/>
+                                        </svg>
+                                        Light
+                                    </label>
+                                </div>
+                                <div class="form-fc-check">
+                                    <input type="radio" asp-for="ThemePreference" value="Dark" id="themeDark" />
+                                    <label for="themeDark" class="form-fc-label mb-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                                        </svg>
+                                        Dark
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-fc btn-fc-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            Kaydet
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tehlikeli Alan: Hesap Silme -->
+            <div class="card-fc" style="border-color: var(--fc-danger);">
+                <div class="card-header" style="background-color: var(--fc-danger-light); color: #991b1b;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    Tehlikeli Alan
+                </div>
+                <div class="card-body">
+                    <h4 class="mb-2" style="color: var(--fc-danger);">Hesabı Sil</h4>
+                    <p class="text-muted mb-3">
+                        Hesabınızı sildiğinizde tüm verileriniz (üyelikler, randevular, AI öneri geçmişi) kalıcı olarak silinecektir.
+                        <strong>Bu işlem geri alınamaz.</strong>
+                    </p>
+                    <a asp-action="DeleteAccount" class="btn-fc btn-fc-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                            <line x1="10" y1="11" x2="10" y2="17"/>
+                            <line x1="14" y1="11" x2="14" y2="17"/>
+                        </svg>
+                        Hesabımı Sil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Tema değişikliğini anında önizle
+        document.querySelectorAll('input[name="ThemePreference"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.body.setAttribute('data-theme', this.value.toLowerCase());
+            });
+        });
+    </script>
+}

@@ -93,11 +93,17 @@ namespace FitnessCenter.Web.Services.Implementations
                     {
                         result = await CallGeminiApiAsync(input, photoBytes, photoMimeType, inputScenario);
                     }
+                    catch (GeminiApiException gex)
+                    {
+                        _logger.LogError(gex, "Gemini API call failed with status {StatusCode}, returning fallback", gex.StatusCode);
+                        result = GenerateFallbackResponse(input, inputScenario);
+                        result.ErrorMessage = gex.UserMessage; // Kullanıcı dostu mesaj
+                    }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Gemini API call failed, returning fallback");
+                        _logger.LogError(ex, "Gemini API call failed with unexpected error, returning fallback");
                         result = GenerateFallbackResponse(input, inputScenario);
-                        result.ErrorMessage = "AI servisine ulaşılamadı, otomatik öneri sunuldu.";
+                        result.ErrorMessage = $"AI servisine ulaşılamadı: {ex.Message}";
                     }
                 }
 
@@ -204,28 +210,91 @@ namespace FitnessCenter.Web.Services.Implementations
 
         private async Task<AiResultVm> CallGeminiApiAsync(AiRecommendVm input, byte[]? photoBytes, string? mimeType, string inputScenario)
         {
-            // Gemini API URL oluştur
-            var apiUrl = $"{_settings.Endpoint}/{_settings.Model}:generateContent?key={_settings.ApiKey}";
+            // Gemini API URL oluştur (çift slash önleme)
+            var baseUrl = _settings.Endpoint.TrimEnd('/');
+            var apiUrl = $"{baseUrl}/{_settings.Model}:generateContent?key={_settings.ApiKey}";
+
+            // ===== DIAGNOSTIC LOG 1: Request bilgileri =====
+            _logger.LogWarning("GEMINI CALL -> Url={Url} | Endpoint={Endpoint} | Model={Model} | KeyLen={KeyLen} | IsConfigured={IsConfigured}",
+                apiUrl.Replace(_settings.ApiKey, "***REDACTED***"),
+                _settings.Endpoint,
+                _settings.Model,
+                _settings.ApiKey?.Length ?? 0,
+                _settings.IsConfigured);
 
             // Request body oluştur
             var requestBody = BuildGeminiRequest(input, photoBytes, mimeType, inputScenario);
 
             var jsonContent = JsonSerializer.Serialize(requestBody);
+            
+            // ===== DIAGNOSTIC LOG 2: Request body (kısaltılmış) =====
+            var bodyPreview = jsonContent.Length > 500 ? jsonContent[..500] + "..." : jsonContent;
+            _logger.LogWarning("GEMINI REQUEST BODY (preview): {Body}", bodyPreview);
+            
             var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
             _logger.LogInformation("Calling Gemini API with scenario: {Scenario}", inputScenario);
 
             var response = await _httpClient.PostAsync(apiUrl, httpContent);
             
+            // ===== DIAGNOSTIC LOG 3: Response bilgileri (her zaman) =====
+            var responseBody = await response.Content.ReadAsStringAsync();
+            _logger.LogWarning("GEMINI RESP -> Status={Status} Body={Body}", 
+                (int)response.StatusCode, 
+                responseBody.Length > 1000 ? responseBody[..1000] + "..." : responseBody);
+            
             if (!response.IsSuccessStatusCode)
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Gemini API error: {StatusCode} - {Error}", response.StatusCode, errorContent);
-                throw new HttpRequestException($"Gemini API returned {response.StatusCode}");
+                // Kullanıcıya anlamlı hata mesajı üret
+                var errorMessage = GetUserFriendlyErrorMessage((int)response.StatusCode, responseBody);
+                _logger.LogError("Gemini API error: {StatusCode} - {Error} - UserMessage: {UserMessage}", 
+                    response.StatusCode, responseBody, errorMessage);
+                
+                throw new GeminiApiException(errorMessage, (int)response.StatusCode, responseBody);
             }
 
-            var responseJson = await response.Content.ReadAsStringAsync();
-            return ParseGeminiResponse(responseJson, input, inputScenario);
+            return ParseGeminiResponse(responseBody, input, inputScenario);
+        }
+
+        /// <summary>
+        /// HTTP status code'a göre kullanıcı dostu hata mesajı üretir
+        /// </summary>
+        private static string GetUserFriendlyErrorMessage(int statusCode, string responseBody)
+        {
+            return statusCode switch
+            {
+                400 => $"İstek formatı hatalı. Gemini API isteği reddetti. Detay: {ExtractErrorMessage(responseBody)}",
+                401 => "API key geçersiz veya eksik. Lütfen Gemini API anahtarınızı kontrol edin.",
+                403 => "API key yetkisi yok veya geçersiz. Gemini API erişimi reddedildi.",
+                404 => $"Model bulunamadı. '{ExtractErrorMessage(responseBody)}' - Model adını kontrol edin.",
+                429 => "API kullanım limiti aşıldı (Quota). Lütfen daha sonra tekrar deneyin.",
+                500 => "Gemini sunucu hatası. Lütfen daha sonra tekrar deneyin.",
+                503 => "Gemini servisi şu an kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+                _ => $"Gemini API hatası (HTTP {statusCode}). Detay: {ExtractErrorMessage(responseBody)}"
+            };
+        }
+
+        /// <summary>
+        /// Gemini error response'dan mesajı çıkarır
+        /// </summary>
+        private static string ExtractErrorMessage(string responseBody)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(responseBody);
+                if (doc.RootElement.TryGetProperty("error", out var error))
+                {
+                    if (error.TryGetProperty("message", out var message))
+                    {
+                        return message.GetString() ?? "Bilinmeyen hata";
+                    }
+                }
+            }
+            catch
+            {
+                // JSON parse edilemezse raw body'nin bir kısmını döndür
+            }
+            return responseBody.Length > 200 ? responseBody[..200] + "..." : responseBody;
         }
 
         private object BuildGeminiRequest(AiRecommendVm input, byte[]? photoBytes, string? mimeType, string inputScenario)
@@ -244,9 +313,9 @@ namespace FitnessCenter.Web.Services.Implementations
                 var base64Image = Convert.ToBase64String(photoBytes);
                 parts.Add(new
                 {
-                    inline_data = new
+                    inlineData = new
                     {
-                        mime_type = mimeType,
+                        mimeType = mimeType,
                         data = base64Image
                     }
                 });
@@ -720,6 +789,24 @@ Kurallar:
 
             _context.AiLoglar.Add(log);
             await _context.SaveChangesAsync();
+        }
+    }
+
+    /// <summary>
+    /// Gemini API hatalarını temsil eden özel exception sınıfı
+    /// </summary>
+    public class GeminiApiException : Exception
+    {
+        public int StatusCode { get; }
+        public string UserMessage { get; }
+        public string RawResponse { get; }
+
+        public GeminiApiException(string userMessage, int statusCode, string rawResponse)
+            : base($"Gemini API error (HTTP {statusCode}): {userMessage}")
+        {
+            UserMessage = userMessage;
+            StatusCode = statusCode;
+            RawResponse = rawResponse;
         }
     }
 }

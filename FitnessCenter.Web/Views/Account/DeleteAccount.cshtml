@@ -1,0 +1,70 @@
+@model FitnessCenter.Web.Models.ViewModels.DeleteAccountViewModel
+
+@{
+    ViewData["Title"] = "Hesabı Sil";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card-fc" style="border-color: var(--fc-danger);">
+                <div class="card-header" style="background-color: var(--fc-danger-light); color: #991b1b;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    Hesabı Kalıcı Olarak Sil
+                </div>
+                <div class="card-body">
+                    <div class="alert-fc alert-fc-danger mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <div>
+                            <strong>Uyarı:</strong> Bu işlem geri alınamaz!<br>
+                            Aşağıdaki verileriniz kalıcı olarak silinecektir:
+                            <ul class="mb-0 mt-2">
+                                <li>Hesap bilgileriniz</li>
+                                <li>Tüm üyelikleriniz</li>
+                                <li>Tüm randevularınız</li>
+                                <li>AI öneri geçmişiniz</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <form asp-action="DeleteAccount" method="post">
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div asp-validation-summary="All" class="alert-fc alert-fc-danger mb-4"></div>
+                        }
+
+                        <div class="form-fc-group">
+                            <label asp-for="Password" class="form-fc-label">Onaylamak için şifrenizi girin</label>
+                            <input asp-for="Password" type="password" class="form-fc-control" placeholder="Şifrenizi girin" autofocus />
+                            <span asp-validation-for="Password" class="form-fc-error"></span>
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn-fc btn-fc-danger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 6h18"/>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                </svg>
+                                Evet, Hesabımı Sil
+                            </button>
+                            <a asp-action="Settings" class="btn-fc btn-fc-secondary">Vazgeç</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

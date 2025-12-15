@@ -1,0 +1,121 @@
+@model FitnessCenter.Web.Models.ViewModels.ProfileViewModel
+
+@{
+    ViewData["Title"] = "Profil Düzenle";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Page Header -->
+            <div class="mb-4">
+                <h1 class="mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" style="color: var(--fc-primary);">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    Profil Düzenle
+                </h1>
+                <p class="text-muted">Hesap bilgilerinizi güncelleyin</p>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert-fc alert-fc-success mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            <form asp-action="Profile" method="post">
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div asp-validation-summary="All" class="alert-fc alert-fc-danger mb-4"></div>
+                }
+
+                <!-- Hesap Bilgileri -->
+                <div class="card-fc mb-4">
+                    <div class="card-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <circle cx="12" cy="10" r="3"/>
+                            <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/>
+                        </svg>
+                        Hesap Bilgileri
+                    </div>
+                    <div class="card-body">
+                        <div class="form-fc-group">
+                            <label asp-for="UserName" class="form-fc-label"></label>
+                            <input asp-for="UserName" class="form-fc-control" readonly disabled />
+                            <span class="form-fc-hint">Kullanıcı adı değiştirilemez.</span>
+                        </div>
+
+                        <div class="form-fc-group">
+                            <label asp-for="Email" class="form-fc-label"></label>
+                            <input asp-for="Email" type="email" class="form-fc-control" />
+                            <span asp-validation-for="Email" class="form-fc-error"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Şifre Değiştirme -->
+                <div class="card-fc mb-4">
+                    <div class="card-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        Şifre Değiştir
+                        <span class="badge-fc badge-fc-secondary ms-2">Opsiyonel</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Şifrenizi değiştirmek istemiyorsanız bu alanları boş bırakabilirsiniz.</p>
+
+                        <div class="form-fc-group">
+                            <label asp-for="CurrentPassword" class="form-fc-label"></label>
+                            <input asp-for="CurrentPassword" type="password" class="form-fc-control" placeholder="Mevcut şifrenizi girin" />
+                            <span asp-validation-for="CurrentPassword" class="form-fc-error"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="NewPassword" class="form-fc-label"></label>
+                                    <input asp-for="NewPassword" type="password" class="form-fc-control" placeholder="En az 6 karakter" />
+                                    <span asp-validation-for="NewPassword" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="ConfirmNewPassword" class="form-fc-label"></label>
+                                    <input asp-for="ConfirmNewPassword" type="password" class="form-fc-control" placeholder="Yeni şifreyi tekrar girin" />
+                                    <span asp-validation-for="ConfirmNewPassword" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kaydet Butonu -->
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn-fc btn-fc-primary btn-fc-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Değişiklikleri Kaydet
+                    </button>
+                    <a asp-action="Settings" class="btn-fc btn-fc-secondary btn-fc-lg">İptal</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

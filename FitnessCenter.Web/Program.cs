@@ -79,6 +79,14 @@ builder.Services.AddMemoryCache();
 // HttpClient ile AI Recommendation Service
 builder.Services.AddHttpClient<IAiRecommendationService, AiRecommendationService>();
 
+// ===== Email Servis Yapılandırması =====
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+// ===== Bildirim Servisi =====
+builder.Services.AddScoped<IBildirimService, BildirimService>();
+
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {

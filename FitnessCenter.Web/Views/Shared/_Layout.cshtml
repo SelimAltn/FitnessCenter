@@ -23,7 +23,22 @@
     <!-- Site CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="@(ViewContext.RouteData.Values["area"]?.ToString() == "Admin" ? "admin-area" : "")">
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<FitnessCenter.Web.Models.Entities.ApplicationUser> SignInManager
+@inject UserManager<FitnessCenter.Web.Models.Entities.ApplicationUser> UserManager
+
+@{
+    var themePreference = "light";
+    if (SignInManager.IsSignedIn(User))
+    {
+        var currentUser = await UserManager.GetUserAsync(User);
+        if (currentUser?.ThemePreference != null)
+        {
+            themePreference = currentUser.ThemePreference.ToLower();
+        }
+    }
+}
+<body class="@(ViewContext.RouteData.Values["area"]?.ToString() == "Admin" ? "admin-area" : "")" data-theme="@themePreference">
     <!-- Navbar -->
     <header>
         <nav class="navbar navbar-expand-lg navbar-fc">
@@ -83,6 +98,14 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="Admin" asp-controller="Home" asp-action="Index">
                                     Admin Paneli
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="Admin" asp-controller="Destek" asp-action="Index">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                    </svg>
+                                    Destek Kutusu
                                 </a>
                             </li>
                         }

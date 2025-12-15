@@ -21,6 +21,8 @@ namespace FitnessCenter.Web.Data.Context
         public DbSet<Musaitlik> Musaitlikler { get; set; }
         public DbSet<AiLog> AiLoglar { get; set; }
         public DbSet<Uyelik> Uyelikler { get; set; } = null!;
+        public DbSet<SupportTicket> SupportTickets { get; set; } = null!;
+        public DbSet<Bildirim> Bildirimler { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

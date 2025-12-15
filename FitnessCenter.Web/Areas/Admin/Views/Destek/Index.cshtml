@@ -1,0 +1,129 @@
+@model IEnumerable<FitnessCenter.Web.Models.Entities.SupportTicket>
+
+@{
+    ViewData["Title"] = "Destek Kutusu";
+}
+
+<div class="page-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" style="color: var(--fc-primary);">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    Destek Kutusu
+                </h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert-fc alert-fc-success mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <!-- İstatistik Kartları -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card-fc text-center p-4">
+                <h3 class="mb-0" style="color: var(--fc-warning);">@ViewBag.ToplamAcik</h3>
+                <small class="text-muted">Açık Talepler</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-fc text-center p-4">
+                <h3 class="mb-0" style="color: var(--fc-success);">@ViewBag.ToplamYanitlandi</h3>
+                <small class="text-muted">Yanıtlanan</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-fc text-center p-4">
+                <h3 class="mb-0" style="color: var(--fc-primary);">@ViewBag.ToplamTalep</h3>
+                <small class="text-muted">Toplam Talep</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtre -->
+    <div class="filter-bar">
+        <div class="d-flex gap-2">
+            <a asp-action="Index" asp-route-durum="all" class="btn-fc @(ViewBag.AktifDurum == "all" ? "btn-fc-primary" : "btn-fc-secondary")">
+                Tümü
+            </a>
+            <a asp-action="Index" asp-route-durum="Open" class="btn-fc @(ViewBag.AktifDurum == "Open" ? "btn-fc-primary" : "btn-fc-secondary")">
+                🔴 Açık
+            </a>
+            <a asp-action="Index" asp-route-durum="Closed" class="btn-fc @(ViewBag.AktifDurum == "Closed" ? "btn-fc-primary" : "btn-fc-secondary")">
+                ✅ Kapalı
+            </a>
+        </div>
+    </div>
+
+    <!-- Talep Listesi -->
+    <div class="card-fc">
+        @if (Model.Any())
+        {
+            <table class="table-fc">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Kullanıcı</th>
+                        <th>E-posta</th>
+                        <th>Konu</th>
+                        <th>Tarih</th>
+                        <th>Durum</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ticket in Model)
+                    {
+                        <tr>
+                            <td><strong>#@ticket.Id</strong></td>
+                            <td>@(ticket.KullaniciAdi ?? ticket.User?.UserName ?? "Bilinmiyor")</td>
+                            <td>@ticket.Email</td>
+                            <td>
+                                <span title="@ticket.Mesaj">
+                                    @(ticket.Konu.Length > 30 ? ticket.Konu.Substring(0, 30) + "..." : ticket.Konu)
+                                </span>
+                            </td>
+                            <td>@ticket.OlusturulmaTarihi.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>
+                                @if (ticket.Durum == "Open")
+                                {
+                                    <span class="badge-fc badge-fc-warning">Açık</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-fc badge-fc-success">Kapalı</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@ticket.Id" class="btn-fc btn-fc-sm btn-fc-primary">
+                                    @(ticket.Durum == "Open" ? "Yanıtla" : "Görüntüle")
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h4 class="empty-state-title">Destek talebi bulunamadı</h4>
+                <p class="empty-state-text">Henüz hiç destek talebi yok veya filtreye uygun talep bulunamadı.</p>
+            </div>
+        }
+    </div>
+</div>

@@ -45,7 +45,10 @@
 
             <!-- Form -->
             <form asp-action="Register" method="post">
-                <div asp-validation-summary="All" class="alert-fc alert-fc-danger mb-4"></div>
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div asp-validation-summary="All" class="alert-fc alert-fc-danger mb-4"></div>
+                }
 
                 <div class="form-fc-group">
                     <label asp-for="KullaniciAdi" class="form-fc-label">Kullanıcı Adı</label>

@@ -1,0 +1,104 @@
+@model FitnessCenter.Web.Models.Entities.SupportTicket
+
+@{
+    ViewData["Title"] = $"Destek Talebi #{Model.Id}";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Inbox">Destek Taleplerim</a></li>
+                    <li class="breadcrumb-item active">Talep #@Model.Id</li>
+                </ol>
+            </nav>
+
+            <!-- Durum Banner -->
+            @if (Model.Durum == "Closed")
+            {
+                <div class="alert-fc alert-fc-success mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <strong>Yanıtlandı!</strong> Bu destek talebiniz yanıtlandı ve kapatıldı.
+                </div>
+            }
+            else
+            {
+                <div class="alert-fc alert-fc-warning mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <strong>Beklemede</strong> - Talebiniz en kısa sürede yanıtlanacaktır.
+                </div>
+            }
+
+            <!-- Gönderilen Mesaj -->
+            <div class="card-fc mb-4">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    Gönderdiğiniz Mesaj
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Konu</small>
+                            <strong>@Model.Konu</strong>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Tarih</small>
+                            @Model.OlusturulmaTarihi.ToString("dd MMMM yyyy HH:mm")
+                        </div>
+                    </div>
+                    <hr />
+                    <p style="white-space: pre-wrap;">@Model.Mesaj</p>
+                </div>
+            </div>
+
+            <!-- Admin Yanıtı (varsa) -->
+            @if (Model.Durum == "Closed" && !string.IsNullOrEmpty(Model.AdminCevap))
+            {
+                <div class="card-fc" style="border-color: var(--fc-success); border-width: 2px;">
+                    <div class="card-header" style="background: var(--fc-success-light); color: #065f46;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        Fitness Center Yanıtı
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Yanıt Tarihi</small>
+                            @Model.CevapTarihi?.ToString("dd MMMM yyyy HH:mm")
+                        </div>
+                        <hr />
+                        <p style="white-space: pre-wrap; font-size: 1.05rem;">@Model.AdminCevap</p>
+                    </div>
+                </div>
+            }
+
+            <!-- Geri Dön -->
+            <div class="mt-4">
+                <a asp-action="Inbox" class="btn-fc btn-fc-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                    Tüm Taleplerim
+                </a>
+                @if (Model.Durum == "Closed")
+                {
+                    <a asp-action="Index" class="btn-fc btn-fc-primary ms-2">
+                        Yeni Talep Oluştur
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

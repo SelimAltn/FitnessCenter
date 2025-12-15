@@ -1,0 +1,98 @@
+@model IEnumerable<FitnessCenter.Web.Models.Entities.Bildirim>
+
+@{
+    ViewData["Title"] = "Gelen Kutusu";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" style="color: var(--fc-primary);">
+                            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                        </svg>
+                        Gelen Kutusu
+                    </h1>
+                    <p class="text-muted">Bildirimleriniz ve güncellemeler</p>
+                </div>
+                @if (Model.Any(b => !b.Okundu))
+                {
+                    <form asp-action="TumunuOku" method="post">
+                        <button type="submit" class="btn-fc btn-fc-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                <polyline points="9 11 12 14 22 4"/>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                            </svg>
+                            Tümünü Okundu İşaretle
+                        </button>
+                    </form>
+                }
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert-fc alert-fc-success mb-4">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (Model.Any())
+            {
+                <div class="card-fc">
+                    @foreach (var bildirim in Model)
+                    {
+                        var icon = bildirim.Tur switch
+                        {
+                            "DestekYaniti" => "💬",
+                            "YeniUyelik" => "🎉",
+                            "YeniRandevu" => "📅",
+                            _ => "🔔"
+                        };
+                        
+                        var bgClass = bildirim.Okundu ? "" : "background: var(--fc-primary-light);";
+                        
+                        <a asp-action="Oku" asp-route-id="@bildirim.Id" 
+                           class="d-block text-decoration-none p-4 @(bildirim != Model.Last() ? "border-bottom" : "")"
+                           style="@bgClass border-color: var(--fc-gray-200); transition: var(--fc-transition-fast);">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="fs-4">@icon</div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h5 class="mb-1" style="color: var(--fc-gray-800);">
+                                            @bildirim.Baslik
+                                            @if (!bildirim.Okundu)
+                                            {
+                                                <span class="badge-fc badge-fc-primary ms-2">Yeni</span>
+                                            }
+                                        </h5>
+                                        <small class="text-muted">@bildirim.OlusturulmaTarihi.ToString("dd.MM.yyyy HH:mm")</small>
+                                    </div>
+                                    <p class="mb-0 text-muted" style="font-size: 0.9rem;">
+                                        @(bildirim.Mesaj.Length > 150 ? bildirim.Mesaj.Substring(0, 150) + "..." : bildirim.Mesaj)
+                                    </p>
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--fc-gray-400);">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="card-fc">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h4 class="empty-state-title">Bildirim yok</h4>
+                        <p class="empty-state-text">Henüz hiç bildiriminiz bulunmuyor.</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
