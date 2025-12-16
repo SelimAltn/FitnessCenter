@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FitnessCenter.Web.Data.Context;
 using FitnessCenter.Web.Models.Entities;
 using FitnessCenter.Web.Models.ViewModels;
+using FitnessCenter.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,11 +18,16 @@ namespace FitnessCenter.Web.Controllers
     {
         private readonly AppDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IBildirimService _bildirimService;
 
-        public UyelikController(AppDbContext context, UserManager<ApplicationUser> userManager)
+        public UyelikController(
+            AppDbContext context, 
+            UserManager<ApplicationUser> userManager,
+            IBildirimService bildirimService)
         {
             _context = context;
             _userManager = userManager;
+            _bildirimService = bildirimService;
         }
 
         // Giriş yapan user için Uye kaydını bul (varsa)
@@ -129,6 +135,20 @@ namespace FitnessCenter.Web.Controllers
 
                 _context.Uyeler.Add(uye);
                 await _context.SaveChangesAsync();
+
+                // ========== YENİ ÜYE OLUŞTURULDU - ADMİN'LERE BİLDİRİM ==========
+                var adminUsers = await _userManager.GetUsersInRoleAsync("Admin");
+                foreach (var admin in adminUsers)
+                {
+                    await _bildirimService.OlusturAsync(
+                        userId: admin.Id,
+                        baslik: "Yeni üye oluşturuldu",
+                        mesaj: $"{model.AdSoyad} sisteme üye olarak eklendi.",
+                        tur: "NewMember",
+                        iliskiliId: uye.Id,
+                        link: $"/Admin/Uye/Details/{uye.Id}"
+                    );
+                }
             }
             else
             {
@@ -161,6 +181,34 @@ namespace FitnessCenter.Web.Controllers
 
             _context.Uyelikler.Add(uyelik);
             await _context.SaveChangesAsync();
+
+            // Şube adını al
+            var salon = await _context.Salonlar.FindAsync(model.SalonId);
+            var salonAd = salon?.Ad ?? "Şube";
+
+            // ========== YENİ ÜYELİK SATIN ALINDI - ADMİN'LERE BİLDİRİM ==========
+            var adminUsersForMembership = await _userManager.GetUsersInRoleAsync("Admin");
+            foreach (var admin in adminUsersForMembership)
+            {
+                await _bildirimService.OlusturAsync(
+                    userId: admin.Id,
+                    baslik: "Yeni üyelik satın alındı",
+                    mesaj: $"{model.AdSoyad} - {salonAd} şubesine üye oldu.",
+                    tur: "NewMembership",
+                    iliskiliId: uyelik.Id,
+                    link: $"/Admin/Uye/Details/{uye.Id}"
+                );
+            }
+
+            // ========== KULLANICIYA HOŞ GELDİN BİLDİRİMİ ==========
+            await _bildirimService.OlusturAsync(
+                userId: user.Id,
+                baslik: "Aramıza hoş geldin! 🎉",
+                mesaj: $"{salonAd} şubesine üyeliğiniz aktif. Sağlıklı yaşama hoş geldiniz!",
+                tur: "MembershipWelcome",
+                iliskiliId: uyelik.Id,
+                link: "/Uyelik"
+            );
 
             TempData["Success"] = "Üyeliğiniz oluşturuldu. Artık bu şubeden randevu alabilirsiniz.";
             return RedirectToAction(nameof(Index));

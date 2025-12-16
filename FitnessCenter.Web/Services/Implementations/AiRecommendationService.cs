@@ -191,7 +191,9 @@ namespace FitnessCenter.Web.Services.Implementations
 
             try
             {
-                var result = JsonSerializer.Deserialize<AiResultVm>(cachedLog.ResponseJson);
+                // Case-insensitive deserialize: eski PascalCase + yeni camelCase kayıtlar için
+                var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var result = JsonSerializer.Deserialize<AiResultVm>(cachedLog.ResponseJson, jsonOptions);
                 if (result != null)
                 {
                     result.IsCached = true;
@@ -302,7 +304,7 @@ namespace FitnessCenter.Web.Services.Implementations
             var parts = new List<object>();
 
             // System prompt + user prompt
-            var systemPrompt = GetSystemPrompt();
+            var systemPrompt = GetSystemPrompt(inputScenario);
             var userPrompt = BuildPrompt(input, inputScenario);
             
             parts.Add(new { text = systemPrompt + "\n\n" + userPrompt });
@@ -330,14 +332,45 @@ namespace FitnessCenter.Web.Services.Implementations
                 generationConfig = new
                 {
                     temperature = 0.7,
-                    maxOutputTokens = 1500,
+                    maxOutputTokens = 8192, // gemini-2.5-flash thinking model için artırıldı
                     responseMimeType = "application/json"
                 }
             };
         }
 
-        private static string GetSystemPrompt()
+        private static string GetSystemPrompt(string inputScenario)
         {
+            // PhotoOnly senaryosunda ek fotoğraf analizi alanlarını ekle
+            if (inputScenario == "PhotoOnly")
+            {
+                return @"Sen bir fitness ve beslenme uzmanısın. Kullanıcının fotoğrafına göre kişiselleştirilmiş antrenman ve beslenme önerisi veriyorsun.
+
+ÖNCELİKLE fotoğrafı analiz et:
+1. Fotoğrafta ne var? (kısa açıklama)
+2. Bu fotoğraf fitness/vücut analizi için uygun mu? (insan vücudu net görünüyor mu?)
+
+SADECE aşağıdaki JSON formatında yanıt ver, başka hiçbir şey ekleme, markdown kullanma, code block kullanma:
+{
+  ""isImageRelevant"": true veya false,
+  ""imageDescription"": ""Fotoğrafta görülenin kısa açıklaması"",
+  ""imageAnalysisReason"": ""Neden uygun veya uygun değil açıklaması"",
+  ""summary"": ""2-3 cümlelik özet (sadece isImageRelevant=true ise doldur)"",
+  ""workoutPlan"": [""madde1"", ""madde2"", ...] (sadece isImageRelevant=true ise doldur),
+  ""nutritionTips"": [""madde1"", ""madde2"", ...] (sadece isImageRelevant=true ise doldur),
+  ""warnings"": [""madde1"", ""madde2"", ...] (sadece isImageRelevant=true ise doldur)
+}
+
+Kurallar:
+- Türkçe yaz
+- isImageRelevant=false ise summary/workoutPlan/nutritionTips/warnings BOŞ ARRAY olarak döndür
+- isImageRelevant=true ise tüm alanları doldur
+- Her liste maksimum 6 madde olsun
+- Kısa ve net cümleler kullan
+- Fotoğrafta insan vücudu net görünmüyorsa isImageRelevant=false olmalı
+- Manzara, yemek, hayvan, nesne gibi fitness ile alakasız görseller için isImageRelevant=false";
+            }
+
+            // Normal senaryo (DataOnly veya Combined)
             return @"Sen bir fitness ve beslenme uzmanısın. Kullanıcının fiziksel özelliklerine, hedeflerine ve/veya fotoğrafına göre kişiselleştirilmiş antrenman ve beslenme önerisi veriyorsun.
 
 SADECE aşağıdaki JSON formatında yanıt ver, başka hiçbir şey ekleme, markdown kullanma, code block kullanma:
@@ -456,50 +489,159 @@ Kurallar:
                 using var doc = JsonDocument.Parse(responseJson);
                 var root = doc.RootElement;
 
-                // Gemini response yapısı: candidates[0].content.parts[0].text
-                string? content = null;
+                // ===== DÜZELTME: Tüm parts içindeki text'leri birleştir =====
+                // Gemini bazen yanıtı birden fazla part halinde döndürebiliyor
+                var contentBuilder = new StringBuilder();
                 
                 if (root.TryGetProperty("candidates", out var candidates) && 
                     candidates.GetArrayLength() > 0)
                 {
                     var firstCandidate = candidates[0];
+                    
+                    // finishReason kontrolü - eğer SAFETY, MAX_TOKENS veya hata varsa logla
+                    if (firstCandidate.TryGetProperty("finishReason", out var finishReason))
+                    {
+                        var reason = finishReason.GetString();
+                        _logger.LogWarning("GEMINI finishReason: {Reason}", reason);
+                        
+                        if (reason == "SAFETY" || reason == "RECITATION" || reason == "OTHER")
+                        {
+                            _logger.LogWarning("Gemini response blocked due to: {Reason}", reason);
+                            throw new InvalidOperationException($"Gemini yanıtı güvenlik nedeniyle engellendi: {reason}");
+                        }
+                        
+                        // MAX_TOKENS - yanıt yarım kaldı, JSON eksik olacak
+                        if (reason == "MAX_TOKENS")
+                        {
+                            _logger.LogError("Gemini response truncated due to MAX_TOKENS limit!");
+                            throw new InvalidOperationException("Gemini yanıtı token limiti nedeniyle tamamlanamadı. Lütfen tekrar deneyin.");
+                        }
+                    }
+                    
                     if (firstCandidate.TryGetProperty("content", out var contentObj) &&
                         contentObj.TryGetProperty("parts", out var partsArray) &&
                         partsArray.GetArrayLength() > 0)
                     {
-                        var firstPart = partsArray[0];
-                        if (firstPart.TryGetProperty("text", out var textProp))
+                        // ===== TÜM PARTS'LARI BİRLEŞTİR =====
+                        foreach (var part in partsArray.EnumerateArray())
                         {
-                            content = textProp.GetString();
+                            if (part.TryGetProperty("text", out var textProp))
+                            {
+                                var textValue = textProp.GetString();
+                                if (!string.IsNullOrEmpty(textValue))
+                                {
+                                    contentBuilder.Append(textValue);
+                                }
+                            }
                         }
+                        
+                        _logger.LogInformation("GEMINI PARSE: Combined {PartCount} parts into {TotalLength} chars", 
+                            partsArray.GetArrayLength(), contentBuilder.Length);
                     }
                 }
 
+                var content = contentBuilder.ToString();
+                
                 if (string.IsNullOrEmpty(content))
                 {
-                    throw new InvalidOperationException("Empty Gemini response");
+                    _logger.LogError("GEMINI PARSE ERROR: No text content found in response. Raw: {Raw}", 
+                        responseJson.Length > 500 ? responseJson[..500] : responseJson);
+                    throw new InvalidOperationException("Empty Gemini response - parts içinde text bulunamadı");
                 }
 
-                // Content içindeki JSON'u parse et
+                // ===== DÜZELTME: JSON extraction daha sağlam =====
+                _logger.LogWarning("GEMINI RAW CONTENT (before extract): {Content}", 
+                    content.Length > 300 ? content[..300] + "..." : content);
+                
                 content = ExtractJsonFromContent(content);
+                
+                _logger.LogWarning("GEMINI EXTRACTED JSON: {Json}", 
+                    content.Length > 300 ? content[..300] + "..." : content);
 
-                using var contentDoc = JsonDocument.Parse(content);
-                var contentRoot = contentDoc.RootElement;
-
-                return new AiResultVm
+                // JSON parse denemesi
+                JsonDocument contentDoc;
+                try
                 {
-                    Summary = contentRoot.TryGetProperty("summary", out var s) ? s.GetString() ?? "" : "",
-                    WorkoutPlan = ParseStringArray(contentRoot, "workoutPlan"),
-                    NutritionTips = ParseStringArray(contentRoot, "nutritionTips"),
-                    Warnings = ParseStringArray(contentRoot, "warnings"),
-                    IsSuccess = true,
-                    IsCached = false,
-                    IsFallback = false,
-                    GeneratedAt = DateTime.UtcNow,
-                    InputSummary = BuildInputSummary(input, inputScenario),
-                    RecommendationType = GetRecommendationTypeLabel(inputScenario),
-                    ModelUsed = _settings.Model
-                };
+                    contentDoc = JsonDocument.Parse(content);
+                }
+                catch (JsonException jsonEx)
+                {
+                    _logger.LogError(jsonEx, "GEMINI JSON PARSE FAILED. Content is not valid JSON: {Content}", content);
+                    throw new InvalidOperationException($"Gemini yanıtı geçerli JSON değil: {jsonEx.Message}");
+                }
+                
+                using (contentDoc)
+                {
+                    var contentRoot = contentDoc.RootElement;
+
+                    // PhotoOnly senaryosunda ek alanları parse et
+                    bool isImageRelevant = true;
+                    string? imageDescription = null;
+                    string? imageAnalysisReason = null;
+
+                    if (inputScenario == "PhotoOnly")
+                    {
+                        // isImageRelevant alanını kontrol et
+                        if (contentRoot.TryGetProperty("isImageRelevant", out var relevantProp))
+                        {
+                            isImageRelevant = relevantProp.GetBoolean();
+                        }
+
+                        if (contentRoot.TryGetProperty("imageDescription", out var descProp))
+                        {
+                            imageDescription = descProp.GetString();
+                        }
+
+                        if (contentRoot.TryGetProperty("imageAnalysisReason", out var reasonProp))
+                        {
+                            imageAnalysisReason = reasonProp.GetString();
+                        }
+
+                        _logger.LogInformation("PhotoOnly analysis: IsRelevant={IsRelevant}, Description={Desc}", 
+                            isImageRelevant, imageDescription);
+
+                        // Eğer fotoğraf uygun değilse, öneri üretme (boş döndür)
+                        if (!isImageRelevant)
+                        {
+                            return new AiResultVm
+                            {
+                                IsSuccess = false, // Başarılı öneri sayılmaz
+                                IsImageRelevant = false,
+                                ImageDescription = imageDescription,
+                                ImageAnalysisReason = imageAnalysisReason,
+                                Summary = "", // Boş
+                                WorkoutPlan = new List<string>(), // Boş
+                                NutritionTips = new List<string>(), // Boş
+                                Warnings = new List<string>(), // Boş
+                                IsCached = false,
+                                IsFallback = false,
+                                GeneratedAt = DateTime.UtcNow,
+                                InputSummary = BuildInputSummary(input, inputScenario),
+                                RecommendationType = "Fotoğraf Uygun Değil",
+                                ModelUsed = _settings.Model
+                            };
+                        }
+                    }
+
+                    return new AiResultVm
+                    {
+                        Summary = contentRoot.TryGetProperty("summary", out var s) ? s.GetString() ?? "" : "",
+                        WorkoutPlan = ParseStringArray(contentRoot, "workoutPlan"),
+                        NutritionTips = ParseStringArray(contentRoot, "nutritionTips"),
+                        Warnings = ParseStringArray(contentRoot, "warnings"),
+                        IsSuccess = true,
+                        IsCached = false,
+                        IsFallback = false,
+                        GeneratedAt = DateTime.UtcNow,
+                        InputSummary = BuildInputSummary(input, inputScenario),
+                        RecommendationType = GetRecommendationTypeLabel(inputScenario),
+                        ModelUsed = _settings.Model,
+                        // PhotoOnly senaryosunda ek alanlar
+                        IsImageRelevant = isImageRelevant,
+                        ImageDescription = imageDescription,
+                        ImageAnalysisReason = imageAnalysisReason
+                    };
+                }
             }
             catch (Exception ex)
             {
@@ -507,12 +649,12 @@ Kurallar:
                 
                 // Parse hatası olursa fallback döndür
                 var fallback = GenerateFallbackResponse(input, inputScenario);
-                fallback.ErrorMessage = "AI yanıtı işlenirken hata oluştu, alternatif öneri sunuldu.";
+                fallback.ErrorMessage = $"AI yanıtı işlenirken hata oluştu: {ex.Message}. Alternatif öneri sunuldu.";
                 return fallback;
             }
         }
 
-        private static string ExtractJsonFromContent(string content)
+        private string ExtractJsonFromContent(string content)
         {
             content = content.Trim();
             
@@ -525,7 +667,31 @@ Kurallar:
             if (content.EndsWith("```"))
                 content = content[..^3];
 
-            return content.Trim();
+            content = content.Trim();
+            
+            // Eğer hala { ile başlamıyorsa, içinden JSON objesini bulmaya çalış
+            if (!content.StartsWith("{"))
+            {
+                _logger.LogWarning("Content does not start with {{, trying to extract JSON object...");
+                
+                // İlk { karakterini bul
+                var startIndex = content.IndexOf('{');
+                if (startIndex >= 0)
+                {
+                    // Son } karakterini bul
+                    var endIndex = content.LastIndexOf('}');
+                    if (endIndex > startIndex)
+                    {
+                        var extracted = content.Substring(startIndex, endIndex - startIndex + 1);
+                        _logger.LogInformation("Extracted JSON from content: StartIdx={Start}, EndIdx={End}", startIndex, endIndex);
+                        return extracted;
+                    }
+                }
+                
+                _logger.LogWarning("Could not find JSON object in content, returning as-is");
+            }
+
+            return content;
         }
 
         private static List<string> ParseStringArray(JsonElement element, string propertyName)
@@ -570,15 +736,18 @@ Kurallar:
             // Senaryoya göre özet
             if (inputScenario == "PhotoOnly")
             {
-                result.Summary = "Fotoğrafınız değerlendirildi. Genel fitness düzeyinize göre öneriler sunuyoruz. " +
-                    "Daha doğru sonuçlar için boy, kilo ve yaş bilgilerinizi de girebilirsiniz.";
-                
-                result.Warnings = new List<string>
-                {
-                    "Bu öneriler fotoğraf analizi yapılamadığı için genel niteliktedir",
-                    "Kesin sonuçlar için ölçü bilgilerinizi de girmenizi öneririz",
-                    "Yeni bir egzersiz programına başlamadan önce doktorunuza danışın"
-                };
+                // PhotoOnly senaryosunda fallback = fotoğraf analiz edilemedi
+                // Öneri üretme, kullanıcıya uygunluk kontrolü yapılamadığını bildir
+                result.IsSuccess = false;
+                result.IsImageRelevant = false;
+                result.ImageDescription = "Fotoğraf analiz edilemedi";
+                result.ImageAnalysisReason = "AI servisi şu an kullanılamıyor. Fotoğraf analizi yapılamadı.";
+                result.Summary = "";
+                result.WorkoutPlan = new List<string>();
+                result.NutritionTips = new List<string>();
+                result.Warnings = new List<string>();
+                result.RecommendationType = "Fotoğraf Analizi Başarısız";
+                return result; // Erken dön, öneri üretme
             }
             else if (input.Boy.HasValue && input.Kilo.HasValue)
             {
@@ -790,6 +959,230 @@ Kurallar:
             _context.AiLoglar.Add(log);
             await _context.SaveChangesAsync();
         }
+
+        // ===== AJAX Polling İçin Yeni Metodlar =====
+
+        /// <summary>
+        /// AI öneri işlemini arka planda başlatır.
+        /// Hemen döner, işlem arka planda devam eder.
+        /// </summary>
+        public async Task StartRecommendationAsync(AiRecommendVm input, int uyeId, string requestId)
+        {
+            _logger.LogInformation("Starting background recommendation for RequestId: {RequestId}", requestId);
+
+            // 1. Foto byte'larını al (varsa)
+            byte[]? photoBytes = null;
+            string? photoMimeType = null;
+            if (input.Photo != null && input.Photo.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await input.Photo.CopyToAsync(ms);
+                photoBytes = ms.ToArray();
+                photoMimeType = input.Photo.ContentType;
+            }
+
+            // 2. Input senaryosunu belirle
+            var inputScenario = input.GetInputScenario();
+
+            // 3. Input hash üret
+            var inputHash = GenerateInputHash(input, photoBytes);
+
+            // 4. DB'ye "Processing" status ile kayıt aç
+            var log = new AiLog
+            {
+                UyeId = uyeId,
+                SoruMetni = BuildInputSummary(input, inputScenario),
+                CevapMetni = "İşleniyor...",
+                OlusturulmaZamani = DateTime.UtcNow,
+                InputHash = inputHash,
+                IsCached = false,
+                ModelName = _settings.Model,
+                IsSuccess = false,
+                RequestId = requestId,
+                Status = "Processing"
+            };
+            _context.AiLoglar.Add(log);
+            await _context.SaveChangesAsync();
+
+            // 5. Input verilerini memory cache'e kaydet (background erişimi için)
+            var cacheKey = $"ai_pending_{requestId}";
+            var pendingData = new PendingRecommendationData
+            {
+                Input = input,
+                UyeId = uyeId,
+                PhotoBytes = photoBytes,
+                PhotoMimeType = photoMimeType,
+                InputScenario = inputScenario,
+                InputHash = inputHash,
+                LogId = log.Id
+            };
+            _memoryCache.Set(cacheKey, pendingData, TimeSpan.FromMinutes(10));
+
+            _logger.LogInformation("Background recommendation queued for RequestId: {RequestId}, LogId: {LogId}", 
+                requestId, log.Id);
+        }
+
+        /// <summary>
+        /// Belirtilen requestId için işlem durumunu sorgular ve (gerekirse) işlemi gerçekleştirir.
+        /// </summary>
+        public async Task<(string Status, AiResultVm? Result, string? ErrorMessage)> GetRecommendationStatusAsync(string requestId)
+        {
+            // 1. DB'den mevcut kayıt durumunu kontrol et
+            var existingLog = await _context.AiLoglar
+                .Where(l => l.RequestId == requestId)
+                .OrderByDescending(l => l.OlusturulmaZamani)
+                .FirstOrDefaultAsync();
+
+            if (existingLog == null)
+            {
+                return ("NotFound", null, "İstek bulunamadı.");
+            }
+
+            // 2. Eğer zaten tamamlandıysa, sonucu döndür
+            if (existingLog.Status == "Completed" && !string.IsNullOrEmpty(existingLog.ResponseJson))
+            {
+                try
+                {
+                    // Case-insensitive deserialize: eski PascalCase + yeni camelCase kayıtlar için
+                    var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var cachedResult = JsonSerializer.Deserialize<AiResultVm>(existingLog.ResponseJson, jsonOptions);
+                    return ("Completed", cachedResult, null);
+                }
+                catch
+                {
+                    return ("Error", null, "Sonuç işlenirken hata oluştu.");
+                }
+            }
+
+            // 3. Eğer hata durumundaysa
+            if (existingLog.Status == "Error")
+            {
+                return ("Error", null, existingLog.ErrorMessage ?? "Bilinmeyen hata oluştu.");
+            }
+
+            // 4. Eğer hala işleniyorsa, gerçek işlemi yap
+            if (existingLog.Status == "Processing")
+            {
+                // Memory cache'den pending data'yı al
+                var cacheKey = $"ai_pending_{requestId}";
+                if (!_memoryCache.TryGetValue(cacheKey, out PendingRecommendationData? pendingData) || pendingData == null)
+                {
+                    // Cache expired veya bulunamadı - hata olarak işaretle
+                    existingLog.Status = "Error";
+                    existingLog.ErrorMessage = "İstek zaman aşımına uğradı. Lütfen tekrar deneyin.";
+                    await _context.SaveChangesAsync();
+                    return ("Error", null, existingLog.ErrorMessage);
+                }
+
+                var stopwatch = Stopwatch.StartNew();
+
+                try
+                {
+                    // 5. Cache kontrolü (aynı input hash varsa hızlı dön)
+                    var cachedResult = await CheckDbCacheAsync(pendingData.InputHash, pendingData.UyeId);
+                    if (cachedResult != null)
+                    {
+                        _logger.LogInformation("Cache hit during polling for RequestId: {RequestId}", requestId);
+                        
+                        existingLog.Status = "Completed";
+                        existingLog.CevapMetni = cachedResult.Summary;
+                        existingLog.ResponseJson = JsonSerializer.Serialize(cachedResult);
+                        existingLog.IsSuccess = true;
+                        existingLog.IsCached = true;
+                        existingLog.DurationMs = (int)stopwatch.ElapsedMilliseconds;
+                        await _context.SaveChangesAsync();
+
+                        // Cache'den temizle
+                        _memoryCache.Remove(cacheKey);
+
+                        return ("Completed", cachedResult, null);
+                    }
+
+                    // 6. API yapılandırılmış mı?
+                    AiResultVm result;
+                    if (!_settings.IsConfigured)
+                    {
+                        _logger.LogWarning("AI API key not configured during polling, returning fallback");
+                        result = GenerateFallbackResponse(pendingData.Input, pendingData.InputScenario);
+                    }
+                    else
+                    {
+                        // 7. Gemini API çağrısı
+                        try
+                        {
+                            result = await CallGeminiApiAsync(
+                                pendingData.Input, 
+                                pendingData.PhotoBytes, 
+                                pendingData.PhotoMimeType, 
+                                pendingData.InputScenario);
+                        }
+                        catch (GeminiApiException gex)
+                        {
+                            _logger.LogError(gex, "Gemini API call failed during polling with status {StatusCode}", gex.StatusCode);
+                            result = GenerateFallbackResponse(pendingData.Input, pendingData.InputScenario);
+                            result.ErrorMessage = gex.UserMessage;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Gemini API call failed during polling with unexpected error");
+                            result = GenerateFallbackResponse(pendingData.Input, pendingData.InputScenario);
+                            result.ErrorMessage = $"AI servisine ulaşılamadı: {ex.Message}";
+                        }
+                    }
+
+                    stopwatch.Stop();
+
+                    // 8. DB'yi güncelle
+                    existingLog.Status = "Completed";
+                    existingLog.CevapMetni = result.Summary;
+                    existingLog.ResponseJson = JsonSerializer.Serialize(result);
+                    existingLog.IsSuccess = result.IsSuccess;
+                    existingLog.DurationMs = (int)stopwatch.ElapsedMilliseconds;
+                    existingLog.ErrorMessage = result.ErrorMessage;
+                    await _context.SaveChangesAsync();
+
+                    // 9. Memory cache'e ekle (ikincil cache)
+                    _memoryCache.Set(GetMemoryCacheKey(pendingData.InputHash, pendingData.UyeId), result, 
+                        TimeSpan.FromHours(_settings.CacheHours));
+
+                    // Pending data'yı temizle
+                    _memoryCache.Remove(cacheKey);
+
+                    return ("Completed", result, null);
+                }
+                catch (Exception ex)
+                {
+                    stopwatch.Stop();
+                    _logger.LogError(ex, "Error during GetRecommendationStatusAsync for RequestId: {RequestId}", requestId);
+
+                    existingLog.Status = "Error";
+                    existingLog.ErrorMessage = ex.Message.Length > 1000 ? ex.Message[..1000] : ex.Message;
+                    existingLog.DurationMs = (int)stopwatch.ElapsedMilliseconds;
+                    await _context.SaveChangesAsync();
+
+                    // Cache temizle
+                    _memoryCache.Remove(cacheKey);
+
+                    return ("Error", null, $"İşlem sırasında hata oluştu: {ex.Message}");
+                }
+            }
+
+            return ("Pending", null, null);
+        }
+    }
+
+    /// <summary>
+    /// Background processing için pending data yapısı
+    /// </summary>
+    public class PendingRecommendationData
+    {
+        public AiRecommendVm Input { get; set; } = null!;
+        public int UyeId { get; set; }
+        public byte[]? PhotoBytes { get; set; }
+        public string? PhotoMimeType { get; set; }
+        public string InputScenario { get; set; } = "";
+        public string InputHash { get; set; } = "";
+        public int LogId { get; set; }
     }
 
     /// <summary>

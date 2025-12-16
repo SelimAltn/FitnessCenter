@@ -96,7 +96,7 @@ namespace FitnessCenter.Web.Controllers
 
         /// <summary>
         /// POST: /Ai/Recommend
-        /// Form gönderildiğinde AI öneri işlemini başlatır
+        /// Form gönderildiğinde AI öneri işlemini başlatır (AJAX Polling ile)
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -132,13 +132,19 @@ namespace FitnessCenter.Web.Controllers
                     return View(model);
                 }
 
-                // 4. AI servisi çağrısı (cache kontrolü dahil)
-                var result = await _aiService.GetRecommendationAsync(model, uye.Id);
-
-                // 5. Sonucu TempData'ya kaydet ve Result sayfasına yönlendir
-                TempData["AiResult"] = System.Text.Json.JsonSerializer.Serialize(result);
+                // ===== AJAX POLLING: Hemen Result'a yönlendir, bekletme =====
                 
-                return RedirectToAction(nameof(Result));
+                // 4. Benzersiz requestId üret
+                var requestId = Guid.NewGuid().ToString();
+
+                // 5. Background işlemi başlat (DB'ye Processing status ile kaydet + cache'e ekle)
+                await _aiService.StartRecommendationAsync(model, uye.Id, requestId);
+
+                _logger.LogInformation("AI recommendation started with RequestId: {RequestId} for UyeId: {UyeId}", 
+                    requestId, uye.Id);
+
+                // 6. Hemen Result sayfasına yönlendir (polling mode)
+                return RedirectToAction(nameof(Result), new { requestId });
             }
             catch (Exception ex)
             {
@@ -181,11 +187,29 @@ namespace FitnessCenter.Web.Controllers
         /// <summary>
         /// GET: /Ai/Result
         /// AI öneri sonucunu gösterir
+        /// requestId varsa polling mode'da loading gösterir
         /// </summary>
         [HttpGet]
-        public IActionResult Result()
+        public IActionResult Result(string? requestId = null)
         {
-            // TempData'dan sonucu al
+            // ===== POLLING MODE: requestId varsa loading state göster =====
+            if (!string.IsNullOrEmpty(requestId))
+            {
+                _logger.LogInformation("Result page opened in polling mode for RequestId: {RequestId}", requestId);
+                
+                ViewBag.IsPolling = true;
+                ViewBag.RequestId = requestId;
+                
+                // Boş model ile loading state göster
+                return View(new AiResultVm
+                {
+                    IsSuccess = false,
+                    Summary = "AI yanıtı hazırlanıyor...",
+                    GeneratedAt = DateTime.UtcNow
+                });
+            }
+
+            // ===== NORMAL MODE: TempData'dan sonucu al (fallback durumları için) =====
             var resultJson = TempData["AiResult"] as string;
             
             if (string.IsNullOrEmpty(resultJson))
@@ -196,7 +220,9 @@ namespace FitnessCenter.Web.Controllers
 
             try
             {
-                var result = System.Text.Json.JsonSerializer.Deserialize<AiResultVm>(resultJson);
+                // Case-insensitive deserialize
+                var jsonOptions = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var result = System.Text.Json.JsonSerializer.Deserialize<AiResultVm>(resultJson, jsonOptions);
                 
                 if (result == null)
                 {
@@ -204,12 +230,47 @@ namespace FitnessCenter.Web.Controllers
                     return RedirectToAction(nameof(Recommend));
                 }
 
+                ViewBag.IsPolling = false;
                 return View(result);
             }
             catch
             {
                 TempData["Error"] = "Sonuç işlenirken bir hata oluştu.";
                 return RedirectToAction(nameof(Recommend));
+            }
+        }
+
+        /// <summary>
+        /// GET: /Ai/Status
+        /// AJAX polling için status endpoint'i
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Status(string requestId)
+        {
+            if (string.IsNullOrEmpty(requestId))
+            {
+                return Json(new { status = "Error", errorMessage = "RequestId gerekli." });
+            }
+
+            try
+            {
+                var (status, result, errorMessage) = await _aiService.GetRecommendationStatusAsync(requestId);
+
+                _logger.LogInformation("Status endpoint: RequestId={RequestId}, Status={Status}, HasResult={HasResult}", 
+                    requestId, status, result != null);
+
+                // AiResultVm artık JsonPropertyName attribute'ları ile camelCase kullanıyor
+                return Json(new
+                {
+                    status,
+                    result,
+                    errorMessage
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking status for RequestId: {RequestId}", requestId);
+                return Json(new { status = "Error", errorMessage = "Durum kontrolü sırasında hata oluştu." });
             }
         }
 

@@ -1,0 +1,107 @@
+@model List<FitnessCenter.Web.Areas.Admin.Controllers.KullaniciListeViewModel>
+
+@{
+    ViewData["Title"] = "Kullanıcılar";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1>Kullanıcılar</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Kullanıcılar</li>
+                    </ol>
+                </nav>
+            </div>
+            <div>
+                <span class="badge bg-primary fs-6">@Model.Count kullanıcı</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    @if (!Model.Any())
+    {
+        <div class="card-fc">
+            <div class="card-body">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <h3 class="empty-state-title">Henüz kullanıcı yok</h3>
+                    <p class="empty-state-text">Sistemde kayıtlı kullanıcı bulunmuyor.</p>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card-fc">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-fc table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Kullanıcı Adı</th>
+                                <th>E-posta</th>
+                                <th>Rol</th>
+                                <th>Üyelik Durumu</th>
+                                <th class="text-end">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="profile-avatar profile-avatar-sm">
+                                                @(item.KullaniciAdi.Length >= 2 ? item.KullaniciAdi.Substring(0, 2).ToUpper() : item.KullaniciAdi.ToUpper())
+                                            </span>
+                                            <strong>@item.KullaniciAdi</strong>
+                                        </div>
+                                    </td>
+                                    <td>@item.Email</td>
+                                    <td>
+                                        @if (item.Rol == "Admin")
+                                        {
+                                            <span class="badge bg-danger">Admin</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Üye</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.UyelikDurumu == "Üyeliği yok")
+                                        {
+                                            <span class="text-muted">@item.UyelikDurumu</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                                @item.UyelikDurumu
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-fc btn-fc-sm btn-fc-outline-primary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            Detay
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

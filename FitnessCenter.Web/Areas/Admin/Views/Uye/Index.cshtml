@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<FitnessCenter.Web.Models.Entities.Uye>
 
 @{
-    ViewData["Title"] = "Üyeler";
+    ViewData["Title"] = "Üyeler / Üyelikler";
 }
 
 <!-- Toast Data -->
@@ -15,7 +15,7 @@
     <div class="container">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
             <div>
-                <h1>Üyeler</h1>
+                <h1>Üyeler / Üyelikler</h1>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
@@ -23,11 +23,9 @@
                     </ol>
                 </nav>
             </div>
-            <div class="page-header-actions">
-                <a asp-action="Create" class="btn-fc btn-fc-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Yeni Üye
-                </a>
+            <div class="d-flex gap-2 align-items-center">
+                <span class="badge bg-primary fs-6">@Model.Count() üye</span>
+                <span class="badge bg-success fs-6">@Model.Sum(u => u.Uyelikler?.Count ?? 0) üyelik</span>
             </div>
         </div>
     </div>
@@ -42,53 +40,151 @@
                     <div class="empty-state-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     </div>
-                    <h3 class="empty-state-title">Henüz üye eklenmemiş</h3>
-                    <p class="empty-state-text">Spor salonu üyelerini sisteme ekleyerek başlayın.</p>
-                    <a asp-action="Create" class="btn-fc btn-fc-primary">Üye Ekle</a>
+                    <h3 class="empty-state-title">Henüz üyelik kaydı yok</h3>
+                    <p class="empty-state-text">Kullanıcılar üyelik satın aldıkça burada listelenecek.</p>
+                    <a asp-area="Admin" asp-controller="Kullanici" asp-action="Index" class="btn-fc btn-fc-primary">Kullanıcıları Görüntüle</a>
                 </div>
             </div>
         </div>
     }
     else
     {
-        <div class="card-fc">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table-fc">
-                        <thead>
-                            <tr>
-                                <th>Ad Soyad</th>
-                                <th>E-posta</th>
-                                <th>Telefon</th>
-                                <th style="width: 180px;">İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model)
+        <!-- Açıklama -->
+        <div class="alert-fc alert-fc-info mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Bu sayfada <strong>üyelik satın almış kullanıcılar</strong> ve şubelerdeki üyelikleri listelenir. Tüm sistem hesaplarını görmek için <a asp-area="Admin" asp-controller="Kullanici" asp-action="Index">Kullanıcılar</a> sayfasını ziyaret edin.</span>
+        </div>
+
+        <!-- Accordion ile Gruplu Liste -->
+        <div class="accordion" id="uyelerAccordion">
+            @{int index = 0;}
+            @foreach (var uye in Model)
+            {
+                var hasUyelik = uye.Uyelikler?.Any() == true;
+                var aktifUyelikSayisi = uye.Uyelikler?.Count(x => x.Durum == "Aktif") ?? 0;
+                var collapseId = $"collapse_{uye.Id}";
+                var headerId = $"heading_{uye.Id}";
+                
+                <div class="accordion-item card-fc mb-3">
+                    <h2 class="accordion-header" id="@headerId">
+                        <button class="accordion-button @(index == 0 ? "" : "collapsed")" type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#@collapseId" 
+                                aria-expanded="@(index == 0 ? "true" : "false")" 
+                                aria-controls="@collapseId">
+                            <div class="d-flex align-items-center gap-3 w-100 me-3">
+                                <!-- Avatar -->
+                                <span class="profile-avatar">
+                                    @(uye.AdSoyad.Length >= 2 ? uye.AdSoyad.Substring(0, 2).ToUpper() : uye.AdSoyad.ToUpper())
+                                </span>
+                                
+                                <!-- Kullanıcı Bilgisi -->
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <strong>@uye.AdSoyad</strong>
+                                        @if (aktifUyelikSayisi > 0)
+                                        {
+                                            <span class="badge bg-success">@aktifUyelikSayisi aktif üyelik</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Pasif</span>
+                                        }
+                                    </div>
+                                    <small class="text-muted">@uye.Email</small>
+                                </div>
+                                
+                                <!-- Üyelik Sayısı -->
+                                <div class="text-end d-none d-md-block">
+                                    <span class="fs-5 fw-bold text-primary">@(uye.Uyelikler?.Count ?? 0)</span>
+                                    <small class="text-muted d-block">üyelik</small>
+                                </div>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="@collapseId" class="accordion-collapse collapse @(index == 0 ? "show" : "")" 
+                         aria-labelledby="@headerId" 
+                         data-bs-parent="#uyelerAccordion">
+                        <div class="accordion-body p-0">
+                            @if (!hasUyelik)
                             {
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 36px; height: 36px; background-color: var(--fc-info-light);">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info-fc"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                            </span>
-                                            <strong>@item.AdSoyad</strong>
-                                        </div>
-                                    </td>
-                                    <td>@item.Email</td>
-                                    <td>@item.Telefon</td>
-                                    <td>
-                                        <div class="d-flex gap-2">
-                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-fc btn-fc-primary btn-fc-sm">Düzenle</a>
-                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn-fc btn-fc-danger btn-fc-sm">Sil</a>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <div class="p-4 text-center text-muted">
+                                    <p class="mb-0">Bu üyenin henüz bir şubede üyeliği yok.</p>
+                                </div>
                             }
-                        </tbody>
-                    </table>
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-fc table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Şube</th>
+                                                <th>Başlangıç Tarihi</th>
+                                                <th>Bitiş Tarihi</th>
+                                                <th>Durum</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var uyelik in uye.Uyelikler!.OrderByDescending(x => x.BaslangicTarihi))
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                                                            <strong>@(uyelik.Salon?.Ad ?? "Şube")</strong>
+                                                        </div>
+                                                    </td>
+                                                    <td>@uyelik.BaslangicTarihi.ToString("dd.MM.yyyy")</td>
+                                                    <td>
+                                                        @if (uyelik.BitisTarihi.HasValue)
+                                                        {
+                                                            @uyelik.BitisTarihi.Value.ToString("dd.MM.yyyy")
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">Süresiz</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (uyelik.Durum == "Aktif")
+                                                        {
+                                                            <span class="badge bg-success">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                                                Aktif
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">Pasif</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
-            </div>
+                index++;
+            }
         </div>
     }
 </div>
+
+<style>
+    .accordion-button:not(.collapsed) {
+        background-color: var(--fc-primary-light);
+        color: var(--fc-primary);
+    }
+    .accordion-button:focus {
+        box-shadow: 0 0 0 0.1rem rgba(79, 70, 229, 0.25);
+    }
+    .accordion-item {
+        border: none;
+    }
+    .accordion-body {
+        background-color: var(--fc-bg-secondary);
+    }
+</style>

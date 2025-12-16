@@ -71,6 +71,22 @@ namespace FitnessCenter.Web.Models.Entities
         [Display(Name = "Başarılı")]
         public bool IsSuccess { get; set; }
 
+        // ===== AJAX Polling İçin Yeni Alanlar =====
+
+        /// <summary>
+        /// Benzersiz istek kimliği (AJAX polling için)
+        /// </summary>
+        [StringLength(36)]
+        [Display(Name = "Request ID")]
+        public string? RequestId { get; set; }
+
+        /// <summary>
+        /// İşlem durumu: Pending, Processing, Completed, Error
+        /// </summary>
+        [StringLength(20)]
+        [Display(Name = "Durum")]
+        public string? Status { get; set; }
+
         // ===== Navigation Property =====
 
         [Display(Name = "Üye")]

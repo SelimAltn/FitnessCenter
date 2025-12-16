@@ -18,9 +18,15 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
         }
 
         // GET: Admin/Uye
+        // Üyeleri ve üyeliklerini listele (gruplu görünüm için)
         public async Task<IActionResult> Index()
         {
-            var uyeler = await _context.Uyeler.ToListAsync();
+            var uyeler = await _context.Uyeler
+                .Include(u => u.Uyelikler!)
+                    .ThenInclude(uy => uy.Salon)
+                .Include(u => u.ApplicationUser)
+                .OrderByDescending(u => u.Id)
+                .ToListAsync();
             return View(uyeler);
         }
 

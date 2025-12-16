@@ -1,6 +1,7 @@
 ﻿using FitnessCenter.Web.Data.Context;
 using FitnessCenter.Web.Models.Entities;
 using FitnessCenter.Web.Models.ViewModels;
+using FitnessCenter.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,17 +14,20 @@ namespace FitnessCenter.Web.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly AppDbContext _context;
+        private readonly IBildirimService _bildirimService;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             AppDbContext context,
+            IBildirimService bildirimService,
             ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
+            _bildirimService = bildirimService;
             _logger = logger;
         }
 
@@ -55,6 +59,21 @@ namespace FitnessCenter.Web.Controllers
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(user, "Member");
+
+                // ========== TÜM ADMİN'LERE BİLDİRİM GÖNDER ==========
+                var adminUsers = await _userManager.GetUsersInRoleAsync("Admin");
+                foreach (var admin in adminUsers)
+                {
+                    await _bildirimService.OlusturAsync(
+                        userId: admin.Id,
+                        baslik: "Yeni kullanıcı kaydı",
+                        mesaj: $"{model.KullaniciAdi} ({model.Email}) sisteme kayıt oldu.",
+                        tur: "NewUser",
+                        iliskiliId: null,
+                        link: "/Admin/Uye"
+                    );
+                }
+
                 await _signInManager.SignInAsync(user, isPersistent: false);
 
                 return RedirectToAction("Index", "Home");

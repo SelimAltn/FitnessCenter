@@ -28,5 +28,26 @@ namespace FitnessCenter.Web.Services.Interfaces
         /// API yapılandırılmış mı kontrol eder
         /// </summary>
         bool IsApiConfigured { get; }
+
+        // ===== AJAX Polling İçin Yeni Metodlar =====
+
+        /// <summary>
+        /// AI öneri işlemini arka planda başlatır.
+        /// Hemen requestId döndürür, işlem arka planda devam eder.
+        /// </summary>
+        /// <param name="input">Kullanıcı girdileri</param>
+        /// <param name="uyeId">Üye ID</param>
+        /// <param name="requestId">Benzersiz istek kimliği</param>
+        /// <returns>RequestId</returns>
+        Task StartRecommendationAsync(AiRecommendVm input, int uyeId, string requestId);
+
+        /// <summary>
+        /// Belirtilen requestId için işlem durumunu sorgular.
+        /// Polling ile çağrılır.
+        /// </summary>
+        /// <param name="requestId">İstek kimliği</param>
+        /// <returns>Status (Pending/Processing/Completed/Error) ve sonuç (varsa)</returns>
+        Task<(string Status, AiResultVm? Result, string? ErrorMessage)> GetRecommendationStatusAsync(string requestId);
     }
 }
+

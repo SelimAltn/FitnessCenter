@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FitnessCenter.Web.Data.Context;
 using FitnessCenter.Web.Models.Entities;
+using FitnessCenter.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,14 +17,19 @@ namespace FitnessCenter.Web.Controllers
     {
         private readonly AppDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IBildirimService _bildirimService;
 
         // Randevular arasında bırakılacak minimum ara (dk)
         private const int MinAraDakika = 10;
 
-        public RandevuController(AppDbContext context, UserManager<ApplicationUser> userManager)
+        public RandevuController(
+            AppDbContext context, 
+            UserManager<ApplicationUser> userManager,
+            IBildirimService bildirimService)
         {
             _context = context;
             _userManager = userManager;
+            _bildirimService = bildirimService;
         }
 
         // Login olan kullanıcının Uye kaydını, ApplicationUserId üzerinden bul
@@ -275,6 +281,24 @@ namespace FitnessCenter.Web.Controllers
             _context.Randevular.Add(randevu);
             await _context.SaveChangesAsync();
 
+            // Eğitmen bilgisini al
+            var egitmen = await _context.Egitmenler.FindAsync(randevu.EgitmenId);
+            var egitmenAd = egitmen?.AdSoyad ?? "Eğitmen";
+
+            // ========== YENİ RANDEVU (BEKLEMEDE) - ADMİN'LERE BİLDİRİM ==========
+            var adminUsers = await _userManager.GetUsersInRoleAsync("Admin");
+            foreach (var admin in adminUsers)
+            {
+                await _bildirimService.OlusturAsync(
+                    userId: admin.Id,
+                    baslik: "Yeni randevu (Onay bekliyor)",
+                    mesaj: $"{uye.AdSoyad} - {egitmenAd} - {randevu.BaslangicZamani:dd.MM.yyyy HH:mm}",
+                    tur: "NewAppointmentPending",
+                    iliskiliId: randevu.Id,
+                    link: "/Admin/Randevu?durum=Beklemede"
+                );
+            }
+
             TempData["Success"] = "Randevu talebiniz oluşturuldu. Onaylandığında durum bilgisini bu ekrandan görebilirsiniz.";
 
             return RedirectToAction(nameof(Index));
@@ -292,23 +316,43 @@ namespace FitnessCenter.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var randevu = await _context.Randevular
+            // Randevu ve eğitmen bilgilerini al (bildirim için)
+            var randevuBilgi = await _context.Randevular
+                .Include(r => r.Egitmen)
+                .Include(r => r.Uye)
                 .FirstOrDefaultAsync(r => r.Id == id && r.UyeId == uye.Id);
 
-            if (randevu == null)
+            if (randevuBilgi == null)
             {
                 TempData["Error"] = "Randevu bulunamadı.";
                 return RedirectToAction(nameof(Index));
             }
 
-            if (randevu.Durum == "İptal")
+            if (randevuBilgi.Durum == "İptal")
             {
                 TempData["Info"] = "Bu randevu zaten iptal edilmiş.";
                 return RedirectToAction(nameof(Index));
             }
 
-            randevu.Durum = "İptal";
+            var egitmenAd = randevuBilgi.Egitmen?.AdSoyad ?? "Eğitmen";
+            var randevuTarih = randevuBilgi.BaslangicZamani.ToString("dd.MM.yyyy HH:mm");
+
+            randevuBilgi.Durum = "İptal";
             await _context.SaveChangesAsync();
+
+            // ========== RANDEVU İPTAL EDİLDİ - ADMİN'LERE BİLDİRİM ==========
+            var adminUsers = await _userManager.GetUsersInRoleAsync("Admin");
+            foreach (var admin in adminUsers)
+            {
+                await _bildirimService.OlusturAsync(
+                    userId: admin.Id,
+                    baslik: "Randevu iptal edildi",
+                    mesaj: $"{uye.AdSoyad} - {egitmenAd} - {randevuTarih}",
+                    tur: "AppointmentCancelledByUser",
+                    iliskiliId: randevuBilgi.Id,
+                    link: $"/Admin/Randevu/Details/{randevuBilgi.Id}"
+                );
+            }
 
             TempData["Success"] = "Randevu başarıyla iptal edildi.";
             return RedirectToAction(nameof(Index));

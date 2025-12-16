@@ -1,5 +1,6 @@
 ﻿using FitnessCenter.Web.Data.Context;
 using FitnessCenter.Web.Models.Entities;
+using FitnessCenter.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -12,10 +13,12 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
     public class RandevuController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IBildirimService _bildirimService;
 
-        public RandevuController(AppDbContext context)
+        public RandevuController(AppDbContext context, IBildirimService bildirimService)
         {
             _context = context;
+            _bildirimService = bildirimService;
         }
 
         // GET: Admin/Randevu
@@ -96,7 +99,14 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DurumDegistir(int id, string yeniDurum)
         {
-            var r = await _context.Randevular.FindAsync(id);
+            // Randevu ve ilişkili bilgileri al
+            var r = await _context.Randevular
+                .Include(x => x.Uye)
+                    .ThenInclude(u => u!.ApplicationUser)
+                .Include(x => x.Egitmen)
+                .Include(x => x.Hizmet)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
             if (r == null)
             {
                 TempData["Error"] = "Randevu bulunamadı.";
@@ -111,7 +121,8 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             }
 
             // Zaten aynı durumdaysa boşuna kaydetmeyelim
-            if (r.Durum == yeniDurum)
+            var eskiDurum = r.Durum;
+            if (eskiDurum == yeniDurum)
             {
                 TempData["Info"] = "Randevu zaten bu durumda.";
                 return RedirectToAction(nameof(Index));
@@ -119,6 +130,38 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
 
             r.Durum = yeniDurum;
             await _context.SaveChangesAsync();
+
+            // ========== KULLANICIYA BİLDİRİM GÖNDER ==========
+            var kullaniciId = r.Uye?.ApplicationUserId;
+            if (!string.IsNullOrEmpty(kullaniciId))
+            {
+                var egitmenAd = r.Egitmen?.AdSoyad ?? "Eğitmen";
+                var hizmetAd = r.Hizmet?.Ad ?? "Hizmet";
+                var randevuTarih = r.BaslangicZamani.ToString("dd.MM.yyyy HH:mm");
+
+                if (yeniDurum == "Onaylandı")
+                {
+                    await _bildirimService.OlusturAsync(
+                        userId: kullaniciId,
+                        baslik: "Randevunuz onaylandı ✓",
+                        mesaj: $"{randevuTarih} - {egitmenAd} - {hizmetAd}",
+                        tur: "AppointmentApproved",
+                        iliskiliId: r.Id,
+                        link: "/Randevu"
+                    );
+                }
+                else if (yeniDurum == "İptal")
+                {
+                    await _bildirimService.OlusturAsync(
+                        userId: kullaniciId,
+                        baslik: "Randevunuz iptal edildi",
+                        mesaj: $"{randevuTarih} - {egitmenAd}",
+                        tur: "AppointmentCancelledByAdmin",
+                        iliskiliId: r.Id,
+                        link: "/Randevu"
+                    );
+                }
+            }
 
             TempData["Success"] = $"Randevu durumu '{yeniDurum}' olarak güncellendi.";
             return RedirectToAction(nameof(Index));

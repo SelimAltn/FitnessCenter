@@ -116,21 +116,45 @@
         </div>
 
         <div class="col-md-6 col-lg-4">
-            <a asp-area="Admin" asp-controller="Uye" asp-action="Index" class="text-decoration-none">
+            <a asp-area="Admin" asp-controller="Kullanici" asp-action="Index" class="text-decoration-none">
                 <div class="card-fc h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
                             <span class="d-inline-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: var(--fc-info-light);">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-info-fc">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                                 </svg>
                             </span>
                             <div>
-                                <h5 class="mb-0">Üyeler</h5>
-                                <small class="text-muted-fc">Üye yönetimi</small>
+                                <h5 class="mb-0">Kullanıcılar</h5>
+                                <small class="text-muted-fc">Tüm hesaplar</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a asp-area="Admin" asp-controller="Uye" asp-action="Index" class="text-decoration-none">
+                <div class="card-fc h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: var(--fc-success-light);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-success-fc">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                    <path d="M9 16l2 2 4-4"/>
+                                </svg>
+                            </span>
+                            <div>
+                                <h5 class="mb-0">Üyelikler</h5>
+                                <small class="text-muted-fc">Üyelik yönetimi</small>
                             </div>
                         </div>
                     </div>
