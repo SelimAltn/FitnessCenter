@@ -133,12 +133,13 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
 
             // ========== KULLANICIYA BİLDİRİM GÖNDER ==========
             var kullaniciId = r.Uye?.ApplicationUserId;
+            var egitmenAd = r.Egitmen?.AdSoyad ?? "Eğitmen";
+            var hizmetAd = r.Hizmet?.Ad ?? "Hizmet";
+            var randevuTarih = r.BaslangicZamani.ToString("dd.MM.yyyy HH:mm");
+            var uyeAd = r.Uye?.AdSoyad ?? "Üye";
+
             if (!string.IsNullOrEmpty(kullaniciId))
             {
-                var egitmenAd = r.Egitmen?.AdSoyad ?? "Eğitmen";
-                var hizmetAd = r.Hizmet?.Ad ?? "Hizmet";
-                var randevuTarih = r.BaslangicZamani.ToString("dd.MM.yyyy HH:mm");
-
                 if (yeniDurum == "Onaylandı")
                 {
                     await _bildirimService.OlusturAsync(
@@ -159,6 +160,34 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
                         tur: "AppointmentCancelledByAdmin",
                         iliskiliId: r.Id,
                         link: "/Randevu"
+                    );
+                }
+            }
+
+            // ========== EĞİTMENE BİLDİRİM GÖNDER ==========
+            var egitmenUserId = r.Egitmen?.ApplicationUserId;
+            if (!string.IsNullOrEmpty(egitmenUserId))
+            {
+                if (yeniDurum == "Onaylandı")
+                {
+                    await _bildirimService.OlusturAsync(
+                        userId: egitmenUserId,
+                        baslik: "Yeni onaylı randevunuz var",
+                        mesaj: $"{randevuTarih} - {uyeAd} - {hizmetAd}",
+                        tur: "TrainerAppointmentApproved",
+                        iliskiliId: r.Id,
+                        link: "/Trainer/Randevu"
+                    );
+                }
+                else if (yeniDurum == "İptal")
+                {
+                    await _bildirimService.OlusturAsync(
+                        userId: egitmenUserId,
+                        baslik: "Randevu iptal edildi",
+                        mesaj: $"{randevuTarih} - {uyeAd}",
+                        tur: "TrainerAppointmentCancelled",
+                        iliskiliId: r.Id,
+                        link: "/Trainer/Randevu"
                     );
                 }
             }

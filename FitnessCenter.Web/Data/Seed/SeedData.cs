@@ -15,7 +15,7 @@ namespace FitnessCenter.Web.Data.Seed
             var context = serviceProvider.GetRequiredService<AppDbContext>();
 
             // ---- 1) ROLLER ----
-            string[] roles = new[] { "Admin", "Member" };
+            string[] roles = new[] { "Admin", "Member", "Trainer" };
 
             foreach (var role in roles)
             {
@@ -60,6 +60,25 @@ namespace FitnessCenter.Web.Data.Seed
 
             // Veritabanı gerçekten hazır mı emin olmak için
             await context.Database.EnsureCreatedAsync();
+
+            // 3.0 Uzmanlık Alanları seed
+            if (!await context.UzmanlikAlanlari.AnyAsync())
+            {
+                context.UzmanlikAlanlari.AddRange(
+                    new UzmanlikAlani { Ad = "Fitness", Aciklama = "Genel fitness ve kondisyon çalışmaları", Aktif = true },
+                    new UzmanlikAlani { Ad = "Yoga", Aciklama = "Yoga ve meditasyon seansları", Aktif = true },
+                    new UzmanlikAlani { Ad = "Pilates", Aciklama = "Pilates egzersizleri", Aktif = true },
+                    new UzmanlikAlani { Ad = "CrossFit", Aciklama = "Yüksek yoğunluklu fonksiyonel antrenman", Aktif = true },
+                    new UzmanlikAlani { Ad = "Rehabilitasyon", Aciklama = "Spor sakatlıkları rehabilitasyonu", Aktif = true },
+                    new UzmanlikAlani { Ad = "Beslenme", Aciklama = "Beslenme danışmanlığı", Aktif = true },
+                    new UzmanlikAlani { Ad = "Kişisel Antrenman", Aciklama = "Bire bir kişisel antrenman programları", Aktif = true },
+                    new UzmanlikAlani { Ad = "Grup Dersleri", Aciklama = "Grup fitness dersleri", Aktif = true },
+                    new UzmanlikAlani { Ad = "HIIT", Aciklama = "High Intensity Interval Training", Aktif = true },
+                    new UzmanlikAlani { Ad = "Masaj", Aciklama = "Sporcu masajı ve gevşeme teknikleri", Aktif = true }
+                );
+
+                await context.SaveChangesAsync();
+            }
 
             // 3.1 Salon seed
             if (!await context.Salonlar.AnyAsync())
@@ -112,27 +131,39 @@ namespace FitnessCenter.Web.Data.Seed
                 await context.SaveChangesAsync();
             }
 
-            // 3.3 Eğitmen seed
+            // 3.3 Eğitmen seed (artık Identity olmadan, admin sonradan ekleyecek)
             if (!await context.Egitmenler.AnyAsync())
             {
+                var merkezSube = await context.Salonlar.FirstOrDefaultAsync(s => s.Ad == "Merkez Şube");
+                var premiumSube = await context.Salonlar.FirstOrDefaultAsync(s => s.Ad == "Premium Şube");
+
                 context.Egitmenler.AddRange(
                     new Egitmen
                     {
                         AdSoyad = "Ahmet Yılmaz",
-                        Uzmanlik = "Kişisel Antrenman, Fonksiyonel Antrenman",
-                        Biyografi = "10 yıllık deneyime sahip sertifikalı personal trainer."
+                        Email = "ahmet@fitnesscenter.com",
+                        Telefon = "0532 111 2233",
+                        SalonId = merkezSube?.Id,
+                        Biyografi = "10 yıllık deneyime sahip sertifikalı personal trainer.",
+                        Aktif = true
                     },
                     new Egitmen
                     {
                         AdSoyad = "Ayşe Demir",
-                        Uzmanlik = "Grup Dersleri, HIIT, Pilates",
-                        Biyografi = "Enerjik grup dersleri ve pilates eğitmeni."
+                        Email = "ayse@fitnesscenter.com",
+                        Telefon = "0532 444 5566",
+                        SalonId = merkezSube?.Id,
+                        Biyografi = "Enerjik grup dersleri ve pilates eğitmeni.",
+                        Aktif = true
                     },
                     new Egitmen
                     {
                         AdSoyad = "Mehmet Kaya",
-                        Uzmanlik = "Masaj, Rehabilitasyon",
-                        Biyografi = "Fizyoterapi kökenli sporcu masajı uzmanı."
+                        Email = "mehmet@fitnesscenter.com",
+                        Telefon = "0532 777 8899",
+                        SalonId = premiumSube?.Id,
+                        Biyografi = "Fizyoterapi kökenli sporcu masajı uzmanı.",
+                        Aktif = true
                     }
                 );
 

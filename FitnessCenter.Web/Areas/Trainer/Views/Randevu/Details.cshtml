@@ -1,0 +1,85 @@
+@model FitnessCenter.Web.Models.Entities.Randevu
+@{
+    ViewData["Title"] = "Randevu Detayı";
+}
+
+<div class="mb-4">
+    <a asp-action="Index" class="text-decoration-none">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Randevulara Dön
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Randevu Detayı</h4>
+        @{
+            var durumClass = Model.Durum switch
+            {
+                "Onaylandı" => "bg-success",
+                "Beklemede" => "bg-warning text-dark",
+                "İptal" => "bg-danger",
+                _ => "bg-secondary"
+            };
+        }
+        <span class="badge @durumClass fs-6">@Model.Durum</span>
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="text-muted mb-2">Tarih & Saat</h6>
+                <p class="fs-5 mb-0">
+                    <strong>@Model.BaslangicZamani.ToString("dd MMMM yyyy, dddd")</strong><br/>
+                    @Model.BaslangicZamani.ToString("HH:mm") - @Model.BitisZamani.ToString("HH:mm")
+                </p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-muted mb-2">Hizmet</h6>
+                <p class="fs-5 mb-0">@Model.Hizmet?.Ad</p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-muted mb-2">Üye Bilgileri</h6>
+                <p class="mb-0">
+                    <strong>@Model.Uye?.AdSoyad</strong><br/>
+                    @if (!string.IsNullOrEmpty(Model.Uye?.Email))
+                    {
+                        <span class="text-muted">@Model.Uye.Email</span><br/>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Uye?.Telefon))
+                    {
+                        <span class="text-muted">@Model.Uye.Telefon</span>
+                    }
+                </p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-muted mb-2">Şube</h6>
+                <p class="mb-0">
+                    <strong>@Model.Salon?.Ad</strong><br/>
+                    @if (!string.IsNullOrEmpty(Model.Salon?.Adress))
+                    {
+                        <span class="text-muted">@Model.Salon.Adress</span>
+                    }
+                </p>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Notlar))
+            {
+                <div class="col-12">
+                    <h6 class="text-muted mb-2">Notlar</h6>
+                    <p class="mb-0">@Model.Notlar</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-4">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+    </svg>
+    Randevu durumu değişiklikleri admin tarafından yapılmaktadır. Herhangi bir değişiklik için lütfen admin ile iletişime geçin.
+</div>

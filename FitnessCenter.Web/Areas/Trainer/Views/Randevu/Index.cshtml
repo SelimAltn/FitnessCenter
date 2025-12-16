@@ -1,0 +1,112 @@
+@model List<FitnessCenter.Web.Models.Entities.Randevu>
+@{
+    ViewData["Title"] = "Randevularım";
+    var durumlar = ViewData["Durumlar"] as string[] ?? new[] { "Beklemede", "Onaylandı", "İptal" };
+    var seciliDurum = ViewData["SeciliDurum"] as string;
+    var seciliTarih = ViewData["SeciliTarih"] as string;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Randevularım</h2>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Tarih</label>
+                <input type="date" name="tarih" value="@seciliTarih" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Durum</label>
+                <select name="durum" class="form-select">
+                    <option value="">Tümü</option>
+                    @foreach (var d in durumlar)
+                    {
+                        <option value="@d" selected="@(seciliDurum == d)">@d</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary me-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    Filtrele
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Temizle</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Randevu Listesi -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tarih & Saat</th>
+                            <th>Üye</th>
+                            <th>Hizmet</th>
+                            <th>Şube</th>
+                            <th>Durum</th>
+                            <th class="text-end">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model)
+                        {
+                            var durumClass = r.Durum switch
+                            {
+                                "Onaylandı" => "bg-success",
+                                "Beklemede" => "bg-warning text-dark",
+                                "İptal" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+                            <tr>
+                                <td>
+                                    <strong>@r.BaslangicZamani.ToString("dd MMM yyyy")</strong><br/>
+                                    <small class="text-muted">@r.BaslangicZamani.ToString("HH:mm") - @r.BitisZamani.ToString("HH:mm")</small>
+                                </td>
+                                <td>
+                                    @r.Uye?.AdSoyad
+                                    @if (!string.IsNullOrEmpty(r.Uye?.Telefon))
+                                    {
+                                        <br/><small class="text-muted">@r.Uye.Telefon</small>
+                                    }
+                                </td>
+                                <td>@r.Hizmet?.Ad</td>
+                                <td>@r.Salon?.Ad</td>
+                                <td><span class="badge @durumClass">@r.Durum</span></td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-outline-primary">
+                                        Detay
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-3 opacity-50">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <h5>Randevu Bulunamadı</h5>
+                <p class="mb-0">Seçili kriterlere uygun randevu yok.</p>
+            </div>
+        }
+    </div>
+</div>

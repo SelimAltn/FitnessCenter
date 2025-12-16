@@ -1,70 +1,181 @@
-﻿@model FitnessCenter.Web.Models.Entities.Egitmen
-
+﻿@model FitnessCenter.Web.Models.ViewModels.EgitmenEditVm
 @{
     ViewData["Title"] = "Eğitmen Düzenle";
+    var salonlar = ViewData["Salonlar"] as SelectList;
+    var uzmanlikAlanlari = ViewData["UzmanlikAlanlari"] as List<FitnessCenter.Web.Models.Entities.UzmanlikAlani> ?? new();
 }
 
-<!-- Page Header -->
-<div class="page-header">
-    <div class="container">
-        <div>
-            <h1>Eğitmen Düzenle</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
-                    <li class="breadcrumb-item"><a asp-action="Index">Eğitmenler</a></li>
-                    <li class="breadcrumb-item active">Düzenle</li>
-                </ol>
-            </nav>
-        </div>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Eğitmen Düzenle: @Model.AdSoyad</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">← Listeye Dön</a>
     </div>
-</div>
 
-<div class="container pb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card-fc">
-                <div class="card-header">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                    Eğitmen Bilgilerini Düzenle
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            <strong>Hata!</strong> Lütfen formu kontrol edin.
+        </div>
+    }
+
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Kişisel Bilgiler</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="AdSoyad" class="form-label"></label>
+                            <input asp-for="AdSoyad" class="form-control" />
+                            <span asp-validation-for="AdSoyad" class="text-danger"></span>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label"></label>
+                                <input asp-for="Email" class="form-control" type="email" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Telefon" class="form-label"></label>
+                                <input asp-for="Telefon" class="form-control" />
+                                <span asp-validation-for="Telefon" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="KullaniciAdi" class="form-label"></label>
+                                <input asp-for="KullaniciAdi" class="form-control" readonly />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Sifre" class="form-label">Yeni Şifre (Boş bırakırsanız değişmez)</label>
+                                <input asp-for="Sifre" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form asp-action="Edit" method="post">
-                        <input type="hidden" asp-for="Id" />
-                        <div asp-validation-summary="ModelOnly" class="alert-fc alert-fc-danger mb-4"></div>
 
-                        <div class="form-fc-group">
-                            <label asp-for="AdSoyad" class="form-fc-label">Ad Soyad</label>
-                            <input asp-for="AdSoyad" class="form-fc-control" />
-                            <span asp-validation-for="AdSoyad" class="form-fc-error"></span>
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Şube & Maaş</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SalonId" class="form-label"></label>
+                                <select asp-for="SalonId" asp-items="salonlar" class="form-select">
+                                    <option value="">-- Şube Seçin --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Maas" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₺</span>
+                                    <input asp-for="Maas" class="form-control" type="number" step="100" />
+                                </div>
+                            </div>
                         </div>
+                        <div class="form-check">
+                            <input asp-for="Aktif" class="form-check-input" />
+                            <label asp-for="Aktif" class="form-check-label"></label>
+                        </div>
+                    </div>
+                </div>
 
-                        <div class="form-fc-group">
-                            <label asp-for="Uzmanlik" class="form-fc-label">Uzmanlık Alanı</label>
-                            <input asp-for="Uzmanlik" class="form-fc-control" />
-                            <span asp-validation-for="Uzmanlik" class="form-fc-error"></span>
-                        </div>
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Uzmanlık Alanları</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (uzmanlikAlanlari.Any())
+                        {
+                            <div class="row">
+                                @foreach (var uz in uzmanlikAlanlari)
+                                {
+                                    <div class="col-md-6 col-lg-4 mb-2">
+                                        <div class="form-check">
+                                            <input type="checkbox" name="SecilenUzmanliklar" value="@uz.Id" 
+                                                   class="form-check-input" id="uz_@uz.Id"
+                                                   @(Model.SecilenUzmanliklar.Contains(uz.Id) ? "checked" : "") />
+                                            <label class="form-check-label" for="uz_@uz.Id">@uz.Ad</label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
 
-                        <div class="form-fc-group">
-                            <label asp-for="Biyografi" class="form-fc-label">Biyografi</label>
-                            <textarea asp-for="Biyografi" class="form-fc-control" rows="4"></textarea>
-                            <span asp-validation-for="Biyografi" class="form-fc-error"></span>
-                        </div>
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">Haftalık Çalışma Saatleri</h5>
+                    </div>
+                    <div class="card-body">
+                        @for (int i = 0; i < Model.CalismaSaatleri.Count; i++)
+                        {
+                            var cs = Model.CalismaSaatleri[i];
+                            <input type="hidden" name="CalismaSaatleri[@i].Gun" value="@((int)cs.Gun)" />
+                            
+                            <div class="row align-items-center mb-2 py-2 border-bottom">
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" name="CalismaSaatleri[@i].Calisiyor" value="true" 
+                                               class="form-check-input work-day-check" id="day_@i"
+                                               data-index="@i"
+                                               @(cs.Calisiyor ? "checked" : "") />
+                                        <label class="form-check-label fw-medium" for="day_@i">@cs.GunAdi</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="time" name="CalismaSaatleri[@i].BaslangicSaati" 
+                                           class="form-control form-control-sm time-input time-input-@i"
+                                           value="@(cs.BaslangicSaati?.ToString(@"hh\:mm"))"
+                                           @(cs.Calisiyor ? "" : "disabled") />
+                                </div>
+                                <div class="col-md-1 text-center">-</div>
+                                <div class="col-md-4">
+                                    <input type="time" name="CalismaSaatleri[@i].BitisSaati" 
+                                           class="form-control form-control-sm time-input time-input-@i"
+                                           value="@(cs.BitisSaati?.ToString(@"hh\:mm"))"
+                                           @(cs.Calisiyor ? "" : "disabled") />
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
 
-                        <div class="d-flex gap-3 pt-3">
-                            <button type="submit" class="btn-fc btn-fc-primary">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                Güncelle
-                            </button>
-                            <a asp-action="Index" class="btn-fc btn-fc-secondary">İptal</a>
-                        </div>
-                    </form>
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">Biyografi</h5>
+                    </div>
+                    <div class="card-body">
+                        <textarea asp-for="Biyografi" class="form-control" rows="5"></textarea>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">Güncelle</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">İptal</a>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 
 @section Scripts {
-    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        document.querySelectorAll('.work-day-check').forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                var index = this.dataset.index;
+                var inputs = document.querySelectorAll('.time-input-' + index);
+                inputs.forEach(function(input) {
+                    input.disabled = !checkbox.checked;
+                });
+            });
+        });
+    </script>
 }

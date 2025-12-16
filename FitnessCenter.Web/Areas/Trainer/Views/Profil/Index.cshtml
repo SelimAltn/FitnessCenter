@@ -1,0 +1,219 @@
+@model FitnessCenter.Web.Models.Entities.Egitmen
+@{
+    ViewData["Title"] = "Profilim";
+    var calismaSaatleri = ViewData["CalismaSaatleri"] as Dictionary<DayOfWeek, List<FitnessCenter.Web.Models.Entities.Musaitlik>>;
+    
+    string GunAdi(DayOfWeek gun) => gun switch
+    {
+        DayOfWeek.Monday => "Pazartesi",
+        DayOfWeek.Tuesday => "Salı",
+        DayOfWeek.Wednesday => "Çarşamba",
+        DayOfWeek.Thursday => "Perşembe",
+        DayOfWeek.Friday => "Cuma",
+        DayOfWeek.Saturday => "Cumartesi",
+        DayOfWeek.Sunday => "Pazar",
+        _ => gun.ToString()
+    };
+}
+
+<h2 class="mb-4">Profil Bilgilerim</h2>
+
+<div class="alert alert-info mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+    </svg>
+    Profil bilgileriniz admin tarafından yönetilmektedir. Değişiklik talepleriniz için admin ile iletişime geçin.
+</div>
+
+<div class="row g-4">
+    <!-- Kişisel Bilgiler -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-primary">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    Kişisel Bilgiler
+                </h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Ad Soyad</dt>
+                    <dd class="col-sm-8">@Model.AdSoyad</dd>
+                    
+                    <dt class="col-sm-4">E-posta</dt>
+                    <dd class="col-sm-8">@(Model.Email ?? "-")</dd>
+                    
+                    <dt class="col-sm-4">Telefon</dt>
+                    <dd class="col-sm-8">@(Model.Telefon ?? "-")</dd>
+                    
+                    <dt class="col-sm-4">Kullanıcı Adı</dt>
+                    <dd class="col-sm-8">@(Model.KullaniciAdi ?? "-")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Şube ve Maaş -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-success">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    Çalışma Bilgileri
+                </h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Çalıştığı Şube</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Salon != null)
+                        {
+                            <strong>@Model.Salon.Ad</strong>
+                            @if (!string.IsNullOrEmpty(Model.Salon.Adress))
+                            {
+                                <br/><small class="text-muted">@Model.Salon.Adress</small>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">Atanmamış</span>
+                        }
+                    </dd>
+                    
+                    <dt class="col-sm-4">Maaş</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Maas.HasValue)
+                        {
+                            <strong class="text-success">@Model.Maas?.ToString("C0")</strong>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Belirlenmemiş</span>
+                        }
+                    </dd>
+                    
+                    <dt class="col-sm-4">Durum</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Aktif)
+                        {
+                            <span class="badge bg-success">Aktif</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Pasif</span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Uzmanlık Alanları -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-info">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    Uzmanlık Alanları
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.EgitmenUzmanliklari?.Any() == true)
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var eu in Model.EgitmenUzmanliklari)
+                        {
+                            <span class="badge bg-info fs-6 py-2 px-3">@eu.UzmanlikAlani?.Ad</span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <span class="text-muted">Henüz uzmanlık alanı atanmamış</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Çalışma Saatleri -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-warning">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Haftalık Çalışma Saatleri
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                @if (calismaSaatleri?.Any() == true)
+                {
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            @foreach (DayOfWeek gun in new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday })
+                            {
+                                <tr>
+                                    <td class="fw-medium" style="width: 120px;">@GunAdi(gun)</td>
+                                    <td>
+                                        @if (calismaSaatleri.ContainsKey(gun))
+                                        {
+                                            @foreach (var m in calismaSaatleri[gun])
+                                            {
+                                                <span class="badge bg-light text-dark me-1">
+                                                    @m.BaslangicSaati.ToString(@"hh\:mm") - @m.BitisSaati.ToString(@"hh\:mm")
+                                                </span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Kapalı</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="p-3 text-muted">Çalışma saatleri belirlenmemiş</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Biyografi -->
+    @if (!string.IsNullOrEmpty(Model.Biyografi))
+    {
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-secondary">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        Biyografi
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">@Model.Biyografi</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>

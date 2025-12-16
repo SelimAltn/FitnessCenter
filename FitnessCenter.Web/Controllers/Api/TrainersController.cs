@@ -22,12 +22,13 @@ namespace FitnessCenter.Web.Controllers.Api
         }
 
         /// <summary>
-        /// /api/trainers?date=2025-12-11&serviceId=3&page=1&pageSize=10
-        /// Belirtilen tarihin gününe göre (DayOfWeek) müsait eğitmenleri listeler.
+        /// /api/trainers?date=2025-12-11&salonId=1&serviceId=3&page=1&pageSize=10
+        /// Belirtilen tarihin gününe ve şubeye göre müsait eğitmenleri listeler.
         /// </summary>
         [HttpGet]
         public async Task<ActionResult<PagedResult<TrainerDto>>> GetAvailableTrainers(
             [FromQuery] string? date,
+            [FromQuery] int? salonId,
             [FromQuery] int? serviceId,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
@@ -51,48 +52,58 @@ namespace FitnessCenter.Web.Controllers.Api
                     type: "https://fitnesscenter.com/probs/invalid-date");
             }
 
+            if (!salonId.HasValue)
+            {
+                return Problem(
+                    statusCode: 400,
+                    title: "Geçersiz parametre",
+                    detail: "salonId parametresi zorunludur.",
+                    type: "https://fitnesscenter.com/probs/invalid-parameter");
+            }
+
             page = page < 1 ? 1 : page;
             pageSize = pageSize < 1 ? 10 : (pageSize > 50 ? 50 : pageSize);
 
             var gun = targetDate.DayOfWeek;
 
-            // ---- Temel eğitmen sorgusu ----
-            IQueryable<Models.Entities.Egitmen> egitmenQuery = _context.Egitmenler.AsNoTracking();
+            // ---- Temel eğitmen sorgusu: Aktif VE bu şubede çalışan ----
+            IQueryable<Models.Entities.Egitmen> egitmenQuery = _context.Egitmenler
+                .Where(e => e.Aktif && e.SalonId == salonId.Value)
+                .Include(e => e.EgitmenUzmanliklari!)
+                    .ThenInclude(eu => eu.UzmanlikAlani)
+                .Include(e => e.Musaitlikler)
+                .AsNoTracking();
 
             // Hizmete göre filtre (EgitmenHizmet N-N)
             if (serviceId.HasValue)
             {
-                egitmenQuery =
-                    from e in _context.Egitmenler
-                    join eh in _context.EgitmenHizmetler on e.Id equals eh.EgitmenId
-                    where eh.HizmetId == serviceId.Value
-                    select e;
+                egitmenQuery = egitmenQuery.Where(e => 
+                    e.EgitmenHizmetler!.Any(eh => eh.HizmetId == serviceId.Value));
             }
 
-            // Musaitlik'e göre filtre
-            var availableTrainersQuery =
-                from e in egitmenQuery
-                join m in _context.Musaitlikler
-                    on e.Id equals m.EgitmenId
-                where m.Gun == gun
-                select new TrainerDto
+            // Musaitlik'e göre filtre - eğer müsaitlik kaydı varsa o günde çalışanları göster
+            // Müsaitlik kaydı yoksa yine de göster (henüz program belirlenmemiş olabilir)
+            var filteredQuery = egitmenQuery.Where(e => 
+                e.Musaitlikler == null || 
+                !e.Musaitlikler.Any() || 
+                e.Musaitlikler.Any(m => m.Gun == gun));
+
+            var items = await filteredQuery
+                .OrderBy(e => e.AdSoyad)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(e => new TrainerDto
                 {
                     Id = e.Id,
                     AdSoyad = e.AdSoyad,
-                    Uzmanlik = e.Uzmanlik
-                };
-
-            availableTrainersQuery = availableTrainersQuery.Distinct();
-
-            // ---- Sayfalama ----
-            var totalCount = await availableTrainersQuery.CountAsync();
-            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-            var items = await availableTrainersQuery
-                .OrderBy(t => t.AdSoyad)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                    Uzmanlik = e.EgitmenUzmanliklari != null 
+                        ? string.Join(", ", e.EgitmenUzmanliklari.Select(eu => eu.UzmanlikAlani!.Ad))
+                        : ""
+                })
                 .ToListAsync();
+
+            var totalCount = await filteredQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
             var result = new PagedResult<TrainerDto>
             {

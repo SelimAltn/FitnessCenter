@@ -1,65 +1,149 @@
 ﻿@model FitnessCenter.Web.Models.Entities.Egitmen
-
 @{
     ViewData["Title"] = "Eğitmen Detay";
 }
 
-<!-- Page Header -->
-<div class="page-header">
-    <div class="container">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-            <div>
-                <h1>Eğitmen Detay</h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
-                        <li class="breadcrumb-item"><a asp-action="Index">Eğitmenler</a></li>
-                        <li class="breadcrumb-item active">Detay</li>
-                    </ol>
-                </nav>
-            </div>
-            <div class="page-header-actions">
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                    Düzenle
-                </a>
-            </div>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@Model.AdSoyad</h2>
+        <div class="d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Düzenle</a>
+            <a asp-action="Index" class="btn btn-outline-secondary">Listeye Dön</a>
         </div>
     </div>
-</div>
 
-<div class="container pb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card-fc">
-                <div class="card-header">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    @Model.AdSoyad
-                </div>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">Kişisel Bilgiler</div>
                 <div class="card-body">
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Ad Soyad</div>
-                            <div class="fw-semibold">@Model.AdSoyad</div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Uzmanlık Alanı</div>
-                            <div><span class="badge-fc badge-fc-info">@Model.Uzmanlik</span></div>
-                        </div>
-                        <div class="col-12">
-                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Biyografi</div>
-                            <div>@(Model.Biyografi ?? "—")</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <div class="d-flex gap-3">
-                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
-                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-fc btn-fc-danger">Sil</a>
-                        <a asp-action="Index" class="btn-fc btn-fc-secondary">Geri</a>
-                    </div>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Ad Soyad</dt>
+                        <dd class="col-sm-8">@Model.AdSoyad</dd>
+                        
+                        <dt class="col-sm-4">E-posta</dt>
+                        <dd class="col-sm-8">@(Model.Email ?? "-")</dd>
+                        
+                        <dt class="col-sm-4">Telefon</dt>
+                        <dd class="col-sm-8">@(Model.Telefon ?? "-")</dd>
+                        
+                        <dt class="col-sm-4">Kullanıcı Adı</dt>
+                        <dd class="col-sm-8">@(Model.KullaniciAdi ?? "-")</dd>
+                        
+                        <dt class="col-sm-4">Şifre</dt>
+                        <dd class="col-sm-8"><code>@(Model.SifreHash ?? "-")</code></dd>
+                    </dl>
                 </div>
             </div>
+
+            <div class="card mb-4">
+                <div class="card-header">Çalışma Bilgileri</div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Şube</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Salon != null)
+                            {
+                                <span class="badge bg-primary">@Model.Salon.Ad</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Atanmamış</span>
+                            }
+                        </dd>
+                        
+                        <dt class="col-sm-4">Maaş</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Maas.HasValue)
+                            {
+                                <strong class="text-success">@Model.Maas?.ToString("C0")</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Belirlenmemiş</span>
+                            }
+                        </dd>
+                        
+                        <dt class="col-sm-4">Durum</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Aktif)
+                            {
+                                <span class="badge bg-success">Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Pasif</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">Uzmanlık Alanları</div>
+                <div class="card-body">
+                    @if (Model.EgitmenUzmanliklari?.Any() == true)
+                    {
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var eu in Model.EgitmenUzmanliklari)
+                            {
+                                <span class="badge bg-info fs-6 py-2 px-3">@eu.UzmanlikAlani?.Ad</span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Uzmanlık alanı atanmamış</span>
+                    }
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">Çalışma Saatleri</div>
+                <div class="card-body p-0">
+                    @if (Model.Musaitlikler?.Any() == true)
+                    {
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                @foreach (var m in Model.Musaitlikler.OrderBy(x => x.Gun))
+                                {
+                                    var gunAdi = m.Gun switch
+                                    {
+                                        DayOfWeek.Monday => "Pazartesi",
+                                        DayOfWeek.Tuesday => "Salı",
+                                        DayOfWeek.Wednesday => "Çarşamba",
+                                        DayOfWeek.Thursday => "Perşembe",
+                                        DayOfWeek.Friday => "Cuma",
+                                        DayOfWeek.Saturday => "Cumartesi",
+                                        DayOfWeek.Sunday => "Pazar",
+                                        _ => m.Gun.ToString()
+                                    };
+                                    <tr>
+                                        <td class="fw-medium">@gunAdi</td>
+                                        <td>@m.BaslangicSaati.ToString(@"hh\:mm") - @m.BitisSaati.ToString(@"hh\:mm")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="p-3 text-muted">Çalışma saatleri belirlenmemiş</div>
+                    }
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Biyografi))
+            {
+                <div class="card">
+                    <div class="card-header">Biyografi</div>
+                    <div class="card-body">
+                        <p class="mb-0">@Model.Biyografi</p>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>

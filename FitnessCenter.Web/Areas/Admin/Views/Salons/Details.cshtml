@@ -1,60 +1,328 @@
-﻿@model FitnessCenter.Web.Models.Entities.Salon
-
+﻿@model FitnessCenter.Web.Models.ViewModels.SalonDetailsVm
 @{
-    ViewData["Title"] = "Salon Detay";
+    ViewData["Title"] = Model.Salon.Ad + " - Dashboard";
 }
 
-<!-- Page Header -->
-<div class="page-header">
-    <div class="container">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-            <div>
-                <h1>Salon Detay</h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
-                        <li class="breadcrumb-item"><a asp-action="Index">Salonlar</a></li>
-                        <li class="breadcrumb-item active">Detay</li>
-                    </ol>
-                </nav>
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">@Model.Salon.Ad</h2>
+            @if (!string.IsNullOrEmpty(Model.Salon.Adress))
+            {
+                <p class="text-muted mb-0"><i class="bi bi-geo-alt me-1"></i>@Model.Salon.Adress</p>
+            }
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Salon.Id" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i> Düzenle
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">← Salonlar</a>
+        </div>
+    </div>
+
+    <!-- 1. İstatistik Kartları -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2">
+            <div class="card text-center border-primary">
+                <div class="card-body">
+                    <h3 class="text-primary mb-0">@Model.EgitmenSayisi</h3>
+                    <small class="text-muted">Eğitmen</small>
+                </div>
             </div>
-            <div class="page-header-actions">
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h3 class="text-success mb-0">@Model.UyeSayisi</h3>
+                    <small class="text-muted">Üye</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-info">
+                <div class="card-body">
+                    <h3 class="text-info mb-0">@Model.ToplamRandevuSayisi</h3>
+                    <small class="text-muted">Toplam Randevu</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <h3 class="text-warning mb-0">@Model.BugunRandevuSayisi</h3>
+                    <small class="text-muted">Bugün</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-danger">
+                <div class="card-body">
+                    <h3 class="text-danger mb-0">@Model.BekleyenRandevuSayisi</h3>
+                    <small class="text-muted">Bekleyen</small>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="container pb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card-fc">
+    <!-- Açıklama -->
+    @if (!string.IsNullOrEmpty(Model.Salon.Aciklama))
+    {
+        <div class="alert alert-light mb-4">
+            <strong>Hakkında:</strong> @Model.Salon.Aciklama
+        </div>
+    }
+
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs mb-3" id="salonTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#uyelerTab">
+                👥 Üyeler <span class="badge bg-secondary">@Model.Uyeler.Count</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#egitmenlerTab">
+                🏋️ Eğitmenler <span class="badge bg-secondary">@Model.Egitmenler.Count</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#randevularTab">
+                📅 Randevular <span class="badge bg-secondary">@Model.Randevular.Count</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- 2. Üyeler Tab -->
+        <div class="tab-pane fade show active" id="uyelerTab">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Bu Salondaki Üyeler</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Uyeler.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ad Soyad</th>
+                                        <th>İletişim</th>
+                                        <th>Üyelik Durumu</th>
+                                        <th>Başlangıç</th>
+                                        <th>Bitiş</th>
+                                        <th class="text-end">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var uye in Model.Uyeler)
+                                    {
+                                        <tr>
+                                            <td><strong>@uye.AdSoyad</strong></td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(uye.Email))
+                                                {
+                                                    <small>@uye.Email</small><br/>
+                                                }
+                                                @if (!string.IsNullOrEmpty(uye.Telefon))
+                                                {
+                                                    <small class="text-muted">@uye.Telefon</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (uye.UyelikDurum == "Aktif")
+                                                {
+                                                    <span class="badge bg-success">@uye.UyelikDurum</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">@uye.UyelikDurum</span>
+                                                }
+                                            </td>
+                                            <td>@uye.BaslangicTarihi.ToString("dd.MM.yyyy")</td>
+                                            <td>@(uye.BitisTarihi?.ToString("dd.MM.yyyy") ?? "-")</td>
+                                            <td class="text-end">
+                                                <a asp-controller="Uye" asp-action="Details" asp-route-id="@uye.UyeId" 
+                                                   class="btn btn-sm btn-outline-primary">Detay</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">
+                            Bu salonda henüz üye bulunmuyor.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Eğitmenler Tab -->
+        <div class="tab-pane fade" id="egitmenlerTab">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Bu Salondaki Eğitmenler</h5>
+                    <a asp-controller="Egitmen" asp-action="Create" class="btn btn-sm btn-primary">+ Yeni Eğitmen</a>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Egitmenler.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Eğitmen</th>
+                                        <th>Uzmanlık Alanları</th>
+                                        <th>Çalışma</th>
+                                        <th>Durum</th>
+                                        <th class="text-end">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var eg in Model.Egitmenler)
+                                    {
+                                        <tr class="@(!eg.Aktif ? "table-secondary" : "")">
+                                            <td><strong>@eg.AdSoyad</strong></td>
+                                            <td>
+                                                @foreach (var uz in eg.UzmanlikAlanlari.Take(3))
+                                                {
+                                                    <span class="badge bg-info me-1">@uz</span>
+                                                }
+                                                @if (eg.UzmanlikAlanlari.Count > 3)
+                                                {
+                                                    <span class="badge bg-secondary">+@(eg.UzmanlikAlanlari.Count - 3)</span>
+                                                }
+                                            </td>
+                                            <td><small class="text-muted">@eg.CalismaSaatleriOzet</small></td>
+                                            <td>
+                                                @if (eg.Aktif)
+                                                {
+                                                    <span class="badge bg-success">Aktif</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Pasif</span>
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a asp-controller="Egitmen" asp-action="Details" asp-route-id="@eg.EgitmenId" class="btn btn-outline-secondary">Detay</a>
+                                                    <a asp-controller="Egitmen" asp-action="Edit" asp-route-id="@eg.EgitmenId" class="btn btn-outline-primary">Düzenle</a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">
+                            Bu salonda henüz eğitmen bulunmuyor.
+                            <br/>
+                            <a asp-controller="Egitmen" asp-action="Create" class="btn btn-primary mt-2">Eğitmen Ekle</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Randevular Tab -->
+        <div class="tab-pane fade" id="randevularTab">
+            <div class="card">
                 <div class="card-header">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                    @Model.Ad
-                </div>
-                <div class="card-body">
-                    <div class="row g-4">
-                        <div class="col-12">
-                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Salon Adı</div>
-                            <div class="fw-semibold">@Model.Ad</div>
-                        </div>
-                        <div class="col-12">
-                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Adres</div>
-                            <div>@(Model.Adress ?? "—")</div>
-                        </div>
-                        <div class="col-12">
-                            <div class="mb-1 text-muted-fc" style="font-size: 0.875rem;">Açıklama</div>
-                            <div>@(Model.Aciklama ?? "—")</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Bu Salondaki Randevular</h5>
+                        <div class="btn-group btn-group-sm">
+                            <a asp-action="Details" asp-route-id="@Model.Salon.Id" asp-route-filtre="beklemede"
+                               class="btn @(Model.RandevuFiltre == "beklemede" ? "btn-warning" : "btn-outline-warning")">
+                                Bekleyen
+                            </a>
+                            <a asp-action="Details" asp-route-id="@Model.Salon.Id" asp-route-filtre="bugun"
+                               class="btn @(Model.RandevuFiltre == "bugun" ? "btn-info" : "btn-outline-info")">
+                                Bugün
+                            </a>
+                            <a asp-action="Details" asp-route-id="@Model.Salon.Id" asp-route-filtre="hafta"
+                               class="btn @(Model.RandevuFiltre == "hafta" ? "btn-primary" : "btn-outline-primary")">
+                                Bu Hafta
+                            </a>
+                            <a asp-action="Details" asp-route-id="@Model.Salon.Id" asp-route-filtre="tumu"
+                               class="btn @(Model.RandevuFiltre == "tumu" ? "btn-secondary" : "btn-outline-secondary")">
+                                Tümü
+                            </a>
                         </div>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <div class="d-flex gap-3">
-                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-fc btn-fc-primary">Düzenle</a>
-                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-fc btn-fc-danger">Sil</a>
-                        <a asp-action="Index" class="btn-fc btn-fc-secondary">Geri</a>
-                    </div>
+                <div class="card-body p-0">
+                    @if (Model.Randevular.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tarih/Saat</th>
+                                        <th>Eğitmen</th>
+                                        <th>Üye</th>
+                                        <th>Hizmet</th>
+                                        <th>Durum</th>
+                                        <th class="text-end">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var r in Model.Randevular)
+                                    {
+                                        var durumClass = r.Durum switch
+                                        {
+                                            "Onaylandı" => "bg-success",
+                                            "Beklemede" => "bg-warning text-dark",
+                                            "İptal" => "bg-danger",
+                                            _ => "bg-secondary"
+                                        };
+                                        <tr>
+                                            <td>
+                                                <strong>@r.BaslangicZamani.ToString("dd.MM.yyyy")</strong><br/>
+                                                <small>@r.BaslangicZamani.ToString("HH:mm") - @r.BitisZamani.ToString("HH:mm")</small>
+                                            </td>
+                                            <td>@(r.Egitmen?.AdSoyad ?? "-")</td>
+                                            <td>@(r.Uye?.AdSoyad ?? "-")</td>
+                                            <td>@(r.Hizmet?.Ad ?? "-")</td>
+                                            <td><span class="badge @durumClass">@r.Durum</span></td>
+                                            <td class="text-end">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a asp-controller="Randevu" asp-action="Details" asp-route-id="@r.Id" 
+                                                       class="btn btn-outline-secondary">Detay</a>
+                                                    @if (r.Durum == "Beklemede")
+                                                    {
+                                                        <form asp-controller="Randevu" asp-action="DurumDegistir" method="post" class="d-inline">
+                                                            <input type="hidden" name="id" value="@r.Id" />
+                                                            <input type="hidden" name="yeniDurum" value="Onaylandı" />
+                                                            <button type="submit" class="btn btn-sm btn-success">Onayla</button>
+                                                        </form>
+                                                        <form asp-controller="Randevu" asp-action="DurumDegistir" method="post" class="d-inline">
+                                                            <input type="hidden" name="id" value="@r.Id" />
+                                                            <input type="hidden" name="yeniDurum" value="İptal" />
+                                                            <button type="submit" class="btn btn-sm btn-danger">İptal</button>
+                                                        </form>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">
+                            Seçilen filtreye göre randevu bulunamadı.
+                        </div>
+                    }
                 </div>
             </div>
         </div>

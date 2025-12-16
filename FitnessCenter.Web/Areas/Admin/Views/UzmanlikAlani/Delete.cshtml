@@ -1,0 +1,44 @@
+@model FitnessCenter.Web.Models.Entities.UzmanlikAlani
+@{
+    ViewData["Title"] = "Uzmanlık Alanı Sil";
+    var kullananEgitmen = (int)(ViewData["KullananEgitmenSayisi"] ?? 0);
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Uzmanlık Alanını Sil</h5>
+                </div>
+                <div class="card-body">
+                    <p>Aşağıdaki uzmanlık alanını silmek istediğinizden emin misiniz?</p>
+                    
+                    <dl class="row">
+                        <dt class="col-sm-4">Ad</dt>
+                        <dd class="col-sm-8"><strong>@Model.Ad</strong></dd>
+                        
+                        <dt class="col-sm-4">Açıklama</dt>
+                        <dd class="col-sm-8">@(Model.Aciklama ?? "-")</dd>
+                    </dl>
+
+                    @if (kullananEgitmen > 0)
+                    {
+                        <div class="alert alert-warning">
+                            <strong>Uyarı:</strong> Bu uzmanlık alanı <strong>@kullananEgitmen eğitmen</strong> tarafından kullanılmaktadır. 
+                            Silme işlemi bu eğitmenlerden uzmanlık alanını kaldıracaktır.
+                        </div>
+                    }
+
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">Evet, Sil</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">İptal</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

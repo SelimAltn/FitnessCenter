@@ -82,6 +82,7 @@ namespace FitnessCenter.Web.Controllers
                 .ToListAsync();
 
             var egitmenler = await _context.Egitmenler
+                .Where(e => e.Aktif)
                 .OrderBy(e => e.AdSoyad)
                 .ToListAsync();
 

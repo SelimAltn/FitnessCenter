@@ -1,0 +1,66 @@
+@using FitnessCenter.Web.Services.Interfaces
+@model List<KonusmaOzetVm>
+@{
+    ViewData["Title"] = "Mesajlar";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Mesajlarım</h2>
+    <a asp-action="AdminIletisim" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Admin ile İletişim
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="list-group list-group-flush">
+                @foreach (var k in Model)
+                {
+                    <a asp-action="Chat" asp-route-userId="@k.KarsiTarafId" 
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 @(k.OkunmamisSayisi > 0 ? "bg-light" : "")">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                @k.KarsiTarafAdi?.Substring(0, 1).ToUpper()
+                            </div>
+                            <div>
+                                <strong>@k.KarsiTarafAdi</strong>
+                                @if (k.KonusmaTipi == "TrainerAdmin")
+                                {
+                                    <span class="badge bg-danger ms-1">Admin</span>
+                                }
+                                <div class="text-muted small text-truncate" style="max-width: 300px;">
+                                    @(k.SonMesaj?.Length > 50 ? k.SonMesaj.Substring(0, 50) + "..." : k.SonMesaj)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block">@k.SonMesajTarihi?.ToString("dd MMM, HH:mm")</small>
+                            @if (k.OkunmamisSayisi > 0)
+                            {
+                                <span class="badge bg-danger rounded-pill">@k.OkunmamisSayisi</span>
+                            }
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-3 opacity-50">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                <h5>Henüz Mesajınız Yok</h5>
+                <p class="mb-3">Onaylı randevunuz olan üyeler ile mesajlaşabilirsiniz.</p>
+                <a asp-action="AdminIletisim" class="btn btn-outline-primary">Admin ile Yeni Sohbet Başlat</a>
+            </div>
+        }
+    </div>
+</div>

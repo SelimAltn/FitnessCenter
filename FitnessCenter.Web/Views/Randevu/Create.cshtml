@@ -161,50 +161,67 @@
 
     <script>
         $(function () {
-            // Tarih-saat alanı değiştiğinde eğitmenleri güncelle
-            $("#BaslangicZamani").on("change", function () {
-                var value = $(this).val();
-                if (!value) return;
+            function updateEgitmenler() {
+                var tarih = $("#BaslangicZamani").val();
+                var salonId = $("#SalonId").val();
+                
+                if (!tarih || !salonId) {
+                    $("#EgitmenId").empty().append('<option value="">Önce şube ve tarih seçiniz</option>');
+                    return;
+                }
 
-                var datePart = value.split("T")[0];
-
+                var datePart = tarih.split("T")[0];
                 var $egitmenSelect = $("#EgitmenId");
-                $egitmenSelect.empty();
-                $egitmenSelect.append('<option>Yükleniyor...</option>');
+                $egitmenSelect.empty().append('<option>Yükleniyor...</option>');
 
                 $.ajax({
                     url: '/api/trainers',
                     method: 'GET',
-                    data: { date: datePart },
+                    data: { 
+                        date: datePart,
+                        salonId: salonId
+                    },
                     success: function (response) {
                         $egitmenSelect.empty();
 
                         if (!response.items || response.items.length === 0) {
-                            $egitmenSelect.append('<option value="">Müsait eğitmen yok</option>');
+                            $egitmenSelect.append('<option value="">Bu şubede müsait eğitmen yok</option>');
                             return;
                         }
 
                         $egitmenSelect.append('<option value="">Eğitmen seçiniz</option>');
 
                         response.items.forEach(function (trainer) {
+                            var text = trainer.adSoyad;
+                            if (trainer.uzmanlik) {
+                                text += ' (' + trainer.uzmanlik + ')';
+                            }
                             $egitmenSelect.append(
                                 $('<option>', {
                                     value: trainer.id,
-                                    text: trainer.adSoyad
+                                    text: text
                                 })
                             );
                         });
                     },
                     error: function () {
-                        $egitmenSelect.empty();
-                        $egitmenSelect.append('<option>Hata oluştu</option>');
+                        $egitmenSelect.empty().append('<option>Hata oluştu</option>');
                         
-                        // Show error toast
                         if (window.FitnessCenter && window.FitnessCenter.toast) {
                             window.FitnessCenter.toast.show('Eğitmenler yüklenirken bir hata oluştu.', 'danger');
                         }
                     }
                 });
+            }
+
+            // Salon değiştiğinde eğitmenleri güncelle
+            $("#SalonId").on("change", function () {
+                updateEgitmenler();
+            });
+
+            // Tarih değiştiğinde eğitmenleri güncelle
+            $("#BaslangicZamani").on("change", function () {
+                updateEgitmenler();
             });
         });
     </script>

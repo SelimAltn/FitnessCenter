@@ -1,56 +1,45 @@
 ﻿@model FitnessCenter.Web.Models.Entities.Egitmen
-
 @{
     ViewData["Title"] = "Eğitmen Sil";
+    var aktifRandevu = (int)(ViewData["AktifRandevuSayisi"] ?? 0);
 }
 
-<!-- Page Header -->
-<div class="page-header">
-    <div class="container">
-        <div>
-            <h1>Eğitmen Sil</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
-                    <li class="breadcrumb-item"><a asp-action="Index">Eğitmenler</a></li>
-                    <li class="breadcrumb-item active">Sil</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-</div>
-
-<div class="container pb-5">
+<div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-6">
-            <div class="card-fc" style="border-color: var(--fc-danger);">
-                <div class="card-header" style="background-color: var(--fc-danger-light); color: var(--fc-danger);">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                    Silme Onayı
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Eğitmen Silme Onayı</h5>
                 </div>
                 <div class="card-body">
-                    <div class="alert-fc alert-fc-warning mb-4">
-                        <strong>Dikkat!</strong> Bu eğitmeni silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+                    <div class="alert alert-warning">
+                        <strong>Dikkat!</strong> Bu işlem geri alınamaz.
                     </div>
-                    
-                    <div class="mb-3">
-                        <div class="text-muted-fc" style="font-size: 0.875rem;">Ad Soyad</div>
-                        <div class="fw-semibold">@Model.AdSoyad</div>
-                    </div>
-                    <div class="mb-3">
-                        <div class="text-muted-fc" style="font-size: 0.875rem;">Uzmanlık</div>
-                        <div>@Model.Uzmanlik</div>
-                    </div>
-                </div>
-                <div class="card-footer">
+
+                    <dl class="row">
+                        <dt class="col-sm-4">Ad Soyad</dt>
+                        <dd class="col-sm-8"><strong>@Model.AdSoyad</strong></dd>
+                        
+                        <dt class="col-sm-4">E-posta</dt>
+                        <dd class="col-sm-8">@(Model.Email ?? "-")</dd>
+                        
+                        <dt class="col-sm-4">Şube</dt>
+                        <dd class="col-sm-8">@(Model.Salon?.Ad ?? "-")</dd>
+                    </dl>
+
+                    @if (aktifRandevu > 0)
+                    {
+                        <div class="alert alert-danger">
+                            <strong>Uyarı:</strong> Bu eğitmenin <strong>@aktifRandevu aktif randevusu</strong> bulunmaktadır. 
+                            Silme işlemi bu randevuları <strong>İptal</strong> edecek ve ilgili üyelere bildirim gönderecektir.
+                        </div>
+                    }
+
                     <form asp-action="Delete" method="post">
                         <input type="hidden" asp-for="Id" />
-                        <div class="d-flex gap-3">
-                            <button type="submit" class="btn-fc btn-fc-danger">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>
-                                Evet, Sil
-                            </button>
-                            <a asp-action="Index" class="btn-fc btn-fc-secondary">Vazgeç</a>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">Evet, Sil</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç</a>
                         </div>
                     </form>
                 </div>

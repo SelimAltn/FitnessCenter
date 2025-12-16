@@ -1,0 +1,182 @@
+@using FitnessCenter.Web.Models.Entities
+@{
+    ViewData["Title"] = "Dashboard";
+    var egitmen = ViewData["Egitmen"] as Egitmen;
+    var bugunRandevular = ViewData["BugunRandevular"] as List<Randevu> ?? new List<Randevu>();
+    var yaklasanRandevular = ViewData["YaklasanRandevular"] as List<Randevu> ?? new List<Randevu>();
+    var bugunMusaitlik = ViewData["BugunMusaitlik"] as List<Musaitlik> ?? new List<Musaitlik>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Hoş Geldiniz, @egitmen?.AdSoyad</h2>
+        <p class="text-muted mb-0">@DateTime.Now.ToString("dd MMMM yyyy, dddd")</p>
+    </div>
+    @if (egitmen?.Salon != null)
+    {
+        <span class="badge bg-primary fs-6 py-2 px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+            </svg>
+            @egitmen.Salon.Ad
+        </span>
+    }
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="stat-value">@bugunRandevular.Count</div>
+                    <div class="stat-label">Bugünkü Randevu</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon bg-success bg-opacity-10 text-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="stat-value">@yaklasanRandevular.Count</div>
+                    <div class="stat-label">Yaklaşan (7 Gün)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon bg-info bg-opacity-10 text-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div>
+                    @if (bugunMusaitlik.Any())
+                    {
+                        <div class="stat-value">@bugunMusaitlik.First().BaslangicSaati.ToString(@"hh\:mm") - @bugunMusaitlik.Last().BitisSaati.ToString(@"hh\:mm")</div>
+                    }
+                    else
+                    {
+                        <div class="stat-value text-muted">Kapalı</div>
+                    }
+                    <div class="stat-label">Bugün Çalışma Saati</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Bugünkü Randevular -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-primary">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    Bugünkü Randevular
+                </h5>
+                <a asp-action="Index" asp-controller="Randevu" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
+            </div>
+            <div class="card-body p-0">
+                @if (bugunRandevular.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var r in bugunRandevular)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div>
+                                    <strong>@r.BaslangicZamani.ToString("HH:mm") - @r.BitisZamani.ToString("HH:mm")</strong>
+                                    <div class="text-muted small">
+                                        @r.Uye?.AdSoyad - @r.Hizmet?.Ad
+                                    </div>
+                                </div>
+                                <span class="badge bg-success">Onaylı</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5 text-muted">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-3 opacity-50">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <p class="mb-0">Bugün randevunuz yok</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Yaklaşan Randevular -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-success">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Yaklaşan Randevular
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                @if (yaklasanRandevular.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var r in yaklasanRandevular)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div>
+                                    <strong>@r.BaslangicZamani.ToString("dd MMM, HH:mm")</strong>
+                                    <div class="text-muted small">
+                                        @r.Uye?.AdSoyad - @r.Hizmet?.Ad
+                                    </div>
+                                </div>
+                                <a asp-action="Details" asp-controller="Randevu" asp-route-id="@r.Id" class="btn btn-sm btn-outline-secondary">
+                                    Detay
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5 text-muted">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-3 opacity-50">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <p class="mb-0">Yaklaşan randevu yok</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

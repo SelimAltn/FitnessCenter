@@ -66,6 +66,11 @@ builder.Services.AddAuthorization(options =>
     {
         policy.RequireRole("Member");
     });
+
+    options.AddPolicy("TrainerOnly", policy =>
+    {
+        policy.RequireRole("Trainer");
+    });
 });
 
 // ===== AI Servis Yapılandırması =====
@@ -86,6 +91,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 
 // ===== Bildirim Servisi =====
 builder.Services.AddScoped<IBildirimService, BildirimService>();
+
+// ===== Mesaj Servisi =====
+builder.Services.AddScoped<IMesajService, MesajService>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())

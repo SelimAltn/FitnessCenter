@@ -127,6 +127,13 @@ namespace FitnessCenter.Web.Controllers
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     return Redirect(returnUrl);
 
+                // Role-based redirect
+                if (await _userManager.IsInRoleAsync(user, "Admin"))
+                    return RedirectToAction("Index", "Home", new { area = "Admin" });
+                
+                if (await _userManager.IsInRoleAsync(user, "Trainer"))
+                    return RedirectToAction("Index", "Home", new { area = "Trainer" });
+
                 return RedirectToAction("Index", "Home");
             }
 
@@ -149,6 +156,10 @@ namespace FitnessCenter.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Settings()
         {
+            // Eğitmenler ana site ayarlarına erişemez
+            if (User.IsInRole("Trainer"))
+                return RedirectToAction("Index", "Home", new { area = "Trainer" });
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return RedirectToAction("Login");
@@ -166,6 +177,10 @@ namespace FitnessCenter.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Settings(SettingsViewModel model)
         {
+            // Eğitmenler ana site ayarlarına erişemez
+            if (User.IsInRole("Trainer"))
+                return RedirectToAction("Index", "Home", new { area = "Trainer" });
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return RedirectToAction("Login");
@@ -186,6 +201,10 @@ namespace FitnessCenter.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
+            // Eğitmenler profil düzenleyemez
+            if (User.IsInRole("Trainer"))
+                return RedirectToAction("Index", "Profil", new { area = "Trainer" });
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return RedirectToAction("Login");
@@ -204,6 +223,10 @@ namespace FitnessCenter.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Profile(ProfileViewModel model)
         {
+            // Eğitmenler profil düzenleyemez
+            if (User.IsInRole("Trainer"))
+                return RedirectToAction("Index", "Profil", new { area = "Trainer" });
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return RedirectToAction("Login");
@@ -272,6 +295,10 @@ namespace FitnessCenter.Web.Controllers
         [HttpGet]
         public IActionResult DeleteAccount()
         {
+            // Eğitmenler hesaplarını silemez
+            if (User.IsInRole("Trainer"))
+                return RedirectToAction("Index", "Home", new { area = "Trainer" });
+
             return View(new DeleteAccountViewModel());
         }
 
@@ -280,6 +307,10 @@ namespace FitnessCenter.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteAccount(DeleteAccountViewModel model)
         {
+            // Eğitmenler hesaplarını silemez
+            if (User.IsInRole("Trainer"))
+                return RedirectToAction("Index", "Home", new { area = "Trainer" });
+
             if (!ModelState.IsValid)
             {
                 return View(model);
