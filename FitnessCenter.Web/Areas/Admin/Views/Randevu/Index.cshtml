@@ -92,6 +92,19 @@
                 </div>
             </div>
         </form>
+        
+        <!-- Toplu İşlem Butonu -->
+        <div class="mt-3 pt-3 border-top">
+            <form asp-action="TumunuOnayla" method="post" class="d-inline" 
+                  onsubmit="return confirm('Tüm beklemede olan randevular onaylanacak. Devam etmek istiyor musunuz?');">
+                <button type="submit" class="btn-fc btn-fc-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Tüm Beklemedekileri Onayla
+                </button>
+            </form>
+        </div>
     </div>
 
     @if (!Model.Any())

@@ -3,6 +3,7 @@
     ViewData["Title"] = "Yeni Eğitmen";
     var salonlar = ViewData["Salonlar"] as SelectList;
     var uzmanlikAlanlari = ViewData["UzmanlikAlanlari"] as List<FitnessCenter.Web.Models.Entities.UzmanlikAlani> ?? new();
+    var hizmetler = ViewData["Hizmetler"] as List<FitnessCenter.Web.Models.Entities.Hizmet> ?? new();
 }
 
 <div class="container-fluid py-4">
@@ -118,6 +119,39 @@
                         {
                             <p class="text-muted mb-0">Henüz uzmanlık alanı tanımlanmamış. 
                                 <a asp-controller="UzmanlikAlani" asp-action="Create">Yeni ekle</a>
+                            </p>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">4. Yapabileceği Hizmetler</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (hizmetler.Any())
+                        {
+                            <p class="text-muted small mb-3">Eğitmenin randevu oluşturulurken seçilebilmesi için en az bir hizmet seçin.</p>
+                            <div class="row">
+                                @foreach (var hz in hizmetler)
+                                {
+                                    <div class="col-md-6 mb-2">
+                                        <div class="form-check">
+                                            <input type="checkbox" name="SecilenHizmetler" value="@hz.Id" 
+                                                   class="form-check-input" id="hz_@hz.Id"
+                                                   @(Model.SecilenHizmetler.Contains(hz.Id) ? "checked" : "") />
+                                            <label class="form-check-label" for="hz_@hz.Id">
+                                                @hz.Ad <small class="text-muted">(@hz.SureDakika dk - @hz.Ucret.ToString("C0"))</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">Henüz hizmet tanımlanmamış. 
+                                <a asp-controller="Hizmet" asp-action="Create">Yeni ekle</a>
                             </p>
                         }
                     </div>

@@ -52,6 +52,13 @@ namespace FitnessCenter.Web.Models.ViewModels
 
         #endregion
 
+        #region Hizmetler
+
+        [Display(Name = "Yapabileceği Hizmetler")]
+        public List<int> SecilenHizmetler { get; set; } = new();
+
+        #endregion
+
         #region Maaş
 
         [Display(Name = "Maaş (₺)")]
@@ -144,6 +151,9 @@ namespace FitnessCenter.Web.Models.ViewModels
 
         [Display(Name = "Uzmanlık Alanları")]
         public List<int> SecilenUzmanliklar { get; set; } = new();
+
+        [Display(Name = "Yapabileceği Hizmetler")]
+        public List<int> SecilenHizmetler { get; set; } = new();
 
         [Display(Name = "Maaş (₺)")]
         [DataType(DataType.Currency)]

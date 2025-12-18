@@ -55,6 +55,39 @@ namespace FitnessCenter.Web.Services.Implementations
             var gonderen = await _context.Users.FindAsync(gonderenId);
             var gonderenAd = gonderen?.UserName ?? "Bilinmeyen";
 
+            // Alıcının rolünü kontrol et - doğru link için
+            var aliciUser = await _context.Users.FindAsync(aliciId);
+            string bildirimLink;
+            
+            if (aliciUser != null)
+            {
+                // UserRoles tablosundan rolü bul
+                var aliciRoles = await _context.UserRoles
+                    .Where(ur => ur.UserId == aliciId)
+                    .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
+                    .ToListAsync();
+
+                if (aliciRoles.Contains("Admin"))
+                {
+                    // Admin için Admin alanındaki mesaj sayfası
+                    bildirimLink = $"/Admin/Mesaj/Chat?userId={gonderenId}";
+                }
+                else if (aliciRoles.Contains("Trainer"))
+                {
+                    // Trainer için Trainer alanındaki mesaj sayfası
+                    bildirimLink = $"/Trainer/Mesaj/Chat?userId={gonderenId}";
+                }
+                else
+                {
+                    // Member için normal mesaj sayfası
+                    bildirimLink = $"/Mesaj/Chat?userId={gonderenId}";
+                }
+            }
+            else
+            {
+                bildirimLink = $"/Trainer/Mesaj/Chat?userId={gonderenId}";
+            }
+
             // Alıcıya bildirim gönder
             await _bildirimService.OlusturAsync(
                 userId: aliciId,
@@ -62,7 +95,7 @@ namespace FitnessCenter.Web.Services.Implementations
                 mesaj: $"{gonderenAd}: {(icerik.Length > 50 ? icerik.Substring(0, 50) + "..." : icerik)}",
                 tur: "YeniMesaj",
                 iliskiliId: mesaj.Id,
-                link: $"/Trainer/Mesaj/Chat?userId={gonderenId}"
+                link: bildirimLink
             );
 
             _logger.LogInformation("Mesaj gönderildi: {GonderenId} -> {AliciId}", gonderenId, aliciId);

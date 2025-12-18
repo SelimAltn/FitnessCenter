@@ -195,5 +195,72 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             TempData["Success"] = $"Randevu durumu '{yeniDurum}' olarak güncellendi.";
             return RedirectToAction(nameof(Index));
         }
+
+        // POST: Admin/Randevu/TumunuOnayla
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TumunuOnayla()
+        {
+            // Beklemede olan tüm randevuları al
+            var bekleyenRandevular = await _context.Randevular
+                .Include(r => r.Uye)
+                    .ThenInclude(u => u!.ApplicationUser)
+                .Include(r => r.Egitmen)
+                .Include(r => r.Hizmet)
+                .Where(r => r.Durum == "Beklemede")
+                .ToListAsync();
+
+            if (!bekleyenRandevular.Any())
+            {
+                TempData["Info"] = "Beklemede olan randevu bulunmuyor.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            int onaylananSayi = 0;
+
+            foreach (var randevu in bekleyenRandevular)
+            {
+                randevu.Durum = "Onaylandı";
+                onaylananSayi++;
+
+                var kullaniciId = randevu.Uye?.ApplicationUserId;
+                var egitmenAd = randevu.Egitmen?.AdSoyad ?? "Eğitmen";
+                var hizmetAd = randevu.Hizmet?.Ad ?? "Hizmet";
+                var randevuTarih = randevu.BaslangicZamani.ToString("dd.MM.yyyy HH:mm");
+                var uyeAd = randevu.Uye?.AdSoyad ?? "Üye";
+
+                // Kullanıcıya bildirim
+                if (!string.IsNullOrEmpty(kullaniciId))
+                {
+                    await _bildirimService.OlusturAsync(
+                        userId: kullaniciId,
+                        baslik: "Randevunuz onaylandı ✓",
+                        mesaj: $"{randevuTarih} - {egitmenAd} - {hizmetAd}",
+                        tur: "AppointmentApproved",
+                        iliskiliId: randevu.Id,
+                        link: "/Randevu"
+                    );
+                }
+
+                // Eğitmene bildirim
+                var egitmenUserId = randevu.Egitmen?.ApplicationUserId;
+                if (!string.IsNullOrEmpty(egitmenUserId))
+                {
+                    await _bildirimService.OlusturAsync(
+                        userId: egitmenUserId,
+                        baslik: "Yeni onaylı randevunuz var",
+                        mesaj: $"{randevuTarih} - {uyeAd} - {hizmetAd}",
+                        tur: "TrainerAppointmentApproved",
+                        iliskiliId: randevu.Id,
+                        link: "/Trainer/Randevu"
+                    );
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"{onaylananSayi} randevu başarıyla onaylandı ve kullanıcılara bildirim gönderildi.";
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

@@ -4,6 +4,11 @@
     var durumlar = ViewData["Durumlar"] as string[] ?? new[] { "Beklemede", "Onaylandı", "İptal" };
     var seciliDurum = ViewData["SeciliDurum"] as string;
     var seciliTarih = ViewData["SeciliTarih"] as string;
+    
+    // Randevuları ayır: Yaklaşan ve Yapılmış
+    var simdi = DateTime.Now;
+    var yaklasanRandevular = Model.Where(r => r.BaslangicZamani >= simdi).OrderBy(r => r.BaslangicZamani).ToList();
+    var yapilmisRandevular = Model.Where(r => r.BaslangicZamani < simdi).OrderByDescending(r => r.BaslangicZamani).ToList();
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -42,71 +47,174 @@
     </div>
 </div>
 
-<!-- Randevu Listesi -->
-<div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-        @if (Model.Any())
-        {
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Tarih & Saat</th>
-                            <th>Üye</th>
-                            <th>Hizmet</th>
-                            <th>Şube</th>
-                            <th>Durum</th>
-                            <th class="text-end">İşlem</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var r in Model)
-                        {
-                            var durumClass = r.Durum switch
-                            {
-                                "Onaylandı" => "bg-success",
-                                "Beklemede" => "bg-warning text-dark",
-                                "İptal" => "bg-danger",
-                                _ => "bg-secondary"
-                            };
-                            <tr>
-                                <td>
-                                    <strong>@r.BaslangicZamani.ToString("dd MMM yyyy")</strong><br/>
-                                    <small class="text-muted">@r.BaslangicZamani.ToString("HH:mm") - @r.BitisZamani.ToString("HH:mm")</small>
-                                </td>
-                                <td>
-                                    @r.Uye?.AdSoyad
-                                    @if (!string.IsNullOrEmpty(r.Uye?.Telefon))
+<!-- Tabs for Yaklaşan / Yapılmış -->
+<ul class="nav nav-tabs mb-4" id="randevuTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="yaklasan-tab" data-bs-toggle="tab" data-bs-target="#yaklasan" type="button" role="tab">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Yaklaşan Randevular
+            @if (yaklasanRandevular.Any())
+            {
+                <span class="badge bg-primary ms-1">@yaklasanRandevular.Count</span>
+            }
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="yapilmis-tab" data-bs-toggle="tab" data-bs-target="#yapilmis" type="button" role="tab">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            Yapılmış Randevular
+            @if (yapilmisRandevular.Any())
+            {
+                <span class="badge bg-secondary ms-1">@yapilmisRandevular.Count</span>
+            }
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="randevuTabContent">
+    <!-- Yaklaşan Randevular -->
+    <div class="tab-pane fade show active" id="yaklasan" role="tabpanel">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                @if (yaklasanRandevular.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tarih & Saat</th>
+                                    <th>Üye</th>
+                                    <th>Hizmet</th>
+                                    <th>Şube</th>
+                                    <th>Durum</th>
+                                    <th class="text-end">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var r in yaklasanRandevular)
+                                {
+                                    var durumClass = r.Durum switch
                                     {
-                                        <br/><small class="text-muted">@r.Uye.Telefon</small>
-                                    }
-                                </td>
-                                <td>@r.Hizmet?.Ad</td>
-                                <td>@r.Salon?.Ad</td>
-                                <td><span class="badge @durumClass">@r.Durum</span></td>
-                                <td class="text-end">
-                                    <a asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-outline-primary">
-                                        Detay
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                                        "Onaylandı" => "bg-success",
+                                        "Beklemede" => "bg-warning text-dark",
+                                        "İptal" => "bg-danger",
+                                        _ => "bg-secondary"
+                                    };
+                                    <tr>
+                                        <td>
+                                            <strong>@r.BaslangicZamani.ToString("dd MMM yyyy")</strong><br/>
+                                            <small class="text-muted">@r.BaslangicZamani.ToString("HH:mm") - @r.BitisZamani.ToString("HH:mm")</small>
+                                        </td>
+                                        <td>
+                                            @r.Uye?.AdSoyad
+                                            @if (!string.IsNullOrEmpty(r.Uye?.Telefon))
+                                            {
+                                                <br/><small class="text-muted">@r.Uye.Telefon</small>
+                                            }
+                                        </td>
+                                        <td>@r.Hizmet?.Ad</td>
+                                        <td>@r.Salon?.Ad</td>
+                                        <td><span class="badge @durumClass">@r.Durum</span></td>
+                                        <td class="text-end">
+                                            <a asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-outline-primary">
+                                                Detay
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5 text-muted">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-3 opacity-50">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <h5>Yaklaşan Randevu Yok</h5>
+                        <p class="mb-0">Henüz gelecek tarihe ait randevunuz bulunmuyor.</p>
+                    </div>
+                }
             </div>
-        }
-        else
-        {
-            <div class="text-center py-5 text-muted">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-3 opacity-50">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                <h5>Randevu Bulunamadı</h5>
-                <p class="mb-0">Seçili kriterlere uygun randevu yok.</p>
+        </div>
+    </div>
+
+    <!-- Yapılmış Randevular -->
+    <div class="tab-pane fade" id="yapilmis" role="tabpanel">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                @if (yapilmisRandevular.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tarih & Saat</th>
+                                    <th>Üye</th>
+                                    <th>Hizmet</th>
+                                    <th>Şube</th>
+                                    <th>Durum</th>
+                                    <th class="text-end">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var r in yapilmisRandevular)
+                                {
+                                    var durumClass = r.Durum switch
+                                    {
+                                        "Onaylandı" => "bg-success",
+                                        "Beklemede" => "bg-warning text-dark",
+                                        "İptal" => "bg-danger",
+                                        _ => "bg-secondary"
+                                    };
+                                    <tr class="table-secondary">
+                                        <td>
+                                            <strong>@r.BaslangicZamani.ToString("dd MMM yyyy")</strong><br/>
+                                            <small class="text-muted">@r.BaslangicZamani.ToString("HH:mm") - @r.BitisZamani.ToString("HH:mm")</small>
+                                        </td>
+                                        <td>
+                                            @r.Uye?.AdSoyad
+                                            @if (!string.IsNullOrEmpty(r.Uye?.Telefon))
+                                            {
+                                                <br/><small class="text-muted">@r.Uye.Telefon</small>
+                                            }
+                                        </td>
+                                        <td>@r.Hizmet?.Ad</td>
+                                        <td>@r.Salon?.Ad</td>
+                                        <td><span class="badge @durumClass">@r.Durum</span></td>
+                                        <td class="text-end">
+                                            <a asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-outline-secondary">
+                                                Detay
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5 text-muted">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-3 opacity-50">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        <h5>Yapılmış Randevu Yok</h5>
+                        <p class="mb-0">Henüz tamamlanmış randevunuz bulunmuyor.</p>
+                    </div>
+                }
             </div>
-        }
+        </div>
     </div>
 </div>

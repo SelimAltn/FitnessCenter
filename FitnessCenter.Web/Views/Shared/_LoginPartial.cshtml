@@ -93,6 +93,47 @@
             </div>
         </li>
 
+        @if (User.IsInRole("Admin"))
+        {
+            // Admin için okunmamış mesaj sayısını hesapla
+            var okunmamisMesajSayisi = DbContext.Mesajlar.Count(m => m.AliciId == userId && !m.Okundu);
+            
+            <!-- 💬 Mesaj İkonu (Admin için) -->
+            <li class="nav-item me-2">
+                <a class="nav-link notification-bell" 
+                   asp-area="Admin" asp-controller="Mesaj" asp-action="Index"
+                   title="Mesajlar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    @if (okunmamisMesajSayisi > 0)
+                    {
+                        <span class="notification-badge">@(okunmamisMesajSayisi > 9 ? "9+" : okunmamisMesajSayisi.ToString())</span>
+                    }
+                </a>
+            </li>
+        }
+        else if (User.IsInRole("Trainer"))
+        {
+            // Trainer için okunmamış mesaj sayısını hesapla
+            var okunmamisMesajSayisi = DbContext.Mesajlar.Count(m => m.AliciId == userId && !m.Okundu);
+            
+            <!-- 💬 Mesaj İkonu (Trainer için) -->
+            <li class="nav-item me-2">
+                <a class="nav-link notification-bell" 
+                   asp-area="Trainer" asp-controller="Mesaj" asp-action="Index"
+                   title="Mesajlar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    @if (okunmamisMesajSayisi > 0)
+                    {
+                        <span class="notification-badge">@(okunmamisMesajSayisi > 9 ? "9+" : okunmamisMesajSayisi.ToString())</span>
+                    }
+                </a>
+            </li>
+        }
+
         <!-- 👤 Profil Dropdown -->
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 profile-dropdown-toggle" 

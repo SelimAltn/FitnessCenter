@@ -155,6 +155,20 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
                     await _context.SaveChangesAsync();
                 }
 
+                // 3.5 Hizmetleri ekle
+                if (model.SecilenHizmetler?.Any() == true)
+                {
+                    foreach (var hizmetId in model.SecilenHizmetler)
+                    {
+                        _context.EgitmenHizmetler.Add(new EgitmenHizmet
+                        {
+                            EgitmenId = egitmen.Id,
+                            HizmetId = hizmetId
+                        });
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
                 // 4. Çalışma saatlerini ekle
                 if (model.CalismaSaatleri?.Any() == true)
                 {
@@ -191,6 +205,7 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
 
             var egitmen = await _context.Egitmenler
                 .Include(e => e.EgitmenUzmanliklari)
+                .Include(e => e.EgitmenHizmetler)
                 .Include(e => e.Musaitlikler)
                 .FirstOrDefaultAsync(e => e.Id == id);
 
@@ -211,6 +226,7 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
                 Biyografi = egitmen.Biyografi,
                 Aktif = egitmen.Aktif,
                 SecilenUzmanliklar = egitmen.EgitmenUzmanliklari?.Select(eu => eu.UzmanlikAlaniId).ToList() ?? new List<int>(),
+                SecilenHizmetler = egitmen.EgitmenHizmetler?.Select(eh => eh.HizmetId).ToList() ?? new List<int>(),
                 CalismaSaatleri = GetCalismaSaatleriFromEgitmen(egitmen)
             };
 
@@ -233,6 +249,7 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
 
             var egitmen = await _context.Egitmenler
                 .Include(e => e.EgitmenUzmanliklari)
+                .Include(e => e.EgitmenHizmetler)
                 .Include(e => e.Musaitlikler)
                 .FirstOrDefaultAsync(e => e.Id == id);
 
@@ -281,6 +298,24 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
                         {
                             EgitmenId = egitmen.Id,
                             UzmanlikAlaniId = uzmanlikId
+                        });
+                    }
+                }
+
+                // Hizmetleri güncelle - önce mevcut olanları sil
+                if (egitmen.EgitmenHizmetler != null)
+                {
+                    _context.EgitmenHizmetler.RemoveRange(egitmen.EgitmenHizmetler);
+                }
+
+                if (model.SecilenHizmetler?.Any() == true)
+                {
+                    foreach (var hizmetId in model.SecilenHizmetler)
+                    {
+                        _context.EgitmenHizmetler.Add(new EgitmenHizmet
+                        {
+                            EgitmenId = egitmen.Id,
+                            HizmetId = hizmetId
                         });
                     }
                 }
@@ -453,6 +488,10 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             ViewData["UzmanlikAlanlari"] = await _context.UzmanlikAlanlari
                 .Where(u => u.Aktif)
                 .OrderBy(u => u.Ad)
+                .ToListAsync();
+
+            ViewData["Hizmetler"] = await _context.Hizmetler
+                .OrderBy(h => h.Ad)
                 .ToListAsync();
         }
 

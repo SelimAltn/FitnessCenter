@@ -1,0 +1,137 @@
+@model List<FitnessCenter.Web.Models.Entities.Mesaj>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<FitnessCenter.Web.Models.Entities.ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "Sohbet";
+    var karsiTaraf = ViewData["KarsiTaraf"] as FitnessCenter.Web.Models.Entities.ApplicationUser;
+    var karsiTarafId = ViewData["KarsiTarafId"] as string;
+    var isTrainer = (bool?)ViewData["IsTrainer"] ?? false;
+    var isMember = (bool?)ViewData["IsMember"] ?? false;
+    var currentUser = await UserManager.GetUserAsync(User);
+}
+
+<style>
+    .chat-container {
+        height: calc(100vh - 350px);
+        min-height: 400px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    .message {
+        max-width: 70%;
+        padding: 0.75rem 1rem;
+        border-radius: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .message.sent {
+        background: linear-gradient(135deg, #1e3a5f, #2d5a87);
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 0.25rem;
+    }
+    .message.received {
+        background: #f0f2f5;
+        color: #333;
+        margin-right: auto;
+        border-bottom-left-radius: 0.25rem;
+    }
+    .message .time {
+        font-size: 0.75rem;
+        opacity: 0.7;
+    }
+</style>
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1>Sohbet</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                        <li class="breadcrumb-item"><a asp-action="Index">Mesajlar</a></li>
+                        <li class="breadcrumb-item active">@karsiTaraf?.UserName</li>
+                    </ol>
+                </nav>
+            </div>
+            <div>
+                <a asp-action="Index" class="btn-fc btn-fc-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                    Mesajlara Dön
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3 d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                @karsiTaraf?.UserName?.Substring(0, 1).ToUpper()
+            </div>
+            <div>
+                <strong>@karsiTaraf?.UserName</strong>
+                @if (isTrainer)
+                {
+                    <span class="badge bg-info ms-1">Eğitmen</span>
+                }
+                else if (isMember)
+                {
+                    <span class="badge bg-secondary ms-1">Üye</span>
+                }
+            </div>
+        </div>
+        
+        <div class="card-body chat-container" id="chatContainer">
+            @if (Model.Any())
+            {
+                @foreach (var m in Model)
+                {
+                    var isSent = m.GonderenId == currentUser?.Id;
+                    <div class="message @(isSent ? "sent" : "received")">
+                        <div>@m.Icerik</div>
+                        <div class="time text-end">@m.GonderimTarihi.ToString("HH:mm")</div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted my-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-2 opacity-50">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <p class="mb-0">Henüz mesaj yok. İlk mesajı gönderin!</p>
+                </div>
+            }
+        </div>
+        
+        <div class="card-footer bg-white py-3">
+            <form asp-action="Gonder" method="post" class="d-flex gap-2">
+                <input type="hidden" name="aliciId" value="@karsiTarafId" />
+                <input type="text" name="mesaj" class="form-control" placeholder="Mesajınızı yazın..." autocomplete="off" required />
+                <button type="submit" class="btn btn-primary px-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Chat'i en alta scroll et
+        var container = document.getElementById('chatContainer');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+}

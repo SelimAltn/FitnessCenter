@@ -209,6 +209,15 @@ namespace FitnessCenter.Web.Controllers
             randevu.UyeId = uye.Id;            // güvenlik için
             randevu.Durum = "Beklemede";
 
+            // ---------------- 0) Minimum 3 saat öncesi kontrolü ----------------
+            var minZaman = DateTime.Now.AddHours(3);
+            if (baslangic < minZaman)
+            {
+                var minSaatStr = minZaman.ToString("dd.MM.yyyy HH:mm");
+                ModelState.AddModelError(string.Empty,
+                    $"Randevu en erken 3 saat sonrası için alınabilir. En erken: {minSaatStr}");
+            }
+
             // ---------------- 1) Eğitmenin müsaitliği ----------------
             var gun = baslangic.DayOfWeek;
             var baslangicTime = baslangic.TimeOfDay;

@@ -1,0 +1,28 @@
+Seed işlemi başlıyor...
+1. Salonlar ekleniyor...
+Salonlar eklendi. Istanbul ID: 6, Ankara ID: 7, Sakarya ID: 8
+2. Eğitmenler ekleniyor...
+Eğitmenler eklendi.
+3. Eğitmen uzmanlıkları ekleniyor...
+Eğitmen uzmanlıkları eklendi.
+4. Eğitmen çalışma saatleri ekleniyor...
+Eğitmen çalışma saatleri eklendi.
+5. Kullanıcılar (üyeler) ekleniyor...
+Kullanıcılar eklendi.
+6. Üyelikler ekleniyor...
+Üyelikler eklendi.
+7. Randevular oluşturuluyor...
+Randevular eklendi. Toplam: 200
+ 
+========================================
+SEED İ�?LEMİ BA�?ARIYLA TAMAMLANDI!
+========================================
+ 
+ÖZET:
+- Salonlar: 7
+- Eğitmenler: 45
+- Eğitmen Uzmanlıkları: 98
+- Çalışma Saatleri: 240
+- Üyeler: 105
+- Üyelikler: 90
+- Randevular: 206
