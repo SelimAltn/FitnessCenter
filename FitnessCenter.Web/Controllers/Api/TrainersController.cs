@@ -22,57 +22,68 @@ namespace FitnessCenter.Web.Controllers.Api
         }
 
         /// <summary>
-        /// /api/trainers?date=2025-12-11&salonId=1&serviceId=3&page=1&pageSize=10
-        /// Belirtilen tarihin gününe ve şubeye göre müsait eğitmenleri listeler.
+        /// Eğitmenleri listeler. Parametreler opsiyoneldir.
+        /// 
+        /// - date boş: Tüm aktif eğitmenleri döner
+        /// - date dolu: Belirtilen tarihin gününe göre müsait eğitmenleri döner
+        /// - salonId: Şubeye göre filtreler (date doluysa zorunlu, boşsa opsiyonel)
+        /// - serviceId: Hizmete göre filtreler
+        /// 
+        /// Örnek kullanımlar:
+        /// - GET /api/trainers → Tüm eğitmenler
+        /// - GET /api/trainers?salonId=1 → 1 nolu şubedeki eğitmenler
+        /// - GET /api/trainers?date=2025-12-11&amp;salonId=1 → Belirtilen tarihte müsait eğitmenler
         /// </summary>
         [HttpGet]
         public async Task<ActionResult<PagedResult<TrainerDto>>> GetAvailableTrainers(
-            [FromQuery] string? date,
-            [FromQuery] int? salonId,
-            [FromQuery] int? serviceId,
+            [FromQuery] string? date = null,
+            [FromQuery] int? salonId = null,
+            [FromQuery] int? serviceId = null,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
-            // ---- Parametre kontrolleri (ProblemDetails) ----
-            if (string.IsNullOrWhiteSpace(date))
-            {
-                return Problem(
-                    statusCode: 400,
-                    title: "Geçersiz parametre",
-                    detail: "date parametresi zorunludur. Örn: ?date=2025-12-11",
-                    type: "https://fitnesscenter.com/probs/invalid-parameter");
-            }
+            DateTime? targetDate = null;
 
-            if (!DateTime.TryParse(date, out var targetDate))
+            // ---- Date parametresi varsa parse et ----
+            if (!string.IsNullOrWhiteSpace(date))
             {
-                return Problem(
-                    statusCode: 400,
-                    title: "Geçersiz tarih formatı",
-                    detail: "date parametresi geçerli bir tarih olmalıdır (yyyy-MM-dd).",
-                    type: "https://fitnesscenter.com/probs/invalid-date");
-            }
+                if (!DateTime.TryParse(date, out var parsedDate))
+                {
+                    return Problem(
+                        statusCode: 400,
+                        title: "Geçersiz tarih formatı",
+                        detail: "date parametresi geçerli bir tarih olmalıdır (yyyy-MM-dd).",
+                        type: "https://fitnesscenter.com/probs/invalid-date");
+                }
+                targetDate = parsedDate;
 
-            if (!salonId.HasValue)
-            {
-                return Problem(
-                    statusCode: 400,
-                    title: "Geçersiz parametre",
-                    detail: "salonId parametresi zorunludur.",
-                    type: "https://fitnesscenter.com/probs/invalid-parameter");
+                // Date verilmişse salonId de zorunlu
+                if (!salonId.HasValue)
+                {
+                    return Problem(
+                        statusCode: 400,
+                        title: "Geçersiz parametre",
+                        detail: "date parametresi kullanılırken salonId zorunludur.",
+                        type: "https://fitnesscenter.com/probs/invalid-parameter");
+                }
             }
 
             page = page < 1 ? 1 : page;
             pageSize = pageSize < 1 ? 10 : (pageSize > 50 ? 50 : pageSize);
 
-            var gun = targetDate.DayOfWeek;
-
-            // ---- Temel eğitmen sorgusu: Aktif VE bu şubede çalışan ----
+            // ---- Temel eğitmen sorgusu: Aktif olanlar ----
             IQueryable<Models.Entities.Egitmen> egitmenQuery = _context.Egitmenler
-                .Where(e => e.Aktif && e.SalonId == salonId.Value)
+                .Where(e => e.Aktif)
                 .Include(e => e.EgitmenUzmanliklari!)
                     .ThenInclude(eu => eu.UzmanlikAlani)
                 .Include(e => e.Musaitlikler)
                 .AsNoTracking();
+
+            // Şubeye göre filtre (opsiyonel)
+            if (salonId.HasValue)
+            {
+                egitmenQuery = egitmenQuery.Where(e => e.SalonId == salonId.Value);
+            }
 
             // Hizmete göre filtre (EgitmenHizmet N-N)
             if (serviceId.HasValue)
@@ -81,12 +92,22 @@ namespace FitnessCenter.Web.Controllers.Api
                     e.EgitmenHizmetler!.Any(eh => eh.HizmetId == serviceId.Value));
             }
 
-            // Musaitlik'e göre filtre - eğer müsaitlik kaydı varsa o günde çalışanları göster
-            // Müsaitlik kaydı yoksa yine de göster (henüz program belirlenmemiş olabilir)
-            var filteredQuery = egitmenQuery.Where(e => 
-                e.Musaitlikler == null || 
-                !e.Musaitlikler.Any() || 
-                e.Musaitlikler.Any(m => m.Gun == gun));
+            // Tarihe göre müsaitlik filtresi (sadece date verilmişse)
+            IQueryable<Models.Entities.Egitmen> filteredQuery;
+            if (targetDate.HasValue)
+            {
+                var gun = targetDate.Value.DayOfWeek;
+                // Müsaitlik kaydı yoksa yine de göster (henüz program belirlenmemiş olabilir)
+                filteredQuery = egitmenQuery.Where(e => 
+                    e.Musaitlikler == null || 
+                    !e.Musaitlikler.Any() || 
+                    e.Musaitlikler.Any(m => m.Gun == gun));
+            }
+            else
+            {
+                // Date yoksa tüm eğitmenleri göster
+                filteredQuery = egitmenQuery;
+            }
 
             var items = await filteredQuery
                 .OrderBy(e => e.AdSoyad)
@@ -118,3 +139,4 @@ namespace FitnessCenter.Web.Controllers.Api
         }
     }
 }
+

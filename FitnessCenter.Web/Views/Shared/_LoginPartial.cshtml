@@ -11,8 +11,12 @@
         var user = await UserManager.GetUserAsync(User);
         var userId = user?.Id ?? "";
         var userEmail = user?.Email ?? "";
-        var userName = user?.UserName ?? User.Identity?.Name ?? "Kullanıcı";
-        var initials = userName.Length >= 2 ? userName.Substring(0, 2).ToUpper() : userName.ToUpper();
+        var rawUserName = user?.UserName ?? User.Identity?.Name ?? "Kullanıcı";
+        
+        // Admin için özel görüntü adı
+        var userName = rawUserName == "g231210558@sakarya.edu.tr" ? "Admin" : rawUserName;
+        var displayInitials = userName == "Admin" ? "AD" : (userName.Length >= 2 ? userName.Substring(0, 2).ToUpper() : userName.ToUpper());
+        var initials = displayInitials;
         
         // Okunmamış bildirim sayısı ve son bildirimler
         var okunmamisSayisi = DbContext.Bildirimler.Count(b => b.UserId == userId && !b.Okundu);
@@ -192,6 +196,17 @@
                 else
                 {
                     <!-- Normal Kullanıcı Menü Öğeleri -->
+                    <li>
+                        <a class="dropdown-item" asp-area="" asp-controller="Randevu" asp-action="Calendar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            Takvim
+                        </a>
+                    </li>
                     <li>
                         <a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Settings">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">

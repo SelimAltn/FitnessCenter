@@ -50,6 +50,37 @@
                             <span asp-validation-for="Aciklama" class="form-fc-error"></span>
                         </div>
 
+                        <hr class="my-4" />
+                        <h6 class="mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Çalışma Saatleri
+                        </h6>
+
+                        <div class="form-fc-group">
+                            <div class="form-check">
+                                <input asp-for="Is24Hours" class="form-check-input" id="Is24Hours" />
+                                <label asp-for="Is24Hours" class="form-check-label">7/24 Açık</label>
+                            </div>
+                            <small class="text-muted">Bu seçenek işaretlenirse salon 7 gün 24 saat çalışır.</small>
+                        </div>
+
+                        <div class="row" id="workingHoursSection">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="AcilisSaati" class="form-fc-label">Açılış Saati</label>
+                                    <input asp-for="AcilisSaati" type="time" class="form-fc-control" id="AcilisSaati" />
+                                    <span asp-validation-for="AcilisSaati" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="KapanisSaati" class="form-fc-label">Kapanış Saati</label>
+                                    <input asp-for="KapanisSaati" type="time" class="form-fc-control" id="KapanisSaati" />
+                                    <span asp-validation-for="KapanisSaati" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-flex gap-3 pt-3">
                             <button type="submit" class="btn-fc btn-fc-success">Kaydet</button>
                             <a asp-action="Index" class="btn-fc btn-fc-secondary">İptal</a>
@@ -63,4 +94,20 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        $(function() {
+            function toggleWorkingHours() {
+                var is24h = $('#Is24Hours').is(':checked');
+                $('#AcilisSaati, #KapanisSaati').prop('disabled', is24h);
+                if (is24h) {
+                    $('#workingHoursSection').css('opacity', '0.5');
+                } else {
+                    $('#workingHoursSection').css('opacity', '1');
+                }
+            }
+            $('#Is24Hours').on('change', toggleWorkingHours);
+            toggleWorkingHours(); // ilk yükleme için
+        });
+    </script>
 }
+

@@ -96,5 +96,57 @@ namespace FitnessCenter.Web.Areas.Trainer.Controllers
 
             return View(randevu);
         }
+
+        // GET: Trainer/Randevu/Calendar
+        // FullCalendar.js ile takvim görünümü
+        [HttpGet]
+        public IActionResult Calendar()
+        {
+            return View();
+        }
+
+        // GET: Trainer/Randevu/CalendarEvents
+        // FullCalendar.js için JSON event endpoint'i
+        [HttpGet]
+        public async Task<IActionResult> CalendarEvents()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Json(new List<object>());
+
+            var egitmen = await _context.Egitmenler
+                .FirstOrDefaultAsync(e => e.ApplicationUserId == user.Id);
+
+            if (egitmen == null)
+                return Json(new List<object>());
+
+            var events = await _context.Randevular
+                .Where(r => r.EgitmenId == egitmen.Id)
+                .Include(r => r.Hizmet)
+                .Include(r => r.Uye)
+                .Include(r => r.Salon)
+                .Select(r => new
+                {
+                    id = r.Id,
+                    title = r.Uye != null ? r.Uye.AdSoyad : "Randevu",
+                    start = r.BaslangicZamani.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    end = r.BitisZamani.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    // Durum renkleri: Yeşil=Onaylandı, Sarı=Beklemede, Kırmızı=İptal
+                    color = r.Durum == "Onaylandı" ? "#10b981" : 
+                            r.Durum == "Beklemede" ? "#f59e0b" : "#ef4444",
+                    extendedProps = new
+                    {
+                        durum = r.Durum,
+                        uye = r.Uye != null ? r.Uye.AdSoyad : "",
+                        hizmet = r.Hizmet != null ? r.Hizmet.Ad : "",
+                        salon = r.Salon != null ? r.Salon.Ad : "",
+                        hizmetSure = r.Hizmet != null ? r.Hizmet.SureDakika : 0
+                    }
+                })
+                .ToListAsync();
+
+            return Json(events);
+        }
     }
 }
+

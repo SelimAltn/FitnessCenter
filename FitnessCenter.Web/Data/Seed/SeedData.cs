@@ -27,13 +27,22 @@ namespace FitnessCenter.Web.Data.Seed
 
             // ---- 2) ADMIN KULLANICI ----
             var adminEmail = "admin@fitnesscenter.com";
-            var adminUserName = "admin";
-            var adminPassword = "Admin123!";
+            var adminUserName = "g231210558@sakarya.edu.tr";
+            var adminPassword = "sau";
 
+            // Önce mevcut admin kullanıcısını bul (email veya Admin rolüne göre)
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            
+            // Email ile bulunamadıysa, Admin rolündeki mevcut kullanıcıyı bul
+            if (adminUser == null)
+            {
+                var usersInAdminRole = await userManager.GetUsersInRoleAsync("Admin");
+                adminUser = usersInAdminRole.FirstOrDefault();
+            }
 
             if (adminUser == null)
             {
+                // Hiç admin yoksa yeni oluştur
                 adminUser = new ApplicationUser
                 {
                     UserName = adminUserName,
@@ -50,6 +59,33 @@ namespace FitnessCenter.Web.Data.Seed
             }
             else
             {
+                // Mevcut admini güncelle
+                bool needsUpdate = false;
+
+                if (adminUser.UserName != adminUserName)
+                {
+                    adminUser.UserName = adminUserName;
+                    adminUser.NormalizedUserName = adminUserName.ToUpperInvariant();
+                    needsUpdate = true;
+                }
+
+                if (adminUser.Email != adminEmail)
+                {
+                    adminUser.Email = adminEmail;
+                    adminUser.NormalizedEmail = adminEmail.ToUpperInvariant();
+                    needsUpdate = true;
+                }
+
+                if (needsUpdate)
+                {
+                    await userManager.UpdateAsync(adminUser);
+                }
+
+                // Şifreyi sıfırla ve yenisini ata
+                var token = await userManager.GeneratePasswordResetTokenAsync(adminUser);
+                await userManager.ResetPasswordAsync(adminUser, token, adminPassword);
+
+                // Admin rolünde olduğundan emin ol
                 if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
                 {
                     await userManager.AddToRoleAsync(adminUser, "Admin");
@@ -88,13 +124,17 @@ namespace FitnessCenter.Web.Data.Seed
                     {
                         Ad = "Merkez Şube",
                         Adress = "Sakarya / Serdivan",
-                        Aciklama = "Ana fitness salonu. Kardiyo, ağırlık ve ders stüdyosu."
+                        Aciklama = "Ana fitness salonu. Kardiyo, ağırlık ve ders stüdyosu.",
+                        Is24Hours = true // 7/24 açık
                     },
                     new Salon
                     {
                         Ad = "Premium Şube",
                         Adress = "İstanbul / Kadıköy",
-                        Aciklama = "Daha butik, randevulu kişisel antrenman salonu."
+                        Aciklama = "Daha butik, randevulu kişisel antrenman salonu.",
+                        Is24Hours = false,
+                        AcilisSaati = new TimeSpan(8, 0, 0),   // 08:00
+                        KapanisSaati = new TimeSpan(22, 0, 0)  // 22:00
                     }
                 );
 

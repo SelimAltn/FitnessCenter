@@ -4,82 +4,90 @@ namespace FitnessCenter.Web.Models.ViewModels
 {
     /// <summary>
     /// AI öneri formu için ViewModel
-    /// Fotoğraf VEYA ölçü bilgileri (Boy+Kilo+Yaş) girilmelidir.
+    /// İki mod: Fotoğraf VEYA Veri (mutual exclusive - ikisi aynı anda yok)
     /// </summary>
     public class AiRecommendVm : IValidatableObject
     {
+        // ===== Ölçü Bilgileri (Data Modu) =====
+
         [Range(100, 250, ErrorMessage = "Boy 100-250 cm arasında olmalıdır.")]
-        [Display(Name = "Boy (cm) - Opsiyonel")]
+        [Display(Name = "Boy (cm)")]
         public int? Boy { get; set; }
 
         [Range(30, 300, ErrorMessage = "Kilo 30-300 kg arasında olmalıdır.")]
-        [Display(Name = "Kilo (kg) - Opsiyonel")]
+        [Display(Name = "Kilo (kg)")]
         public decimal? Kilo { get; set; }
 
         [Range(10, 100, ErrorMessage = "Yaş 10-100 arasında olmalıdır.")]
-        [Display(Name = "Yaş - Opsiyonel")]
+        [Display(Name = "Yaş")]
         public int? Yas { get; set; }
 
         [Display(Name = "Cinsiyet")]
         public string? Cinsiyet { get; set; }
 
+        // ===== Fotoğraf (Photo Modu) =====
+
+        [Display(Name = "Fotoğraf")]
+        [DataType(DataType.Upload)]
+        public IFormFile? Photo { get; set; }
+
+        // ===== Tercihler (Her iki modda aktif) =====
+
         [Display(Name = "Hedef")]
         public string? Hedef { get; set; }
-
-        [Range(1, 7, ErrorMessage = "Haftalık antrenman günü 1-7 arasında olmalıdır.")]
-        [Display(Name = "Haftalık Antrenman Günü")]
-        public int? AntrenmanGunu { get; set; }
 
         [Display(Name = "Ekipman Durumu")]
         public string? Ekipman { get; set; }
 
-        [StringLength(500, ErrorMessage = "Sağlık kısıtı en fazla 500 karakter olabilir.")]
-        [Display(Name = "Sağlık Kısıtları (Opsiyonel)")]
-        public string? SaglikKisiti { get; set; }
+        [Range(1, 7, ErrorMessage = "Antrenman günü 1-7 arasında olmalıdır.")]
+        [Display(Name = "Haftalık Antrenman Günü")]
+        public int? AntrenmanGunu { get; set; }
 
-        [Display(Name = "Fotoğraf (Opsiyonel)")]
-        [DataType(DataType.Upload)]
-        public IFormFile? Photo { get; set; }
-
-        // ===== Custom Validation =====
+        // ===== Strict Mutual Exclusive Validation =====
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             bool hasPhoto = Photo != null && Photo.Length > 0;
-            bool hasMeasurements = Boy.HasValue && Kilo.HasValue && Yas.HasValue;
+            bool hasMeasurements = Boy.HasValue || Kilo.HasValue || Yas.HasValue || !string.IsNullOrEmpty(Cinsiyet);
 
+            // KURAL: İkisi birden gelirse error
+            if (hasPhoto && hasMeasurements)
+            {
+                yield return new ValidationResult(
+                    "Fotoğraf ve ölçüler aynı anda gönderilemez. Lütfen birini seçin.",
+                    new[] { nameof(Photo) });
+            }
+
+            // KURAL: En az biri olmalı
             if (!hasPhoto && !hasMeasurements)
             {
                 yield return new ValidationResult(
-                    "Lütfen fotoğraf yükleyin VEYA ölçü bilgilerini (Boy, Kilo, Yaş) girin.",
-                    new[] { nameof(Photo), nameof(Boy), nameof(Kilo), nameof(Yas) });
+                    "Lütfen ya fotoğraf yükleyin ya da ölçü bilgilerinizi girin.",
+                    new[] { nameof(Photo), nameof(Boy) });
             }
 
-            // Kısmi ölçü girilmişse uyarı
-            if (!hasPhoto && (Boy.HasValue || Kilo.HasValue || Yas.HasValue) && !hasMeasurements)
+            // Data modu seçilmişse: Boy ve Kilo zorunlu
+            if (hasMeasurements && !hasPhoto)
             {
-                yield return new ValidationResult(
-                    "Fotoğraf olmadan öneri almak için Boy, Kilo ve Yaş bilgilerinin tamamı girilmelidir.",
-                    new[] { nameof(Boy), nameof(Kilo), nameof(Yas) });
+                if (!Boy.HasValue)
+                {
+                    yield return new ValidationResult(
+                        "Boy bilgisi zorunludur.",
+                        new[] { nameof(Boy) });
+                }
+                if (!Kilo.HasValue)
+                {
+                    yield return new ValidationResult(
+                        "Kilo bilgisi zorunludur.",
+                        new[] { nameof(Kilo) });
+                }
             }
         }
 
         // ===== Helper Properties =====
 
-        /// <summary>
-        /// Giriş senaryosunu belirler: PhotoOnly, DataOnly, Combined
-        /// </summary>
-        public string GetInputScenario()
-        {
-            bool hasPhoto = Photo != null && Photo.Length > 0;
-            bool hasMeasurements = Boy.HasValue && Kilo.HasValue && Yas.HasValue;
-
-            if (hasPhoto && hasMeasurements)
-                return "Combined";
-            if (hasPhoto)
-                return "PhotoOnly";
-            return "DataOnly";
-        }
+        public bool IsPhotoMode => Photo != null && Photo.Length > 0;
+        public bool IsDataMode => !IsPhotoMode && (Boy.HasValue || Kilo.HasValue);
 
         // ===== Seçenek Listeleri (View için) =====
 
@@ -99,9 +107,9 @@ namespace FitnessCenter.Web.Models.ViewModels
 
         public static List<string> EkipmanSecenekleri => new()
         {
-            "Bodyweight (Alet yok)",
-            "Dumbbell (Evde ağırlık)",
-            "Gym (Salon erişimi)"
+            "Ekipman Yok (Evde)",
+            "Temel Ekipman (Dambıl)",
+            "Tam Donanımlı Salon"
         };
     }
 }

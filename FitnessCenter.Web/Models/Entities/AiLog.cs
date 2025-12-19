@@ -23,23 +23,15 @@ namespace FitnessCenter.Web.Models.Entities
         [Display(Name = "Oluşturulma Zamanı")]
         public DateTime OlusturulmaZamani { get; set; } = DateTime.UtcNow;
 
-        // ===== Cache ve Log için Yeni Alanlar =====
-
         /// <summary>
-        /// Input verilerinin SHA256 hash'i (cache key olarak kullanılır)
+        /// Input verilerinin SHA256 hash'i
         /// </summary>
         [StringLength(64)]
         [Display(Name = "Input Hash")]
         public string? InputHash { get; set; }
 
         /// <summary>
-        /// Sonuç cache'den mi geldi?
-        /// </summary>
-        [Display(Name = "Cache'den Geldi")]
-        public bool IsCached { get; set; }
-
-        /// <summary>
-        /// AI'dan dönen ham JSON yanıt (nvarchar(max))
+        /// AI'dan dönen ham JSON yanıt
         /// </summary>
         [Column(TypeName = "nvarchar(max)")]
         [Display(Name = "JSON Yanıt")]
@@ -70,22 +62,6 @@ namespace FitnessCenter.Web.Models.Entities
         /// </summary>
         [Display(Name = "Başarılı")]
         public bool IsSuccess { get; set; }
-
-        // ===== AJAX Polling İçin Yeni Alanlar =====
-
-        /// <summary>
-        /// Benzersiz istek kimliği (AJAX polling için)
-        /// </summary>
-        [StringLength(36)]
-        [Display(Name = "Request ID")]
-        public string? RequestId { get; set; }
-
-        /// <summary>
-        /// İşlem durumu: Pending, Processing, Completed, Error
-        /// </summary>
-        [StringLength(20)]
-        [Display(Name = "Durum")]
-        public string? Status { get; set; }
 
         // ===== Navigation Property =====
 

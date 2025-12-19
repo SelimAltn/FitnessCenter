@@ -64,6 +64,9 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
 
             TemelKontroller(musaitlik);
 
+            // Salon çalışma saatleri içinde mi?
+            await SalonSaatiKontroluAsync(musaitlik);
+
             // Aynı eğitmen + gün için çakışan blok var mı?
             CakismaKontrolu(musaitlik, isEdit: false);
 
@@ -101,6 +104,10 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             await DoldurEgitmenSelectAsync(musaitlik.EgitmenId);
 
             TemelKontroller(musaitlik);
+
+            // Salon çalışma saatleri içinde mi?
+            await SalonSaatiKontroluAsync(musaitlik);
+
             CakismaKontrolu(musaitlik, isEdit: true);
 
             if (!ModelState.IsValid)
@@ -204,6 +211,53 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             }
 
             // İstersen burada da arka arkaya bloklar için MinAraDakika kuralını ekleyebilirsin.
+        }
+
+        /// <summary>
+        /// Eğitmenin çalıştığı salonun saatlerini kontrol eder.
+        /// Müsaitlik bloğu salon çalışma saatleri dışına taşamaz (salon 24 saat değilse).
+        /// </summary>
+        private async Task SalonSaatiKontroluAsync(Musaitlik m)
+        {
+            // Eğitmenin bağlı olduğu salonu bul
+            var egitmen = await _context.Egitmenler
+                .Include(e => e.Salon)
+                .FirstOrDefaultAsync(e => e.Id == m.EgitmenId);
+
+            if (egitmen?.Salon == null)
+            {
+                // Eğitmenin şubesi yoksa kontrol yapma
+                return;
+            }
+
+            var salon = egitmen.Salon;
+
+            // 7/24 açık ise saat kısıtlaması yok
+            if (salon.Is24Hours)
+            {
+                return;
+            }
+
+            // Salon saatleri tanımlı mı?
+            if (!salon.AcilisSaati.HasValue || !salon.KapanisSaati.HasValue)
+            {
+                // Tanımlı değilse kontrol yapma
+                return;
+            }
+
+            // Müsaitlik başlangıç saati salonun açılış saatinden önce mi?
+            if (m.BaslangicSaati < salon.AcilisSaati.Value)
+            {
+                ModelState.AddModelError(nameof(Musaitlik.BaslangicSaati),
+                    $"Müsaitlik başlangıç saati, salonun açılış saatinden ({salon.AcilisSaati.Value:hh\\:mm}) önce olamaz.");
+            }
+
+            // Müsaitlik bitiş saati salonun kapanış saatinden sonra mı?
+            if (m.BitisSaati > salon.KapanisSaati.Value)
+            {
+                ModelState.AddModelError(nameof(Musaitlik.BitisSaati),
+                    $"Müsaitlik bitiş saati, salonun kapanış saatinden ({salon.KapanisSaati.Value:hh\\:mm}) sonra olamaz.");
+            }
         }
     }
 }

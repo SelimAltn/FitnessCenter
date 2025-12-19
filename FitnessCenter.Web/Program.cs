@@ -40,7 +40,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    options.Password.RequiredLength = 6;
+    options.Password.RequiredLength = 3;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
     options.Password.RequireLowercase = false;
@@ -74,15 +74,25 @@ builder.Services.AddAuthorization(options =>
 });
 
 // ===== AI Servis Yapılandırması =====
-// AiSettings binding (appsettings.json + User Secrets + Environment Variables)
+// DeepSeek (Text/Plan generation)
 builder.Services.Configure<AiSettings>(
     builder.Configuration.GetSection("AiSettings"));
 
-// IMemoryCache (opsiyonel ikincil cache)
+// Groq (Vision/Photo analysis)
+builder.Services.Configure<GroqSettings>(
+    builder.Configuration.GetSection("GroqSettings"));
+
+// MemoryCache (AI yanıt cache için)
 builder.Services.AddMemoryCache();
 
-// HttpClient ile AI Recommendation Service
-builder.Services.AddHttpClient<IAiRecommendationService, AiRecommendationService>();
+// DeepSeek Service (metin plan üretimi)
+builder.Services.AddHttpClient<IDeepSeekService, DeepSeekService>();
+
+// Groq Vision Service (fotoğraf analizi)
+builder.Services.AddHttpClient<IAiVisionService, GroqVisionService>();
+
+// Image Generation Service (Placeholder)
+builder.Services.AddScoped<IImageGenerationService, PlaceholderImageService>();
 
 // ===== Email Servis Yapılandırması =====
 builder.Services.Configure<SmtpSettings>(

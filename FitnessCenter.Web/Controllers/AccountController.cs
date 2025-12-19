@@ -108,10 +108,21 @@ namespace FitnessCenter.Web.Controllers
 
             ApplicationUser user;
 
+            // Önce email olarak ara (@ varsa)
             if (model.KullaniciAdiVeyaEmail.Contains("@"))
+            {
                 user = await _userManager.FindByEmailAsync(model.KullaniciAdiVeyaEmail);
+                
+                // Email ile bulunamadıysa, username olarak da dene (username de @ içerebilir)
+                if (user == null)
+                {
+                    user = await _userManager.FindByNameAsync(model.KullaniciAdiVeyaEmail);
+                }
+            }
             else
+            {
                 user = await _userManager.FindByNameAsync(model.KullaniciAdiVeyaEmail);
+            }
 
             if (user == null)
             {

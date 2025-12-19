@@ -4,18 +4,34 @@ namespace FitnessCenter.Web.Models.ViewModels
 {
     /// <summary>
     /// AI öneri sonucu için ViewModel
-    /// JSON serialization için camelCase property isimleri kullanılır
+    /// Özet, BMI, vücut kategorisi, antrenman planı, beslenme önerileri, uyarılar
     /// </summary>
     public class AiResultVm
     {
+        // ===== Özet Bilgileri =====
+
         /// <summary>
-        /// Kısa özet (2-3 cümle)
+        /// Kısa özet (BMI + kategori + hedefe göre 1-2 cümle)
         /// </summary>
         [JsonPropertyName("summary")]
         public string Summary { get; set; } = string.Empty;
 
         /// <summary>
-        /// Antrenman planı maddeleri
+        /// Vücut kategorisi (Data: Zayıf/Normal/Kilolu/Obez, Photo: Zayıf/Kilolu/Kaslı)
+        /// </summary>
+        [JsonPropertyName("bodyCategory")]
+        public string? BodyCategory { get; set; }
+
+        /// <summary>
+        /// BMI değeri (sadece Data modunda hesaplanır)
+        /// </summary>
+        [JsonPropertyName("bmi")]
+        public decimal? BMI { get; set; }
+
+        // ===== Plan ve Öneriler =====
+
+        /// <summary>
+        /// Haftalık antrenman planı (gün gün)
         /// </summary>
         [JsonPropertyName("workoutPlan")]
         public List<string> WorkoutPlan { get; set; } = new();
@@ -27,28 +43,40 @@ namespace FitnessCenter.Web.Models.ViewModels
         public List<string> NutritionTips { get; set; } = new();
 
         /// <summary>
-        /// Uyarılar ve dikkat edilmesi gerekenler
+        /// Dikkat edilmesi gerekenler / uyarılar
         /// </summary>
-        [JsonPropertyName("warnings")]
-        public List<string> Warnings { get; set; } = new();
+        [JsonPropertyName("notes")]
+        public List<string> Notes { get; set; } = new();
+
+        // ===== Fotoğraf Analizi (Photo Modu) =====
 
         /// <summary>
-        /// Sonuç cache'den mi geldi?
+        /// Fotoğrafta insan var mı?
         /// </summary>
-        [JsonPropertyName("isCached")]
-        public bool IsCached { get; set; }
+        [JsonPropertyName("isHuman")]
+        public bool IsHuman { get; set; } = true;
 
         /// <summary>
-        /// Sonucun üretildiği tarih
+        /// Fotoğrafta ne görüldüğünün açıklaması (insan değilse)
         /// </summary>
-        [JsonPropertyName("generatedAt")]
-        public DateTime GeneratedAt { get; set; }
+        [JsonPropertyName("photoDescription")]
+        public string? PhotoDescription { get; set; }
+
+        // ===== Görsel Üretimi =====
 
         /// <summary>
-        /// Kullanıcının girdiği ölçüler (özet)
+        /// "Nasıl görünürüm?" görseli URL'si
         /// </summary>
-        [JsonPropertyName("inputSummary")]
-        public string InputSummary { get; set; } = string.Empty;
+        [JsonPropertyName("imageUrl")]
+        public string? ImageUrl { get; set; }
+
+        /// <summary>
+        /// Görsel üretim durumu: "pending", "ready", "unavailable"
+        /// </summary>
+        [JsonPropertyName("imageStatus")]
+        public string ImageStatus { get; set; } = "unavailable";
+
+        // ===== Durum Bilgileri =====
 
         /// <summary>
         /// İşlem başarılı mı?
@@ -63,45 +91,21 @@ namespace FitnessCenter.Web.Models.ViewModels
         public string? ErrorMessage { get; set; }
 
         /// <summary>
-        /// Fallback yanıt mı? (API key yoksa veya hata durumunda)
+        /// Sonucun üretildiği tarih
         /// </summary>
-        [JsonPropertyName("isFallback")]
-        public bool IsFallback { get; set; }
+        [JsonPropertyName("generatedAt")]
+        public DateTime GeneratedAt { get; set; }
 
         /// <summary>
-        /// Öneri türü: "PhotoBased", "MeasurementBased", "Combined"
+        /// Cache'den mi geldi?
         /// </summary>
-        [JsonPropertyName("recommendationType")]
-        public string? RecommendationType { get; set; }
+        [JsonPropertyName("isCached")]
+        public bool IsCached { get; set; }
 
         /// <summary>
-        /// Kullanılan AI model adı (örn: gemini-2.0-flash, fallback)
+        /// Ham metin çıktı (JSON parse edilemezse)
         /// </summary>
-        [JsonPropertyName("modelUsed")]
-        public string? ModelUsed { get; set; }
-
-        // ===== Alakasız Fotoğraf Senaryosu İçin Yeni Alanlar =====
-        
-        /// <summary>
-        /// Fotoğraf fitness/vücut analizi için uygun mu?
-        /// PhotoOnly senaryosunda AI tarafından belirlenir.
-        /// true = uygun, false = uygun değil (öneri üretilmez)
-        /// </summary>
-        [JsonPropertyName("isImageRelevant")]
-        public bool IsImageRelevant { get; set; } = true;
-
-        /// <summary>
-        /// AI'ın fotoğraf hakkındaki açıklaması
-        /// Örn: "Bu fotoğrafta bir manzara görülüyor"
-        /// </summary>
-        [JsonPropertyName("imageDescription")]
-        public string? ImageDescription { get; set; }
-
-        /// <summary>
-        /// Fotoğrafın neden uygun/uygun olmadığının açıklaması
-        /// Örn: "Vücut görünmüyor, fitness analizi yapılamaz"
-        /// </summary>
-        [JsonPropertyName("imageAnalysisReason")]
-        public string? ImageAnalysisReason { get; set; }
+        [JsonPropertyName("rawText")]
+        public string? RawText { get; set; }
     }
 }

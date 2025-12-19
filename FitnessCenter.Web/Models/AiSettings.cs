@@ -2,14 +2,14 @@ namespace FitnessCenter.Web.Models
 {
     /// <summary>
     /// AI servis yapılandırması için options sınıfı.
-    /// appsettings.json veya User Secrets'tan bind edilir.
+    /// DeepSeek API (OpenAI uyumlu) için yapılandırılmış.
     /// </summary>
     public class AiSettings
     {
         /// <summary>
-        /// Gemini API base endpoint URL'i
+        /// DeepSeek API base URL
         /// </summary>
-        public string Endpoint { get; set; } = "https://generativelanguage.googleapis.com/v1beta/models";
+        public string BaseUrl { get; set; } = "https://api.deepseek.com";
 
         /// <summary>
         /// API Key - User Secrets veya Environment Variable'dan gelecek
@@ -18,19 +18,16 @@ namespace FitnessCenter.Web.Models
         public string ApiKey { get; set; } = "";
 
         /// <summary>
-        /// Kullanılacak Gemini model adı
+        /// Kullanılacak model adı
+        /// deepseek-chat: Genel sohbet/öneri
+        /// deepseek-reasoner: Mantıksal düşünme gerektiren görevler
         /// </summary>
-        public string Model { get; set; } = "gemini-1.5-pro";
+        public string Model { get; set; } = "deepseek-chat";
 
         /// <summary>
-        /// API çağrı timeout süresi (saniye)
+        /// API çağrı timeout süresi (saniye).
         /// </summary>
         public int TimeoutSeconds { get; set; } = 30;
-
-        /// <summary>
-        /// Cache geçerlilik süresi (saat)
-        /// </summary>
-        public int CacheHours { get; set; } = 24;
 
         /// <summary>
         /// API Key yapılandırılmış mı?

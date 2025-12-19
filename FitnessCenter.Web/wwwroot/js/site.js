@@ -288,6 +288,168 @@
     };
 
     // ========================================
+    // Scroll Reveal Animation System
+    // ========================================
+    const ScrollReveal = {
+        observer: null,
+
+        init: function () {
+            // Check for reduced motion preference
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                return;
+            }
+
+            this.createObserver();
+            this.observeElements();
+        },
+
+        createObserver: function () {
+            const options = {
+                root: null,
+                rootMargin: '0px 0px -50px 0px',
+                threshold: 0.1
+            };
+
+            this.observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        // Stop observing once revealed (run only once)
+                        this.observer.unobserve(entry.target);
+                    }
+                });
+            }, options);
+        },
+
+        observeElements: function () {
+            // Select elements to animate
+            const selectors = [
+                '.card',
+                '.table',
+                '.alert:not(.toast-fc)',
+                '.hero-section',
+                '.stat-card',
+                '.service-card'
+            ];
+
+            const elements = document.querySelectorAll(selectors.join(', '));
+
+            elements.forEach((el, index) => {
+                // Add reveal class for animation
+                el.classList.add('reveal-element');
+
+                // Add stagger delay based on position in viewport row
+                const rect = el.getBoundingClientRect();
+                const siblings = Array.from(el.parentElement?.children || []);
+                const siblingIndex = siblings.indexOf(el);
+
+                if (siblingIndex >= 0 && siblingIndex < 6) {
+                    el.style.transitionDelay = `${siblingIndex * 0.1}s`;
+                }
+
+                this.observer.observe(el);
+            });
+        }
+    };
+
+    // ========================================
+    // Enhanced Button Loading State
+    // ========================================
+    const ButtonLoadingManager = {
+        init: function () {
+            this.enhanceFormSubmissions();
+        },
+
+        enhanceFormSubmissions: function () {
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', (e) => {
+                    const submitBtn = form.querySelector('[type="submit"]');
+                    if (submitBtn && !submitBtn.classList.contains('btn-loading')) {
+                        this.setLoadingState(submitBtn);
+                    }
+                });
+            });
+        },
+
+        setLoadingState: function (btn) {
+            // Store original state
+            btn.dataset.originalText = btn.innerHTML;
+            btn.dataset.originalWidth = btn.offsetWidth + 'px';
+
+            // Set fixed width to prevent size change
+            btn.style.minWidth = btn.dataset.originalWidth;
+
+            // Add loading class and disable
+            btn.classList.add('btn-loading');
+            btn.disabled = true;
+
+            // Set loading text (hidden by CSS, shown as spinner)
+            btn.innerHTML = '<span class="btn-loading-text">Bekleniyor...</span>';
+        },
+
+        resetLoadingState: function (btn) {
+            if (btn.dataset.originalText) {
+                btn.innerHTML = btn.dataset.originalText;
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
+                btn.style.minWidth = '';
+            }
+        }
+    };
+
+    // ========================================
+    // Page Transition Effects
+    // ========================================
+    const PageTransitions = {
+        init: function () {
+            // Page is already visible via CSS animation
+            // Add interactive enhancements
+            this.enhanceLinks();
+        },
+
+        enhanceLinks: function () {
+            // Add subtle feedback on navigation links
+            document.querySelectorAll('a[href]:not([href^="#"]):not([href^="javascript"])').forEach(link => {
+                // Skip external links and download links
+                if (link.target === '_blank' || link.hasAttribute('download')) return;
+
+                link.addEventListener('click', function (e) {
+                    // Let the browser handle navigation naturally
+                    // Just add a micro-interaction feedback
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 100);
+                });
+            });
+        }
+    };
+
+    // ========================================
+    // Interactive Card Enhancements
+    // ========================================
+    const CardEnhancements = {
+        init: function () {
+            this.addClickableCards();
+        },
+
+        addClickableCards: function () {
+            // Make cards with single links fully clickable
+            document.querySelectorAll('.card').forEach(card => {
+                const links = card.querySelectorAll('a');
+                if (links.length === 1) {
+                    card.style.cursor = 'pointer';
+                    card.addEventListener('click', (e) => {
+                        // Don't trigger if clicking on interactive elements
+                        if (e.target.closest('a, button, input, select, textarea')) return;
+                        links[0].click();
+                    });
+                }
+            });
+        }
+    };
+
+    // ========================================
     // Initialize on DOM Ready
     // ========================================
     document.addEventListener('DOMContentLoaded', function () {
@@ -296,12 +458,97 @@
         FormUtils.init();
         TableUtils.init();
         NavUtils.init();
+
+        // New premium UX features
+        ScrollReveal.init();
+        ButtonLoadingManager.init();
+        PageTransitions.init();
+        CardEnhancements.init();
     });
 
-    // Expose ToastManager globally for manual use
+    // Expose managers globally for manual use
     window.FitnessCenter = {
         toast: ToastManager,
-        modal: ModalManager
+        modal: ModalManager,
+        buttonLoading: ButtonLoadingManager
     };
+
+    // ========================================
+    // TESTIMONIAL SLIDER
+    // Auto-advances every 3 seconds
+    // ========================================
+    const TestimonialSlider = {
+        slider: null,
+        dots: null,
+        slides: [],
+        currentIndex: 0,
+        interval: null,
+        isPaused: false,
+
+        init() {
+            this.slider = document.getElementById('testimonialSlider');
+            this.dots = document.getElementById('testimonialDots');
+
+            if (!this.slider || !this.dots) return;
+
+            this.slides = this.slider.querySelectorAll('.testimonial-slide');
+            if (this.slides.length === 0) return;
+
+            // Dot click handlers
+            this.dots.querySelectorAll('.testimonial-dot').forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    this.goToSlide(index);
+                    this.resetInterval();
+                });
+            });
+
+            // Pause on hover
+            this.slider.addEventListener('mouseenter', () => {
+                this.isPaused = true;
+            });
+
+            this.slider.addEventListener('mouseleave', () => {
+                this.isPaused = false;
+            });
+
+            // Start auto-advance
+            this.startInterval();
+        },
+
+        goToSlide(index) {
+            // Remove active from current
+            this.slides[this.currentIndex].classList.remove('active');
+            this.dots.children[this.currentIndex].classList.remove('active');
+
+            // Update index
+            this.currentIndex = index;
+
+            // Add active to new
+            this.slides[this.currentIndex].classList.add('active');
+            this.dots.children[this.currentIndex].classList.add('active');
+        },
+
+        nextSlide() {
+            if (this.isPaused) return;
+            const next = (this.currentIndex + 1) % this.slides.length;
+            this.goToSlide(next);
+        },
+
+        startInterval() {
+            this.interval = setInterval(() => this.nextSlide(), 3000);
+        },
+
+        resetInterval() {
+            clearInterval(this.interval);
+            this.startInterval();
+        }
+    };
+
+    // Initialize testimonial slider when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => TestimonialSlider.init());
+    } else {
+        TestimonialSlider.init();
+    }
 
 })();

@@ -218,10 +218,31 @@ namespace FitnessCenter.Web.Controllers
                     $"Randevu en erken 3 saat sonrası için alınabilir. En erken: {minSaatStr}");
             }
 
-            // ---------------- 1) Eğitmenin müsaitliği ----------------
-            var gun = baslangic.DayOfWeek;
+            // TimeOfDay değerleri tüm saat kontrollerinde kullanılacak
             var baslangicTime = baslangic.TimeOfDay;
             var bitisTime = bitis.TimeOfDay;
+
+            // ---------------- 0.5) Salon çalışma saatleri kontrolü ----------------
+            var salon = await _context.Salonlar.FindAsync(randevu.SalonId);
+            if (salon != null && !salon.Is24Hours)
+            {
+                if (salon.AcilisSaati.HasValue && salon.KapanisSaati.HasValue)
+                {
+                    if (baslangicTime < salon.AcilisSaati.Value)
+                    {
+                        ModelState.AddModelError(string.Empty,
+                            $"Randevu başlangıç saati salonun açılış saatinden ({salon.AcilisSaati.Value:hh\\:mm}) önce olamaz.");
+                    }
+                    if (bitisTime > salon.KapanisSaati.Value)
+                    {
+                        ModelState.AddModelError(string.Empty,
+                            $"Randevu bitiş saati salonun kapanış saatinden ({salon.KapanisSaati.Value:hh\\:mm}) sonra olamaz.");
+                    }
+                }
+            }
+
+            // ---------------- 1) Eğitmenin müsaitliği ----------------
+            var gun = baslangic.DayOfWeek;
 
             bool musaitlikVar = await _context.Musaitlikler.AnyAsync(m =>
                 m.EgitmenId == randevu.EgitmenId &&
@@ -367,5 +388,52 @@ namespace FitnessCenter.Web.Controllers
             TempData["Success"] = "Randevu başarıyla iptal edildi.";
             return RedirectToAction(nameof(Index));
         }
+
+        // GET: /Randevu/Calendar
+        // FullCalendar.js ile takvim görünümü
+        [HttpGet]
+        public IActionResult Calendar()
+        {
+            return View();
+        }
+
+        // GET: /Randevu/CalendarEvents
+        // FullCalendar.js için JSON event endpoint'i
+        [HttpGet]
+        public async Task<IActionResult> CalendarEvents()
+        {
+            var uye = await GetCurrentMemberAsync();
+            if (uye == null)
+            {
+                return Json(new List<object>());
+            }
+
+            var events = await _context.Randevular
+                .Where(r => r.UyeId == uye.Id)
+                .Include(r => r.Hizmet)
+                .Include(r => r.Egitmen)
+                .Include(r => r.Salon)
+                .Select(r => new
+                {
+                    id = r.Id,
+                    title = r.Hizmet != null ? r.Hizmet.Ad : "Randevu",
+                    start = r.BaslangicZamani.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    end = r.BitisZamani.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    // Durum renkleri: Yeşil=Onaylandı, Sarı=Beklemede, Kırmızı=İptal
+                    color = r.Durum == "Onaylandı" ? "#10b981" : 
+                            r.Durum == "Beklemede" ? "#f59e0b" : "#ef4444",
+                    extendedProps = new
+                    {
+                        durum = r.Durum,
+                        egitmen = r.Egitmen != null ? r.Egitmen.AdSoyad : "",
+                        salon = r.Salon != null ? r.Salon.Ad : "",
+                        hizmetSure = r.Hizmet != null ? r.Hizmet.SureDakika : 0
+                    }
+                })
+                .ToListAsync();
+
+            return Json(events);
+        }
     }
 }
+
