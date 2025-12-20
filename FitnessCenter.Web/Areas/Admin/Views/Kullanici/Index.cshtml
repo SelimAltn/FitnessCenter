@@ -4,6 +4,62 @@
     ViewData["Title"] = "Kullanıcılar";
 }
 
+<style>
+    /* ===== Admin/Kullanici Sayfası - Özel CSS Override ===== */
+    /* Bu stiller SADECE bu sayfayı etkiler, global CSS'e dokunmaz */
+    
+    /* Ana düzeltme: reveal-element animasyonu override - en yüksek öncelik */
+    .reveal-element {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+    }
+    
+    /* Tablo görünürlük düzeltmesi - reveal-element animasyonu override */
+    .table-responsive table.reveal-element,
+    .table-responsive table,
+    .card-fc .table-fc,
+    table.table-fc {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+    }
+    
+    /* Card ve container görünürlük garantisi */
+    .card-fc,
+    .card-fc .card-body,
+    .table-responsive {
+        overflow: visible;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Tablo minimum yüksekliği ve görünürlük */
+    .table-fc {
+        min-height: auto;
+    }
+    
+    /* Thead ve tbody metin görünürlüğü */
+    .table-fc thead th {
+        color: var(--fc-gray-600) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    .table-fc tbody td {
+        color: var(--fc-text-main) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Badge ve buton görünürlüğü */
+    .table-fc .badge,
+    .table-fc .btn-fc {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+</style>
+
 <!-- Page Header -->
 <div class="page-header">
     <div class="container">
@@ -105,3 +161,5 @@
         </div>
     }
 </div>
+
+

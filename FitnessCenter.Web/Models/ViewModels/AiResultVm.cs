@@ -76,6 +76,34 @@ namespace FitnessCenter.Web.Models.ViewModels
         [JsonPropertyName("imageStatus")]
         public string ImageStatus { get; set; } = "unavailable";
 
+        // ===== Before/After Görsel Eşleştirme =====
+
+        /// <summary>
+        /// Mevcut durum görseli yolu (kural tabanlı eşleştirme)
+        /// </summary>
+        [JsonPropertyName("beforeImagePath")]
+        public string? BeforeImagePath { get; set; }
+
+        /// <summary>
+        /// Hedef görünüm görseli yolu (kural tabanlı eşleştirme)
+        /// </summary>
+        [JsonPropertyName("afterImagePath")]
+        public string? AfterImagePath { get; set; }
+
+        /// <summary>
+        /// Görsel dönüşüm açıklaması
+        /// </summary>
+        [JsonPropertyName("transformationCaption")]
+        public string? TransformationCaption { get; set; }
+
+        // ===== Photo Mode AI Görsel Üretimi =====
+
+        /// <summary>
+        /// fal.ai ile üretilen after görsel URL'si (SADECE Photo Mode)
+        /// </summary>
+        [JsonPropertyName("afterGeneratedImageUrl")]
+        public string? AfterGeneratedImageUrl { get; set; }
+
         // ===== Durum Bilgileri =====
 
         /// <summary>

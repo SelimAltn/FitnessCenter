@@ -248,6 +248,67 @@ h4 {
 }
 
 /* ----------------------------------------
+   Gradient Text Utilities
+   Premium başlık efektleri için kullanılır
+   ---------------------------------------- */
+.gradient-text {
+  background: linear-gradient(135deg, var(--fc-primary) 0%, #3498db 50%, #2ecc71 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline;
+}
+
+.gradient-text-primary {
+  background: linear-gradient(90deg, #1F7A63 0%, #2A9D7E 50%, #34B08E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline;
+}
+
+.gradient-text-accent {
+  background: linear-gradient(90deg, #C9A24D 0%, #E8C464 50%, #D4AF5C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline;
+}
+
+.gradient-text-hero {
+  background: linear-gradient(135deg, #ffffff 0%, #e0f2e9 30%, #2A9D7E 70%, #1F7A63 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline;
+}
+
+/* Dark mode gradient adjustments */
+[data-theme="dark"] .gradient-text,
+[data-bs-theme="dark"] .gradient-text {
+  background: linear-gradient(135deg, #2A9D7E 0%, #5dade2 50%, #58d68d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .gradient-text-primary,
+[data-bs-theme="dark"] .gradient-text-primary {
+  background: linear-gradient(90deg, #34B08E 0%, #48C9A5 50%, #5DD9B5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .gradient-text-hero,
+[data-bs-theme="dark"] .gradient-text-hero {
+  background: linear-gradient(135deg, #EAF2EE 0%, #c3e6d8 30%, #48C9A5 70%, #2A9D7E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ----------------------------------------
    Navbar Styles
    ---------------------------------------- */
 .navbar-fc {

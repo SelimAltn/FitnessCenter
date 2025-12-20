@@ -15,6 +15,7 @@ namespace FitnessCenter.Web.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly AppDbContext _context;
         private readonly IBildirimService _bildirimService;
+        private readonly IEmailService _emailService;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(
@@ -22,12 +23,14 @@ namespace FitnessCenter.Web.Controllers
             SignInManager<ApplicationUser> signInManager,
             AppDbContext context,
             IBildirimService bildirimService,
+            IEmailService emailService,
             ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
             _bildirimService = bildirimService;
+            _emailService = emailService;
             _logger = logger;
         }
 
@@ -407,6 +410,131 @@ namespace FitnessCenter.Web.Controllers
                 ModelState.AddModelError(string.Empty, "Hesap silinirken bir hata oluştu. Lütfen tekrar deneyin.");
                 return View(model);
             }
+        }
+
+        #endregion
+
+        #region Forgot Password / Reset Password
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+            // Güvenlik: Kullanıcı bulunamasa bile aynı mesajı göster (email enumeration önleme)
+            if (user != null)
+            {
+                // Token üret
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+                // Reset linki oluştur
+                var resetLink = Url.Action(
+                    "ResetPassword",
+                    "Account",
+                    new { email = model.Email, token = token },
+                    Request.Scheme);
+
+                // Email gönder
+                if (_emailService.IsConfigured)
+                {
+                    var emailBody = $@"
+                        <html>
+                        <body style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                            <div style='background: linear-gradient(135deg, #1F7A63, #2A9D7E); padding: 30px; text-align: center;'>
+                                <h1 style='color: white; margin: 0;'>Fitness Center</h1>
+                            </div>
+                            <div style='padding: 30px; background: #f9f9f9;'>
+                                <h2 style='color: #333;'>Şifre Sıfırlama Talebi</h2>
+                                <p>Merhaba,</p>
+                                <p>Hesabınız için şifre sıfırlama talebinde bulundunuz. Şifrenizi sıfırlamak için aşağıdaki butona tıklayın:</p>
+                                <div style='text-align: center; margin: 30px 0;'>
+                                    <a href='{resetLink}' style='background: #1F7A63; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block;'>Şifremi Sıfırla</a>
+                                </div>
+                                <p style='color: #666; font-size: 14px;'>Bu talebi siz yapmadıysanız, bu e-postayı dikkate almayın.</p>
+                                <p style='color: #666; font-size: 14px;'>Bu link 24 saat geçerlidir.</p>
+                            </div>
+                            <div style='padding: 20px; text-align: center; background: #333; color: #999; font-size: 12px;'>
+                                © {DateTime.Now.Year} Fitness Center. Tüm hakları saklıdır.
+                            </div>
+                        </body>
+                        </html>";
+
+                    await _emailService.SendAsync(model.Email, "Şifre Sıfırlama - Fitness Center", emailBody);
+                    _logger.LogInformation("Password reset email sent to: {Email}", model.Email);
+                }
+                else
+                {
+                    // Email servisi yapılandırılmamış - development için log'a yazdır
+                    _logger.LogWarning("Email service not configured. Reset link: {ResetLink}", resetLink);
+                }
+            }
+
+            // Her durumda aynı mesajı göster
+            TempData["SuccessMessage"] = "E-posta adresinize şifre sıfırlama linki gönderildi. Lütfen gelen kutunuzu kontrol edin.";
+            return RedirectToAction("ForgotPassword");
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string? email, string? token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+            {
+                TempData["ErrorMessage"] = "Geçersiz şifre sıfırlama linki.";
+                return RedirectToAction("Login");
+            }
+
+            var model = new ResetPasswordViewModel
+            {
+                Email = email,
+                Token = token
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Güvenlik: Kullanıcı bulunamasa bile başarı mesajı göster
+                TempData["SuccessMessage"] = "Şifreniz başarıyla sıfırlandı. Giriş yapabilirsiniz.";
+                return RedirectToAction("Login");
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("Password reset successful for user: {UserId}", user.Id);
+                TempData["SuccessMessage"] = "Şifreniz başarıyla sıfırlandı. Giriş yapabilirsiniz.";
+                return RedirectToAction("Login");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(model);
         }
 
         #endregion

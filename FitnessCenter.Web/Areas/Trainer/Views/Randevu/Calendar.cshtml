@@ -51,9 +51,11 @@
     </div>
 
     <!-- Takvim -->
-    <div class="card-fc">
-        <div class="card-body p-3 p-md-4">
-            <div id="calendar"></div>
+    <div class="calendar-page">
+        <div class="card-fc">
+            <div class="card-body p-3 p-md-4">
+                <div id="calendar"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -105,38 +107,8 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     
     <style>
-        /* FullCalendar tema uyumu */
-        .fc {
-            --fc-border-color: var(--border-color, #e2e8f0);
-            --fc-button-bg-color: var(--primary-color, #667eea);
-            --fc-button-hover-bg-color: var(--primary-dark, #5a67d8);
-            --fc-button-active-bg-color: var(--primary-dark, #5a67d8);
-            --fc-today-bg-color: rgba(102, 126, 234, 0.1);
-        }
-        
-        .fc .fc-toolbar-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-        
-        .fc .fc-button {
-            border-radius: 8px;
-            font-weight: 500;
-            text-transform: capitalize;
-        }
-        
-        .fc .fc-event {
-            border-radius: 6px;
-            padding: 2px 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-        
-        .fc .fc-daygrid-day-number {
-            font-weight: 500;
-        }
-        
-        /* Mobil uyum */
+        /* Site.css .calendar-page scopeuna güveniyoruz */
+        /* Sadece mobil uyum için ek stiller */
         @@media (max-width: 768px) {
             .fc .fc-toolbar {
                 flex-direction: column;

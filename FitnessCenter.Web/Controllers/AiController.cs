@@ -1,6 +1,7 @@
 using FitnessCenter.Web.Data.Context;
 using FitnessCenter.Web.Models.Entities;
 using FitnessCenter.Web.Models.ViewModels;
+using FitnessCenter.Web.Services.Implementations;
 using FitnessCenter.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -23,6 +24,8 @@ namespace FitnessCenter.Web.Controllers
         private readonly AppDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<AiController> _logger;
+        private readonly AppearanceImageMapper _imageMapper;
+        private readonly FalImageToImageService _falService;
 
         private static readonly string[] AllowedPhotoExtensions = { ".jpg", ".jpeg", ".png" };
         private static readonly string[] AllowedPhotoContentTypes = { "image/jpeg", "image/png" };
@@ -33,13 +36,17 @@ namespace FitnessCenter.Web.Controllers
             IAiVisionService visionService,
             AppDbContext context,
             UserManager<ApplicationUser> userManager,
-            ILogger<AiController> logger)
+            ILogger<AiController> logger,
+            AppearanceImageMapper imageMapper,
+            FalImageToImageService falService)
         {
             _textService = textService;
             _visionService = visionService;
             _context = context;
             _userManager = userManager;
             _logger = logger;
+            _imageMapper = imageMapper;
+            _falService = falService;
         }
 
         private async Task<Uye?> GetCurrentMemberAsync()
@@ -49,6 +56,77 @@ namespace FitnessCenter.Web.Controllers
 
             return await _context.Uyeler
                 .FirstOrDefaultAsync(u => u.ApplicationUserId == user.Id);
+        }
+
+        /// <summary>
+        /// GET: /Ai/History - Üyenin geçmiş AI öneri kayıtlarını listeler
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> History(string? tip, int page = 1)
+        {
+            var uye = await GetCurrentMemberAsync();
+            if (uye == null)
+            {
+                TempData["Error"] = "Sistemde size bağlı bir üye kaydı bulunamadı.";
+                return RedirectToAction("UyeOl", "Uyelik");
+            }
+
+            const int pageSize = 10;
+
+            // Temel sorgu
+            var query = _context.AiLoglar
+                .Where(a => a.UyeId == uye.Id)
+                .AsQueryable();
+
+            // Tip filtresi
+            if (!string.IsNullOrEmpty(tip))
+            {
+                if (tip.Equals("Photo", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(a => a.SoruMetni.StartsWith("Photo"));
+                }
+                else if (tip.Equals("Data", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(a => !a.SoruMetni.StartsWith("Photo"));
+                }
+            }
+
+            // Toplam kayıt sayısı
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            // Sayfa sınırları kontrolü
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            // Veri çek
+            var items = await query
+                .OrderByDescending(a => a.OlusturulmaZamani)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(a => new AiHistoryItemVm
+                {
+                    Id = a.Id,
+                    Tip = a.SoruMetni.StartsWith("Photo") ? "Photo" : "Data",
+                    Girdi = a.SoruMetni.Length > 100 ? a.SoruMetni.Substring(0, 100) + "..." : a.SoruMetni,
+                    Cevap = a.CevapMetni.Length > 150 ? a.CevapMetni.Substring(0, 150) + "..." : a.CevapMetni,
+                    Tarih = a.OlusturulmaZamani,
+                    IsSuccess = a.IsSuccess,
+                    DurationMs = a.DurationMs
+                })
+                .ToListAsync();
+
+            var model = new AiHistoryVm
+            {
+                Items = items,
+                TipFilter = tip,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                TotalItems = totalItems,
+                PageSize = pageSize
+            };
+
+            return View(model);
         }
 
         /// <summary>
@@ -159,6 +237,27 @@ namespace FitnessCenter.Web.Controllers
                 {
                     // 3. DeepSeek ile plan üret
                     result = await _textService.GetPhotoModeRecommendationAsync(visionResult, model);
+
+                    // 4. fal.ai ile after görsel üret (SADECE Photo Mode, opsiyonel)
+                    // Başarısız olursa plan yine gösterilir, graceful fallback
+                    if (result.IsSuccess && _falService.IsConfigured)
+                    {
+                        try
+                        {
+                            _logger.LogInformation("Generating after image with fal.ai for goal: {Goal}", model.Hedef);
+                            var afterUrl = await _falService.GenerateAfterImageAsync(
+                                imageBytes, 
+                                model.Photo.ContentType, 
+                                model.Hedef
+                            );
+                            result.AfterGeneratedImageUrl = afterUrl;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "fal.ai image generation failed, continuing with plan only");
+                            // Graceful fallback - plan yine gösterilir
+                        }
+                    }
                 }
             }
             else
@@ -169,6 +268,20 @@ namespace FitnessCenter.Web.Controllers
             }
 
             stopwatch.Stop();
+
+            // ===== GÖRSEL EŞLEŞTİRME (Kural Tabanlı) =====
+            // DeepSeek/Groq değişmeden, sadece lokal mapping ile before/after görseller eklenir
+            if (result.IsSuccess && result.IsHuman)
+            {
+                var imageMapping = _imageMapper.GetTransformationImages(
+                    result.BodyCategory,
+                    model.Hedef,
+                    model.Cinsiyet
+                );
+                result.BeforeImagePath = imageMapping.BeforePath;
+                result.AfterImagePath = imageMapping.AfterPath;
+                result.TransformationCaption = imageMapping.Caption;
+            }
 
             // Sonucu logla
             await LogToDbAsync(model, result, uye.Id, stopwatch.ElapsedMilliseconds);

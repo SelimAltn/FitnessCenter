@@ -1,0 +1,196 @@
+@model FitnessCenter.Web.Models.ViewModels.AiHistoryVm
+
+@{
+    ViewData["Title"] = "Önceki AI Önerilerim";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1>Önceki AI Önerilerim</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+                        <li class="breadcrumb-item"><a asp-controller="Ai" asp-action="Recommend">AI Öneri</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Geçmiş</li>
+                    </ol>
+                </nav>
+            </div>
+            <a asp-controller="Ai" asp-action="Recommend" class="btn-fc btn-fc-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="16"/>
+                    <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+                Yeni Öneri Al
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <!-- Filter Bar -->
+    <div class="card-fc mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <span class="text-muted-fc">Filtrele:</span>
+                <a asp-action="History" 
+                   class="btn-fc btn-fc-sm @(string.IsNullOrEmpty(Model.TipFilter) ? "btn-fc-primary" : "btn-fc-outline-primary")">
+                    Tümü
+                </a>
+                <a asp-action="History" asp-route-tip="Data" 
+                   class="btn-fc btn-fc-sm @(Model.TipFilter == "Data" ? "btn-fc-primary" : "btn-fc-outline-primary")">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    Data Modu
+                </a>
+                <a asp-action="History" asp-route-tip="Photo" 
+                   class="btn-fc btn-fc-sm @(Model.TipFilter == "Photo" ? "btn-fc-primary" : "btn-fc-outline-primary")">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    Photo Modu
+                </a>
+                <span class="ms-auto text-muted-fc">
+                    Toplam: <strong>@Model.TotalItems</strong> kayıt
+                </span>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Items.Count == 0)
+    {
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="color: var(--fc-gray-300);">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+            </div>
+            <h4 class="text-muted-fc">Henüz AI öneri kaydınız yok</h4>
+            <p class="text-muted-fc mb-4">İlk AI önerinizi almak için aşağıdaki butona tıklayın.</p>
+            <a asp-controller="Ai" asp-action="Recommend" class="btn-fc btn-fc-primary btn-fc-lg">
+                AI Öneri Al
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- History Cards -->
+        <div class="row g-4">
+            @foreach (var item in Model.Items)
+            {
+                <div class="col-12">
+                    <div class="card-fc">
+                        <div class="card-body">
+                            <div class="d-flex flex-column flex-md-row gap-3">
+                                <!-- Icon -->
+                                <div class="flex-shrink-0">
+                                    @if (item.Tip == "Photo")
+                                    {
+                                        <span class="d-inline-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: var(--fc-info-light);">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--fc-info);">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                                <polyline points="21 15 16 10 5 21"/>
+                                            </svg>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="d-inline-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: var(--fc-primary-light);">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--fc-primary);">
+                                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                                                <polyline points="14 2 14 8 20 8"/>
+                                            </svg>
+                                        </span>
+                                    }
+                                </div>
+                                
+                                <!-- Content -->
+                                <div class="flex-grow-1">
+                                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                        <span class="badge-fc @(item.Tip == "Photo" ? "badge-fc-info" : "badge-fc-primary")">
+                                            @item.Tip Modu
+                                        </span>
+                                        @if (item.IsSuccess)
+                                        {
+                                            <span class="badge-fc badge-fc-success">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"/>
+                                                </svg>
+                                                Başarılı
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-fc badge-fc-danger">Başarısız</span>
+                                        }
+                                        @if (item.DurationMs.HasValue)
+                                        {
+                                            <span class="text-muted-fc" style="font-size: 0.875rem;">
+                                                @(item.DurationMs / 1000.0)s
+                                            </span>
+                                        }
+                                    </div>
+                                    
+                                    <p class="mb-2" style="font-size: 0.9rem;">
+                                        <strong>Girdi:</strong> @item.Girdi
+                                    </p>
+                                    
+                                    <p class="text-muted-fc mb-0" style="font-size: 0.875rem;">
+                                        <strong>Cevap:</strong> @item.Cevap
+                                    </p>
+                                </div>
+                                
+                                <!-- Date -->
+                                <div class="flex-shrink-0 text-md-end">
+                                    <div class="text-muted-fc" style="font-size: 0.875rem;">
+                                        @item.Tarih.ToLocalTime().ToString("dd MMM yyyy")
+                                    </div>
+                                    <div class="text-muted-fc" style="font-size: 0.75rem;">
+                                        @item.Tarih.ToLocalTime().ToString("HH:mm")
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="mt-4" aria-label="Sayfa navigasyonu">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="History" asp-route-page="@(Model.CurrentPage - 1)" asp-route-tip="@Model.TipFilter">
+                            &laquo; Önceki
+                        </a>
+                    </li>
+                    
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" asp-action="History" asp-route-page="@i" asp-route-tip="@Model.TipFilter">@i</a>
+                        </li>
+                    }
+                    
+                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="History" asp-route-page="@(Model.CurrentPage + 1)" asp-route-tip="@Model.TipFilter">
+                            Sonraki &raquo;
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+</div>

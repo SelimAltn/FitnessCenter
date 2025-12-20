@@ -105,6 +105,48 @@ builder.Services.AddScoped<IBildirimService, BildirimService>();
 // ===== Mesaj Servisi =====
 builder.Services.AddScoped<IMesajService, MesajService>();
 
+// ===== Appearance Image Mapper (Kural tabanlı before/after görsel eşleştirme) =====
+builder.Services.AddSingleton<AppearanceImageMapper>();
+
+// ===== fal.ai Image-to-Image Service (DEVRE DIŞI - Stability AI kullanılıyor) =====
+// API Key: FalSettings:ApiKey veya FAL_API_KEY environment variable
+builder.Services.Configure<FalSettings>(options =>
+{
+    builder.Configuration.GetSection("FalSettings").Bind(options);
+    // ENV fallback: FAL_API_KEY
+    if (string.IsNullOrEmpty(options.ApiKey))
+    {
+        options.ApiKey = Environment.GetEnvironmentVariable("FAL_API_KEY") ?? "";
+    }
+});
+builder.Services.AddHttpClient<FalImageToImageService>();
+
+// ===== Stability AI Image-to-Image Service (DEVRE DIŞI - Replicate kullanılıyor) =====
+// API Key: StabilitySettings:ApiKey veya STABILITY_API_KEY environment variable
+builder.Services.Configure<StabilitySettings>(options =>
+{
+    builder.Configuration.GetSection("StabilitySettings").Bind(options);
+    // ENV fallback: STABILITY_API_KEY
+    if (string.IsNullOrEmpty(options.ApiKey))
+    {
+        options.ApiKey = Environment.GetEnvironmentVariable("STABILITY_API_KEY") ?? "";
+    }
+});
+builder.Services.AddHttpClient<StabilityImageToImageService>();
+
+// ===== Replicate Image Service (Photo Mode için - AKTİF) =====
+// API Token: ReplicateSettings:ApiToken veya REPLICATE_API_TOKEN environment variable
+builder.Services.Configure<ReplicateSettings>(options =>
+{
+    builder.Configuration.GetSection("ReplicateSettings").Bind(options);
+    // ENV fallback: REPLICATE_API_TOKEN
+    if (string.IsNullOrEmpty(options.ApiToken))
+    {
+        options.ApiToken = Environment.GetEnvironmentVariable("REPLICATE_API_TOKEN") ?? "";
+    }
+});
+builder.Services.AddHttpClient<ReplicateImageService>();
+
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
