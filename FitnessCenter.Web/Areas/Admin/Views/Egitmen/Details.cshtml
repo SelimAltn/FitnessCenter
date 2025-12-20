@@ -101,6 +101,38 @@
             </div>
 
             <div class="card mb-4">
+                <div class="card-header">Yapabileceği Hizmetler</div>
+                <div class="card-body p-0">
+                    @if (Model.EgitmenHizmetler?.Any() == true)
+                    {
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Hizmet Adi</th>
+                                    <th class="text-center">Sure</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var eh in Model.EgitmenHizmetler.OrderBy(x => x.Hizmet?.Ad))
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-success">@eh.Hizmet?.Ad</span>
+                                        </td>
+                                        <td class="text-center">@eh.Hizmet?.SureDakika dk</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="p-3 text-muted">Bu eğitmene henüz hizmet atanmamış.</div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mb-4">
                 <div class="card-header">Çalışma Saatleri</div>
                 <div class="card-body p-0">
                     @if (Model.Musaitlikler?.Any() == true)

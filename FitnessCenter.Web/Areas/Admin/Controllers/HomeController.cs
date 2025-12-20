@@ -22,7 +22,45 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Admin Panel Landing - Sadece Zincir Özet + Hızlı Erişim
+        /// </summary>
         public async Task<IActionResult> Index()
+        {
+            // Sadece özet metrikleri hesapla
+            var salonUyeCounts = await _context.Uyelikler
+                .Where(u => u.Durum == "Aktif")
+                .GroupBy(u => u.SalonId)
+                .Select(g => new { SalonId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var salonEgitmenData = await _context.Egitmenler
+                .Where(e => e.SalonId != null && e.Aktif)
+                .GroupBy(e => e.SalonId)
+                .Select(g => new
+                {
+                    SalonId = g.Key,
+                    ToplamMaas = g.Sum(e => e.Maas ?? 0)
+                })
+                .ToListAsync();
+
+            var toplamGelir = salonUyeCounts.Sum(x => x.Count) * YillikUyelikUcreti;
+            var toplamGider = salonEgitmenData.Sum(x => x.ToplamMaas) * 12;
+
+            var model = new DashboardViewModel
+            {
+                ToplamGelir = toplamGelir,
+                ToplamGider = toplamGider,
+                ToplamKar = toplamGelir - toplamGider
+            };
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Dashboard - Tam istatistikler (KPI + Finans Tablosu + Özet)
+        /// </summary>
+        public async Task<IActionResult> Dashboard()
         {
             var model = new DashboardViewModel
             {
@@ -34,7 +72,6 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             };
 
             // ===== Salon Bazlı Üye Sayısı (Uyelik tablosundan) =====
-            // Sadece aktif üyelikleri sayıyoruz
             var salonUyeCounts = await _context.Uyelikler
                 .Where(u => u.Durum == "Aktif")
                 .GroupBy(u => u.SalonId)
@@ -87,3 +124,4 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
         }
     }
 }
+

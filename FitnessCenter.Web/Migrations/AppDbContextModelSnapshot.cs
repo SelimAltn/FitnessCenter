@@ -45,9 +45,6 @@ namespace FitnessCenter.Web.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
-                    b.Property<bool>("IsCached")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsSuccess")
                         .HasColumnType("bit");
 
@@ -58,10 +55,6 @@ namespace FitnessCenter.Web.Migrations
                     b.Property<DateTime>("OlusturulmaZamani")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("RequestId")
-                        .HasMaxLength(36)
-                        .HasColumnType("nvarchar(36)");
-
                     b.Property<string>("ResponseJson")
                         .HasColumnType("nvarchar(max)");
 
@@ -69,10 +62,6 @@ namespace FitnessCenter.Web.Migrations
                         .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("Status")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int?>("UyeId")
                         .HasColumnType("int");
@@ -303,9 +292,6 @@ namespace FitnessCenter.Web.Migrations
                     b.Property<int>("SureDakika")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("Ucret")
-                        .HasColumnType("decimal(18,2)");
-
                     b.HasKey("Id");
 
                     b.ToTable("Hizmetler");
@@ -461,9 +447,61 @@ namespace FitnessCenter.Web.Migrations
                     b.Property<TimeSpan?>("KapanisSaati")
                         .HasColumnType("time");
 
+                    b.Property<string>("ManagerId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ManagerUserId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("ManagerId");
+
                     b.ToTable("Salonlar");
+                });
+
+            modelBuilder.Entity("FitnessCenter.Web.Models.Entities.SubeMuduru", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdSoyad")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("Aktif")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("OlusturulmaTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SalonId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Telefon")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("SalonId")
+                        .IsUnique();
+
+                    b.ToTable("SubeMudurler");
                 });
 
             modelBuilder.Entity("FitnessCenter.Web.Models.Entities.SupportTicket", b =>
@@ -898,6 +936,33 @@ namespace FitnessCenter.Web.Migrations
                     b.Navigation("Salon");
 
                     b.Navigation("Uye");
+                });
+
+            modelBuilder.Entity("FitnessCenter.Web.Models.Entities.Salon", b =>
+                {
+                    b.HasOne("FitnessCenter.Web.Models.Entities.ApplicationUser", "Manager")
+                        .WithMany()
+                        .HasForeignKey("ManagerId");
+
+                    b.Navigation("Manager");
+                });
+
+            modelBuilder.Entity("FitnessCenter.Web.Models.Entities.SubeMuduru", b =>
+                {
+                    b.HasOne("FitnessCenter.Web.Models.Entities.ApplicationUser", "ApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FitnessCenter.Web.Models.Entities.Salon", "Salon")
+                        .WithOne()
+                        .HasForeignKey("FitnessCenter.Web.Models.Entities.SubeMuduru", "SalonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+
+                    b.Navigation("Salon");
                 });
 
             modelBuilder.Entity("FitnessCenter.Web.Models.Entities.SupportTicket", b =>

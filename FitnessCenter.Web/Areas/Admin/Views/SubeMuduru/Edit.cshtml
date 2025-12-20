@@ -1,0 +1,91 @@
+@model FitnessCenter.Web.Models.Entities.SubeMuduru
+@{
+    ViewData["Title"] = "Sube Muduru Duzenle";
+    var salonlar = ViewData["Salonlar"] as SelectList;
+}
+
+<div class="page-header">
+    <div class="container">
+        <div>
+            <h1>Sube Muduru Duzenle</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Sube Mudurleri</a></li>
+                    <li class="breadcrumb-item active">Duzenle</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    @Model.AdSoyad
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="ApplicationUserId" />
+                        <input type="hidden" asp-for="OlusturulmaTarihi" />
+                        <div asp-validation-summary="ModelOnly" class="alert-fc alert-fc-danger mb-4"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="AdSoyad" class="form-fc-label">Ad Soyad *</label>
+                                    <input asp-for="AdSoyad" class="form-fc-control" />
+                                    <span asp-validation-for="AdSoyad" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="Email" class="form-fc-label">Email *</label>
+                                    <input asp-for="Email" class="form-fc-control" type="email" />
+                                    <span asp-validation-for="Email" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="Telefon" class="form-fc-label">Telefon</label>
+                                    <input asp-for="Telefon" class="form-fc-control" />
+                                    <span asp-validation-for="Telefon" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="SalonId" class="form-fc-label">Sube *</label>
+                                    <select asp-for="SalonId" asp-items="salonlar" class="form-fc-control">
+                                        <option value="">-- Sube Secin --</option>
+                                    </select>
+                                    <span asp-validation-for="SalonId" class="form-fc-error"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-check mt-3">
+                            <input asp-for="Aktif" class="form-check-input" />
+                            <label asp-for="Aktif" class="form-check-label">Aktif</label>
+                        </div>
+
+                        <div class="d-flex gap-3 pt-3">
+                            <button type="submit" class="btn-fc btn-fc-primary">Guncelle</button>
+                            <a asp-action="Index" class="btn-fc btn-fc-secondary">Iptal</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

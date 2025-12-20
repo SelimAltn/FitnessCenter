@@ -1,0 +1,160 @@
+@{
+    ViewData["Title"] = "Sube Muduru Paneli";
+    var mudur = ViewBag.Mudur as FitnessCenter.Web.Models.Entities.SubeMuduru;
+    var salon = ViewBag.Salon as FitnessCenter.Web.Models.Entities.Salon;
+    int pendingAppointments = ViewBag.PendingAppointments ?? 0;
+    int trainerCount = ViewBag.TrainerCount ?? 0;
+    int memberCount = ViewBag.MemberCount ?? 0;
+}
+
+@if (TempData["Success"] != null)
+{
+    <div data-toast-message="@TempData["Success"]" data-toast-type="success" style="display:none;"></div>
+}
+@if (TempData["Error"] != null)
+{
+    <div data-toast-message="@TempData["Error"]" data-toast-type="error" style="display:none;"></div>
+}
+
+<div class="page-header">
+    <div class="container">
+        <div>
+            <h1>Hosgeldiniz, @mudur?.AdSoyad</h1>
+            <p class="mb-0 text-muted">Sube Muduru Paneli - @salon?.Ad</p>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row">
+        <!-- Sol: Mudur Profili -->
+        <div class="col-lg-4 mb-4">
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Profilim
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Ad Soyad</div>
+                        <div class="fw-semibold fs-5">@mudur?.AdSoyad</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Email</div>
+                        <div>@mudur?.Email</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Telefon</div>
+                        <div>@(mudur?.Telefon ?? "—")</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Atanma Tarihi</div>
+                        <div>@mudur?.OlusturulmaTarihi.ToString("dd.MM.yyyy")</div>
+                    </div>
+                    <div>
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Durum</div>
+                        <div>
+                            @if (mudur?.Aktif == true)
+                            {
+                                <span class="badge-fc badge-fc-success">Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="badge-fc badge-fc-danger">Pasif</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sube Bilgisi -->
+            <div class="card-fc mt-4">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Sube Bilgisi
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Sube Adi</div>
+                        <div class="fw-semibold">@salon?.Ad</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Adres</div>
+                        <div>@(salon?.Adress ?? "—")</div>
+                    </div>
+                    <div>
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Calisma Saatleri</div>
+                        <div>
+                            @if (salon?.Is24Hours == true)
+                            {
+                                <span class="badge-fc badge-fc-success">7/24 Acik</span>
+                            }
+                            else
+                            {
+                                <span>@salon?.AcilisSaati?.ToString(@"hh\:mm") - @salon?.KapanisSaati?.ToString(@"hh\:mm")</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sag: Istatistikler ve Hizli Erisim -->
+        <div class="col-lg-8">
+            <!-- Istatistik Kartlari -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card-fc" style="border-left: 4px solid var(--fc-warning);">
+                        <div class="card-body text-center py-4">
+                            <div class="display-4 fw-bold" style="color: var(--fc-warning);">@pendingAppointments</div>
+                            <div class="text-muted-fc">Bekleyen Randevu</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-fc" style="border-left: 4px solid var(--fc-primary);">
+                        <div class="card-body text-center py-4">
+                            <div class="display-4 fw-bold" style="color: var(--fc-primary);">@trainerCount</div>
+                            <div class="text-muted-fc">Aktif Egitmen</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-fc" style="border-left: 4px solid var(--fc-success);">
+                        <div class="card-body text-center py-4">
+                            <div class="display-4 fw-bold" style="color: var(--fc-success);">@memberCount</div>
+                            <div class="text-muted-fc">Aktif Uye</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hizli Erisim -->
+            <div class="card-fc">
+                <div class="card-header">Hizli Erisim</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a asp-controller="Randevu" asp-action="Index" class="btn-fc btn-fc-warning w-100 d-flex align-items-center justify-content-center gap-2 py-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                Randevular
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="Egitmen" asp-action="Index" class="btn-fc btn-fc-primary w-100 d-flex align-items-center justify-content-center gap-2 py-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                Egitmenler
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="Uye" asp-action="Index" class="btn-fc btn-fc-success w-100 d-flex align-items-center justify-content-center gap-2 py-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                Uyeler
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

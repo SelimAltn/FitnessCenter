@@ -1,0 +1,59 @@
+@model FitnessCenter.Web.Models.Entities.SubeMuduru
+@{
+    ViewData["Title"] = "Sube Muduru Sil";
+}
+
+<div class="page-header">
+    <div class="container">
+        <div>
+            <h1>Sube Muduru Sil</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Sube Mudurleri</a></li>
+                    <li class="breadcrumb-item active">Sil</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card-fc" style="border-color: var(--fc-danger);">
+                <div class="card-header" style="background-color: var(--fc-danger-light); color: var(--fc-danger);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>
+                    Silme Onayi
+                </div>
+                <div class="card-body">
+                    <div class="alert-fc alert-fc-warning mb-4">
+                        <strong>Dikkat!</strong> Bu sube mudurunu silmek istediginize emin misiniz? Kullanici hesabi da silinecektir.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Ad Soyad</div>
+                        <div class="fw-semibold">@Model.AdSoyad</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Email</div>
+                        <div>@Model.Email</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Sube</div>
+                        <div><span class="badge-fc badge-fc-info">@Model.Salon?.Ad</span></div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn-fc btn-fc-danger">Evet, Sil</button>
+                            <a asp-action="Index" class="btn-fc btn-fc-secondary">Vazgec</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

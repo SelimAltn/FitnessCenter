@@ -94,9 +94,11 @@
                                 Başlangıç Zamanı
                             </label>
                             <input asp-for="BaslangicZamani"
+                                   id="BaslangicZamaniPicker"
                                    class="form-fc-control"
-                                   type="datetime-local"
-                                   value="@Model.BaslangicZamani.ToString("yyyy-MM-ddTHH:mm")" />
+                                   type="text"
+                                   placeholder="Tarih ve saat seçiniz" />
+                            <input type="hidden" id="BaslangicZamani" name="BaslangicZamani" />
                             <span class="form-fc-hint">Randevunuzun başlayacağı tarih ve saati seçin</span>
                             <span asp-validation-for="BaslangicZamani" class="form-fc-error"></span>
                         </div>
@@ -110,12 +112,10 @@
                                 </svg>
                                 Eğitmen
                             </label>
-                            <select asp-for="EgitmenId"
-                                    asp-items="@(ViewData["EgitmenId"] as SelectList)"
-                                    class="form-fc-control">
-                                <option value="">Eğitmen seçiniz</option>
+                            <select id="EgitmenId" name="EgitmenId" class="form-fc-control" disabled>
+                                <option value="">Önce şube, hizmet ve tarih/saat seçiniz</option>
                             </select>
-                            <span class="form-fc-hint">Tarih seçtiğinizde müsait eğitmenler listelenecektir</span>
+                            <span id="egitmenHint" class="form-fc-hint">Şube, hizmet ve tarih seçtiğinizde müsait eğitmenler listelenecektir</span>
                             <span asp-validation-for="EgitmenId" class="form-fc-error"></span>
                         </div>
 
@@ -159,33 +159,101 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
+    <!-- Flatpickr CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/tr.js"></script>
+
     <script>
         $(function () {
-            function updateEgitmenler() {
-                var tarih = $("#BaslangicZamani").val();
+            var flatpickrInstance = null;
+            var hiddenInput = document.getElementById('BaslangicZamani');
+
+            // Flatpickr initialization
+            flatpickrInstance = flatpickr("#BaslangicZamaniPicker", {
+                enableTime: true,
+                dateFormat: "d/m/Y H:i",
+                altInput: false,
+                time_24hr: true,
+                locale: "tr",
+                minDate: "today",
+                defaultHour: 10,
+                defaultMinute: 0,
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (selectedDates.length > 0) {
+                        // Hidden input'a ISO format yaz (backend için)
+                        var isoDate = selectedDates[0].toISOString().slice(0, 16);
+                        hiddenInput.value = selectedDates[0].toISOString();
+                        updateEgitmenler();
+                    }
+                }
+            });
+
+            // Sayfa yüklendiğinde default tarih/saat al
+            function loadDefaultDateTime() {
                 var salonId = $("#SalonId").val();
-                
-                if (!tarih || !salonId) {
-                    $("#EgitmenId").empty().append('<option value="">Önce şube ve tarih seçiniz</option>');
+                $.ajax({
+                    url: '/Randevu/GetDefaultDateTime',
+                    method: 'GET',
+                    data: { salonId: salonId || null },
+                    success: function (response) {
+                        if (response.start && flatpickrInstance) {
+                            flatpickrInstance.setDate(response.start, true);
+                            hiddenInput.value = new Date(response.start).toISOString();
+                        }
+                    },
+                    error: function () {
+                        // Fallback: 3 saat sonrası
+                        var defaultDate = new Date();
+                        defaultDate.setHours(defaultDate.getHours() + 3);
+                        if (flatpickrInstance) {
+                            flatpickrInstance.setDate(defaultDate, true);
+                            hiddenInput.value = defaultDate.toISOString();
+                        }
+                    }
+                });
+            }
+
+            // Eğitmen listesini güncelle
+            function updateEgitmenler() {
+                var salonId = $("#SalonId").val();
+                var hizmetId = $("#HizmetId").val();
+                var tarihValue = hiddenInput.value;
+
+                var $egitmenSelect = $("#EgitmenId");
+                var $egitmenHint = $("#egitmenHint");
+
+                // 3 alan dolu değilse eğitmen dropdown boş ve disabled
+                if (!salonId || !hizmetId || !tarihValue) {
+                    $egitmenSelect
+                        .empty()
+                        .prop('disabled', true)
+                        .append('<option value="">Önce şube, hizmet ve tarih/saat seçiniz</option>');
+                    $egitmenHint.text('Şube, hizmet ve tarih seçtiğinizde müsait eğitmenler listelenecektir');
                     return;
                 }
 
-                var datePart = tarih.split("T")[0];
-                var $egitmenSelect = $("#EgitmenId");
+                // 3 alan dolu - eğitmenleri yükle
                 $egitmenSelect.empty().append('<option>Yükleniyor...</option>');
+                $egitmenHint.text('Müsait eğitmenler yükleniyor...');
 
                 $.ajax({
                     url: '/api/trainers',
                     method: 'GET',
                     data: { 
-                        date: datePart,
-                        salonId: salonId
+                        salonId: salonId,
+                        hizmetId: hizmetId,
+                        start: tarihValue
                     },
                     success: function (response) {
-                        $egitmenSelect.empty();
+                        $egitmenSelect.empty().prop('disabled', false);
 
                         if (!response.items || response.items.length === 0) {
-                            $egitmenSelect.append('<option value="">Bu şubede müsait eğitmen yok</option>');
+                            $egitmenSelect
+                                .prop('disabled', true)
+                                .append('<option value="">Bu kriterlere uygun eğitmen bulunamadı</option>');
+                            $egitmenHint.text('Farklı bir tarih/saat veya hizmet seçmeyi deneyin');
                             return;
                         }
 
@@ -203,9 +271,15 @@
                                 })
                             );
                         });
+
+                        $egitmenHint.text(response.items.length + ' müsait eğitmen bulundu');
                     },
                     error: function () {
-                        $egitmenSelect.empty().append('<option>Hata oluştu</option>');
+                        $egitmenSelect
+                            .empty()
+                            .prop('disabled', true)
+                            .append('<option>Hata oluştu</option>');
+                        $egitmenHint.text('Eğitmenler yüklenirken bir hata oluştu');
                         
                         if (window.FitnessCenter && window.FitnessCenter.toast) {
                             window.FitnessCenter.toast.show('Eğitmenler yüklenirken bir hata oluştu.', 'danger');
@@ -214,15 +288,21 @@
                 });
             }
 
-            // Salon değiştiğinde eğitmenleri güncelle
+            // Salon değiştiğinde
             $("#SalonId").on("change", function () {
+                // Default tarihi yeniden hesapla
+                loadDefaultDateTime();
+                // Eğitmenleri güncelle (tarih hesaplandıktan sonra)
+                setTimeout(updateEgitmenler, 300);
+            });
+
+            // Hizmet değiştiğinde
+            $("#HizmetId").on("change", function () {
                 updateEgitmenler();
             });
 
-            // Tarih değiştiğinde eğitmenleri güncelle
-            $("#BaslangicZamani").on("change", function () {
-                updateEgitmenler();
-            });
+            // Sayfa ilk yüklendiğinde default tarih al
+            loadDefaultDateTime();
         });
     </script>
 }

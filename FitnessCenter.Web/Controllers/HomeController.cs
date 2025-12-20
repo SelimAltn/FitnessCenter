@@ -12,6 +12,12 @@ namespace FitnessCenter.Web.Controllers
                 return RedirectToAction("Index", "Home", new { area = "Trainer" });
             }
             
+            // Şube müdürleri ana siteye erişemez, BranchManager paneline yönlendir
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole("BranchManager"))
+            {
+                return RedirectToAction("Index", "Home", new { area = "BranchManager" });
+            }
+            
             return View();
         }
 

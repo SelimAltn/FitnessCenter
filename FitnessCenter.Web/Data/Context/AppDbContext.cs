@@ -29,6 +29,9 @@ namespace FitnessCenter.Web.Data.Context
         public DbSet<EgitmenUzmanlik> EgitmenUzmanliklari { get; set; } = null!;
         public DbSet<Mesaj> Mesajlar { get; set; } = null!;
 
+        // Sube Muduru tablosu
+        public DbSet<SubeMuduru> SubeMudurler { get; set; } = null!;
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -96,6 +99,24 @@ namespace FitnessCenter.Web.Data.Context
                 .HasOne(m => m.Randevu)
                 .WithMany()
                 .HasForeignKey(m => m.RandevuId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // SubeMuduru - Salon (1 - 1, her salonun en fazla bir muduru olabilir)
+            modelBuilder.Entity<SubeMuduru>()
+                .HasIndex(sm => sm.SalonId)
+                .IsUnique(); // Her salona sadece bir mudur
+
+            modelBuilder.Entity<SubeMuduru>()
+                .HasOne(sm => sm.Salon)
+                .WithOne()
+                .HasForeignKey<SubeMuduru>(sm => sm.SalonId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // SubeMuduru - ApplicationUser (1 - 1)
+            modelBuilder.Entity<SubeMuduru>()
+                .HasOne(sm => sm.ApplicationUser)
+                .WithMany()
+                .HasForeignKey(sm => sm.ApplicationUserId)
                 .OnDelete(DeleteBehavior.SetNull);
         }
     }

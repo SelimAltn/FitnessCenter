@@ -1,0 +1,118 @@
+@model IEnumerable<FitnessCenter.Web.Models.Entities.Randevu>
+@{
+    ViewData["Title"] = "Randevular";
+    var salon = ViewBag.Salon as FitnessCenter.Web.Models.Entities.Salon;
+    var selectedDurum = ViewBag.SelectedDurum as string;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>Randevular</h2>
+        <p class="text-muted mb-0">@salon?.Ad - Randevu Yonetimi</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex gap-2 flex-wrap">
+            <a asp-action="Index" class="btn @(string.IsNullOrEmpty(selectedDurum) ? "btn-primary" : "btn-outline-primary")">
+                Tumu
+            </a>
+            <a asp-action="Index" asp-route-durum="Beklemede" class="btn @(selectedDurum == "Beklemede" ? "btn-warning" : "btn-outline-warning")">
+                Beklemede
+            </a>
+            <a asp-action="Index" asp-route-durum="Onaylandi" class="btn @(selectedDurum == "Onaylandi" ? "btn-success" : "btn-outline-success")">
+                Onaylandi
+            </a>
+            <a asp-action="Index" asp-route-durum="Iptal" class="btn @(selectedDurum == "Iptal" ? "btn-danger" : "btn-outline-danger")">
+                Iptal
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tarih/Saat</th>
+                        <th>Uye</th>
+                        <th>Egitmen</th>
+                        <th>Hizmet</th>
+                        <th>Durum</th>
+                        <th>Islemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                Randevu bulunamadi.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var r in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@r.BaslangicZamani.ToString("dd.MM.yyyy")</strong><br />
+                                    <small class="text-muted">@r.BaslangicZamani.ToString("HH:mm") - @r.BitisZamani.ToString("HH:mm")</small>
+                                </td>
+                                <td>@r.Uye?.AdSoyad</td>
+                                <td>@r.Egitmen?.AdSoyad</td>
+                                <td>@r.Hizmet?.Ad</td>
+                                <td>
+                                    @switch (r.Durum)
+                                    {
+                                        case "Beklemede":
+                                            <span class="badge bg-warning">Beklemede</span>
+                                            break;
+                                        case "Onaylandi":
+                                            <span class="badge bg-success">Onaylandi</span>
+                                            break;
+                                        case "Iptal":
+                                            <span class="badge bg-danger">Iptal</span>
+                                            break;
+                                        case "Tamamlandi":
+                                            <span class="badge bg-info">Tamamlandi</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@r.Durum</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @if (r.Durum == "Beklemede")
+                                    {
+                                        <form asp-action="Onayla" asp-route-id="@r.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-success btn-sm" title="Onayla">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                        <form asp-action="IptalEt" asp-route-id="@r.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Iptal Et" onclick="return confirm('Bu randevuyu iptal etmek istediginize emin misiniz?');">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

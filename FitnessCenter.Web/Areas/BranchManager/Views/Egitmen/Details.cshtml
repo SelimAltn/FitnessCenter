@@ -1,0 +1,122 @@
+@model FitnessCenter.Web.Models.Entities.Egitmen
+@{
+    ViewData["Title"] = Model.AdSoyad + " - Egitmen Detay";
+    var salon = ViewBag.Salon as FitnessCenter.Web.Models.Entities.Salon;
+}
+
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1>@Model.AdSoyad</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a asp-area="BranchManager" asp-controller="Home" asp-action="Index">Panel</a></li>
+                        <li class="breadcrumb-item"><a asp-action="Index">Egitmenler</a></li>
+                        <li class="breadcrumb-item active">Detay</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="page-header-actions">
+                <a asp-action="Index" class="btn-fc btn-fc-secondary">← Listeye Don</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card-fc mb-4">
+                <div class="card-header">Kisisel Bilgiler</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Ad Soyad</div>
+                        <div class="fw-semibold">@Model.AdSoyad</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Email</div>
+                        <div>@Model.Email</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Telefon</div>
+                        <div>@(Model.Telefon ?? "—")</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted-fc" style="font-size: 0.875rem;">Durum</div>
+                        <div>
+                            @if (Model.Aktif)
+                            {
+                                <span class="badge-fc badge-fc-success">Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="badge-fc badge-fc-danger">Pasif</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            @if (Model.EgitmenUzmanliklari?.Any() == true)
+            {
+                <div class="card-fc mb-4">
+                    <div class="card-header">Uzmanlik Alanlari</div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var eu in Model.EgitmenUzmanliklari)
+                            {
+                                <span class="badge-fc badge-fc-info">@eu.UzmanlikAlani?.Ad</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            @if (Model.EgitmenHizmetler?.Any() == true)
+            {
+                <div class="card-fc mb-4">
+                    <div class="card-header">Yapabilecegi Hizmetler</div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var eh in Model.EgitmenHizmetler)
+                            {
+                                <span class="badge-fc badge-fc-success">@eh.Hizmet?.Ad (@eh.Hizmet?.SureDakika dk)</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            @if (Model.Musaitlikler?.Any() == true)
+            {
+                <div class="card-fc">
+                    <div class="card-header">Calisma Saatleri</div>
+                    <div class="card-body p-0">
+                        <table class="table-fc mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Gun</th>
+                                    <th>Baslangic</th>
+                                    <th>Bitis</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var m in Model.Musaitlikler.OrderBy(x => x.Gun))
+                                {
+                                    <tr>
+                                        <td>@m.Gun.ToString()</td>
+                                        <td>@m.BaslangicSaati.ToString(@"hh\:mm")</td>
+                                        <td>@m.BitisSaati.ToString(@"hh\:mm")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

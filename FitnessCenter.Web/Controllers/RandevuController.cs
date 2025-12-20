@@ -140,6 +140,65 @@ namespace FitnessCenter.Web.Controllers
             return View(liste);
         }
 
+        // GET: /Randevu/GetDefaultDateTime
+        // Akıllı default tarih hesaplama - Now + 3 saat, salon çalışma saatlerine göre
+        [HttpGet]
+        public async Task<IActionResult> GetDefaultDateTime(int? salonId)
+        {
+            var now = DateTime.Now;
+            var defaultStart = now.AddHours(3);
+
+            // Salon belirtilmişse çalışma saatlerini kontrol et
+            if (salonId.HasValue)
+            {
+                var salon = await _context.Salonlar.FindAsync(salonId.Value);
+                if (salon != null && !salon.Is24Hours && salon.AcilisSaati.HasValue && salon.KapanisSaati.HasValue)
+                {
+                    var acilis = salon.AcilisSaati.Value;
+                    var kapanis = salon.KapanisSaati.Value;
+                    var defaultTime = defaultStart.TimeOfDay;
+
+                    // Eğer hesaplanan saat kapanış saatinden sonra ise
+                    if (defaultTime >= kapanis)
+                    {
+                        // Yarın açılış saatine ayarla
+                        defaultStart = defaultStart.Date.AddDays(1).Add(acilis);
+                    }
+                    // Eğer hesaplanan saat açılış saatinden önce ise
+                    else if (defaultTime < acilis)
+                    {
+                        // Bugün açılış saatine ayarla (zaten 3 saat eklenmişti)
+                        defaultStart = defaultStart.Date.Add(acilis);
+                    }
+                }
+            }
+            else
+            {
+                // Salon seçilmemişse default olarak ilk salonun çalışma saatlerini kullan
+                var ilkSalon = await _context.Salonlar.FirstOrDefaultAsync();
+                if (ilkSalon != null && !ilkSalon.Is24Hours && ilkSalon.AcilisSaati.HasValue && ilkSalon.KapanisSaati.HasValue)
+                {
+                    var acilis = ilkSalon.AcilisSaati.Value;
+                    var kapanis = ilkSalon.KapanisSaati.Value;
+                    var defaultTime = defaultStart.TimeOfDay;
+
+                    if (defaultTime >= kapanis)
+                    {
+                        defaultStart = defaultStart.Date.AddDays(1).Add(acilis);
+                    }
+                    else if (defaultTime < acilis)
+                    {
+                        defaultStart = defaultStart.Date.Add(acilis);
+                    }
+                }
+            }
+
+            return Json(new { 
+                start = defaultStart.ToString("yyyy-MM-ddTHH:mm"),
+                formatted = defaultStart.ToString("dd/MM/yyyy HH:mm")
+            });
+        }
+
         // GET: /Randevu/Create
         [HttpGet]
         public async Task<IActionResult> Create()
@@ -163,11 +222,8 @@ namespace FitnessCenter.Web.Controllers
 
             await DoldurSelectListelerAsync(uye);
 
-            // Varsayılan: bugün + 1 gün, saat 10:00 gibi
-            var model = new Randevu
-            {
-                BaslangicZamani = DateTime.Today.AddDays(1).AddHours(10)
-            };
+            // BaslangicZamani boş bırakılacak - JS tarafından doldurulacak
+            var model = new Randevu();
 
             return View(model);
         }

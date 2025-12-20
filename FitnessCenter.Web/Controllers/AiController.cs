@@ -25,7 +25,7 @@ namespace FitnessCenter.Web.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<AiController> _logger;
         private readonly AppearanceImageMapper _imageMapper;
-        private readonly FalImageToImageService _falService;
+        private readonly OpenAIImageService _openAIImageService;
 
         private static readonly string[] AllowedPhotoExtensions = { ".jpg", ".jpeg", ".png" };
         private static readonly string[] AllowedPhotoContentTypes = { "image/jpeg", "image/png" };
@@ -38,7 +38,7 @@ namespace FitnessCenter.Web.Controllers
             UserManager<ApplicationUser> userManager,
             ILogger<AiController> logger,
             AppearanceImageMapper imageMapper,
-            FalImageToImageService falService)
+            OpenAIImageService openAIImageService)
         {
             _textService = textService;
             _visionService = visionService;
@@ -46,7 +46,7 @@ namespace FitnessCenter.Web.Controllers
             _userManager = userManager;
             _logger = logger;
             _imageMapper = imageMapper;
-            _falService = falService;
+            _openAIImageService = openAIImageService;
         }
 
         private async Task<Uye?> GetCurrentMemberAsync()
@@ -238,23 +238,29 @@ namespace FitnessCenter.Web.Controllers
                     // 3. DeepSeek ile plan üret
                     result = await _textService.GetPhotoModeRecommendationAsync(visionResult, model);
 
-                    // 4. fal.ai ile after görsel üret (SADECE Photo Mode, opsiyonel)
+                    // 4. OpenAI ile after görsel üret (IMAGE-TO-IMAGE, referans foto ile)
                     // Başarısız olursa plan yine gösterilir, graceful fallback
-                    if (result.IsSuccess && _falService.IsConfigured)
+                    if (result.IsSuccess && _openAIImageService.IsConfigured)
                     {
                         try
                         {
-                            _logger.LogInformation("Generating after image with fal.ai for goal: {Goal}", model.Hedef);
-                            var afterUrl = await _falService.GenerateAfterImageAsync(
+                            // Cinsiyet çıkarımı (Vision description'dan veya heuristik)
+                            var gender = ExtractGenderFromDescription(visionResult.Description);
+                            
+                            _logger.LogInformation("Generating after image with OpenAI for goal: {Goal}, gender: {Gender}", 
+                                model.Hedef, gender ?? "unknown");
+                            
+                            var afterUrl = await _openAIImageService.GenerateAfterImageAsync(
                                 imageBytes, 
                                 model.Photo.ContentType, 
-                                model.Hedef
+                                model.Hedef,
+                                gender
                             );
                             result.AfterGeneratedImageUrl = afterUrl;
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogWarning(ex, "fal.ai image generation failed, continuing with plan only");
+                            _logger.LogWarning(ex, "OpenAI image generation failed, continuing with plan only");
                             // Graceful fallback - plan yine gösterilir
                         }
                     }
@@ -336,6 +342,37 @@ namespace FitnessCenter.Web.Controllers
             {
                 _logger.LogError(ex, "Failed to log AI request to database");
             }
+        }
+
+        /// <summary>
+        /// Vision description'dan cinsiyet çıkarımı yapar
+        /// OpenAI'ye gönderilen prompt'ta cinsiyet korunması için kullanılır
+        /// </summary>
+        private static string? ExtractGenderFromDescription(string? description)
+        {
+            if (string.IsNullOrEmpty(description)) return null;
+
+            var lower = description.ToLowerInvariant();
+
+            // Erkek göstergeleri
+            if (lower.Contains("male") || lower.Contains("man") || lower.Contains("erkek") ||
+                lower.Contains("boy") || lower.Contains("guy") || lower.Contains("gentleman"))
+            {
+                // "female" içeriyorsa kadın, değilse erkek
+                if (!lower.Contains("female") && !lower.Contains("woman") && !lower.Contains("kadın"))
+                {
+                    return "male";
+                }
+            }
+
+            // Kadın göstergeleri
+            if (lower.Contains("female") || lower.Contains("woman") || lower.Contains("kadın") ||
+                lower.Contains("girl") || lower.Contains("lady"))
+            {
+                return "female";
+            }
+
+            return null;
         }
     }
 }

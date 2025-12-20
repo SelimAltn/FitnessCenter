@@ -58,11 +58,14 @@
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">Hakkımızda</a>
+                            <a class="nav-link" asp-area="" asp-controller="Subelerimiz" asp-action="Index">Subelerimiz</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">Hakkimizda</a>
                         </li>
 
-                        @* Giriş yapmış üyeye özel menüler *@
-                        @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Member"))
+                        @* Giriş yapmış üyeye özel menüler (BranchManager hariç) *@
+                        @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Member") && !User.IsInRole("BranchManager"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Randevu" asp-action="Index">
@@ -126,6 +129,20 @@
                                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                                     </svg>
                                     Destek Kutusu
+                                </a>
+                            </li>
+                        }
+
+                        @* BranchManager paneli linki *@
+                        @if (User.IsInRole("BranchManager"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="BranchManager" asp-controller="Home" asp-action="Index">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                    </svg>
+                                    Sube Muduru Paneli
                                 </a>
                             </li>
                         }

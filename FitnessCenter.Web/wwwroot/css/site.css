@@ -308,6 +308,25 @@ h4 {
   background-clip: text;
 }
 
+/* Hero Highlight - Premium soft gradient */
+.hero-highlight {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 2px 20px rgba(42, 157, 126, 0.3);
+  font-weight: 700;
+}
+
+/* Hero user greeting - smaller and subtle */
+.hero-user-greeting {
+  margin-top: var(--fc-spacing-2);
+  margin-bottom: 0;
+}
+
+.hero-user-greeting small {
+  font-size: var(--fc-font-size-sm);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+}
+
 /* ----------------------------------------
    Navbar Styles
    ---------------------------------------- */
@@ -324,6 +343,12 @@ h4 {
   display: flex;
   align-items: center;
   gap: var(--fc-spacing-2);
+  white-space: nowrap;
+}
+
+.navbar-fc .navbar-brand img {
+  max-height: 36px;
+  width: auto;
 }
 
 .navbar-fc .navbar-brand svg,
@@ -331,12 +356,26 @@ h4 {
   font-size: 1.5rem;
 }
 
+/* ==============================================
+   NAVBAR MENU - NOWRAP FIX
+   Menü yazıları asla kelime kelime kırılmaz
+   ============================================== */
+.navbar-fc .navbar-nav {
+  flex-wrap: nowrap;
+  gap: var(--fc-spacing-1);
+}
+
 .navbar-fc .nav-link {
   color: rgba(255, 255, 255, 0.85) !important;
   font-weight: 500;
-  padding: var(--fc-spacing-2) var(--fc-spacing-4) !important;
+  padding: var(--fc-spacing-2) var(--fc-spacing-3) !important;
   border-radius: var(--fc-radius-md);
   transition: var(--fc-transition-fast);
+  white-space: nowrap;
+  /* CRITICAL: Kelime kırılmasını engeller */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fc-spacing-1);
 }
 
 .navbar-fc .nav-link:hover,
@@ -347,6 +386,11 @@ h4 {
 
 .navbar-fc .navbar-toggler {
   border-color: rgba(255, 255, 255, 0.5);
+  padding: var(--fc-spacing-2);
+}
+
+.navbar-fc .navbar-toggler:focus {
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
 }
 
 .navbar-fc .navbar-toggler-icon {
@@ -365,10 +409,63 @@ h4 {
   border-radius: var(--fc-radius-md);
   font-weight: 500;
   transition: var(--fc-transition-fast);
+  white-space: nowrap;
 }
 
 .navbar-fc .btn-logout:hover {
   background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ==============================================
+   NAVBAR RESPONSIVE RULES
+   Desktop: tek satır, Mobile: collapse/hamburger
+   ============================================== */
+
+/* Desktop (992px+): Tek satır, hiç kırılma yok */
+@media (min-width: 992px) {
+  .navbar-fc .navbar-collapse {
+    display: flex !important;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .navbar-fc .navbar-nav {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .navbar-fc .navbar-nav.me-auto {
+    margin-right: auto !important;
+  }
+
+  .navbar-fc .navbar-nav.ms-auto {
+    margin-left: auto !important;
+    align-items: center;
+  }
+}
+
+/* Mobile (<992px): Collapse menü, dikey düzen */
+@media (max-width: 991.98px) {
+  .navbar-fc .navbar-collapse {
+    padding-top: var(--fc-spacing-3);
+    padding-bottom: var(--fc-spacing-3);
+  }
+
+  .navbar-fc .navbar-nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--fc-spacing-1);
+  }
+
+  .navbar-fc .nav-link {
+    padding: var(--fc-spacing-3) var(--fc-spacing-4) !important;
+    border-radius: var(--fc-radius-md);
+  }
+
+  .navbar-fc .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
 }
 
 /* ----------------------------------------

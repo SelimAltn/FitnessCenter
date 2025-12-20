@@ -43,6 +43,17 @@ namespace FitnessCenter.Web.Models.Entities
 
         #endregion
 
+        #region Manager
+
+        /// <summary>
+        /// Branch Manager - Sube Muduru (her sube icin max 1)
+        /// </summary>
+        [Display(Name = "Sube Muduru")]
+        public string? ManagerUserId { get; set; }
+        public ApplicationUser? Manager { get; set; }
+
+        #endregion
+
         public ICollection<Randevu>? Randevular { get; set; }
 
         /// <summary>

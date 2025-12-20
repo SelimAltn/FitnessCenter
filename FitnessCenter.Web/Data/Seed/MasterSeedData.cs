@@ -225,16 +225,16 @@ namespace FitnessCenter.Web.Data.Seed
             // =============================================
             var hizmetler = new List<Hizmet>
             {
-                new Hizmet { Ad = "fitness", SureDakika = 60, Ucret = 300, Aciklama = "Genel fitness antrenmani" },
-                new Hizmet { Ad = "personal_training", SureDakika = 60, Ucret = 500, Aciklama = "Bire bir kisisel antrenman" },
-                new Hizmet { Ad = "hiit", SureDakika = 30, Ucret = 250, Aciklama = "Yuksek yogunluklu interval antrenman" },
-                new Hizmet { Ad = "spinning", SureDakika = 45, Ucret = 200, Aciklama = "Grup bisiklet dersi" },
-                new Hizmet { Ad = "yoga", SureDakika = 60, Ucret = 200, Aciklama = "Yoga ve meditasyon" },
-                new Hizmet { Ad = "pilates", SureDakika = 60, Ucret = 250, Aciklama = "Mat pilates dersi" },
-                new Hizmet { Ad = "zumba", SureDakika = 60, Ucret = 200, Aciklama = "Dans karisimli kardiyo" },
-                new Hizmet { Ad = "kickbox", SureDakika = 60, Ucret = 300, Aciklama = "Kickbox teknikleri" },
-                new Hizmet { Ad = "fonksiyonel_antrenman", SureDakika = 45, Ucret = 350, Aciklama = "Fonksiyonel hareket antrenmani" },
-                new Hizmet { Ad = "mobility_stretching", SureDakika = 45, Ucret = 150, Aciklama = "Esneklik ve hareketlilik" }
+                new Hizmet { Ad = "fitness", SureDakika = 60, Aciklama = "Genel fitness antrenmani" },
+                new Hizmet { Ad = "personal_training", SureDakika = 60, Aciklama = "Bire bir kisisel antrenman" },
+                new Hizmet { Ad = "hiit", SureDakika = 30, Aciklama = "Yuksek yogunluklu interval antrenman" },
+                new Hizmet { Ad = "spinning", SureDakika = 45, Aciklama = "Grup bisiklet dersi" },
+                new Hizmet { Ad = "yoga", SureDakika = 60, Aciklama = "Yoga ve meditasyon" },
+                new Hizmet { Ad = "pilates", SureDakika = 60, Aciklama = "Mat pilates dersi" },
+                new Hizmet { Ad = "zumba", SureDakika = 60, Aciklama = "Dans karisimli kardiyo" },
+                new Hizmet { Ad = "kickbox", SureDakika = 60, Aciklama = "Kickbox teknikleri" },
+                new Hizmet { Ad = "fonksiyonel_antrenman", SureDakika = 45, Aciklama = "Fonksiyonel hareket antrenmani" },
+                new Hizmet { Ad = "mobility_stretching", SureDakika = 45, Aciklama = "Esneklik ve hareketlilik" }
             };
             context.Hizmetler.AddRange(hizmetler);
             await context.SaveChangesAsync();

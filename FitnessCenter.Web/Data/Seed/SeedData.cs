@@ -15,7 +15,7 @@ namespace FitnessCenter.Web.Data.Seed
             var context = serviceProvider.GetRequiredService<AppDbContext>();
 
             // ---- 1) ROLLER ----
-            string[] roles = new[] { "Admin", "Member", "Trainer" };
+            string[] roles = new[] { "Admin", "Member", "Trainer", "BranchManager" };
 
             foreach (var role in roles)
             {
@@ -147,24 +147,21 @@ namespace FitnessCenter.Web.Data.Seed
                 context.Hizmetler.AddRange(
                     new Hizmet
                     {
-                        Ad = "Kişisel Antrenman",
+                        Ad = "Kisisel Antrenman",
                         SureDakika = 60,
-                        Ucret = 500m,
-                        Aciklama = "Bire bir antrenör eşliğinde kişisel program."
+                        Aciklama = "Bire bir antrenor esliginde kisisel program."
                     },
                     new Hizmet
                     {
                         Ad = "Grup Fitness Dersi",
                         SureDakika = 45,
-                        Ucret = 250m,
-                        Aciklama = "Maksimum 10 kişilik grup dersleri."
+                        Aciklama = "Maksimum 10 kisilik grup dersleri."
                     },
                     new Hizmet
                     {
-                        Ad = "Sporcu Masajı",
+                        Ad = "Sporcu Masaji",
                         SureDakika = 50,
-                        Ucret = 450m,
-                        Aciklama = "Antrenman sonrası kas gevşetici masaj."
+                        Aciklama = "Antrenman sonrasi kas gevsетici masaj."
                     }
                 );
 

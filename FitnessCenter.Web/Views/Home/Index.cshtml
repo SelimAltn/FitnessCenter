@@ -5,14 +5,16 @@
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="container">
-        <h1>Fitness Center'a <span class="gradient-text-hero">Hoş Geldiniz</span></h1>
+        <h1>Fitness Center'a <span class="hero-highlight">Hos Geldiniz</span></h1>
         <p>
-            Profesyonel eğitmenlerimiz ve modern tesislerimizle sağlıklı yaşam yolculuğunuzda size eşlik ediyoruz.
-            @if (User.Identity != null && User.Identity.IsAuthenticated)
-            {
-                <br /><strong>Merhaba, @User.Identity.Name!</strong>
-            }
+            Profesyonel egitmenlerimiz ve modern tesislerimizle saglikli yasam yolculugunuzda size eslik ediyoruz.
         </p>
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <p class="hero-user-greeting">
+                <small>Merhaba, @User.Identity.Name</small>
+            </p>
+        }
         <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
             @if (User.Identity != null && User.Identity.IsAuthenticated)
             {

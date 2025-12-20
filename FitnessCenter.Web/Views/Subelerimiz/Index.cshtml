@@ -1,0 +1,121 @@
+@model IEnumerable<FitnessCenter.Web.Models.Entities.Salon>
+@{
+    ViewData["Title"] = "Subelerimiz";
+    var trainerCounts = ViewBag.TrainerCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+    var trainerSamples = ViewBag.TrainerSamples as Dictionary<int, List<string>> ?? new Dictionary<int, List<string>>();
+}
+
+<!-- Hero Section -->
+<section class="hero-section" style="min-height: 300px;">
+    <div class="container text-center">
+        <h1>Subelerimiz</h1>
+        <p>Turkiye genelinde hizmet veren modern spor salonlarimiz</p>
+    </div>
+</section>
+
+<div class="container py-5">
+    <div class="row g-4">
+        @foreach (var salon in Model)
+        {
+            var trainerCount = trainerCounts.ContainsKey(salon.Id) ? trainerCounts[salon.Id] : 0;
+            var sampleTrainers = trainerSamples.ContainsKey(salon.Id) ? trainerSamples[salon.Id] : new List<string>();
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card-fc h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded" style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--fc-primary-light), var(--fc-primary));">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </span>
+                            <div>
+                                <h4 class="mb-0">@salon.Ad</h4>
+                                @if (salon.Is24Hours)
+                                {
+                                    <span class="badge bg-success">7/24 Acik</span>
+                                }
+                            </div>
+                        </div>
+
+                        <ul class="list-unstyled mb-3">
+                            <li class="mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-muted">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span class="text-muted">@(salon.Adress ?? "Adres bilgisi yok")</span>
+                            </li>
+                            <li class="mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-muted">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                @if (salon.Is24Hours)
+                                {
+                                    <span class="text-muted">7/24 Acik</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">@salon.AcilisSaati?.ToString(@"hh\:mm") - @salon.KapanisSaati?.ToString(@"hh\:mm")</span>
+                                }
+                            </li>
+                            <li class="mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-muted">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                <span class="text-muted">@trainerCount Egitmen</span>
+                            </li>
+                        </ul>
+
+                        @if (!string.IsNullOrEmpty(salon.Aciklama))
+                        {
+                            <p class="text-muted small mb-3">@salon.Aciklama</p>
+                        }
+
+                        @if (sampleTrainers.Any())
+                        {
+                            <div class="mb-3">
+                                <small class="text-muted d-block mb-1">Egitmenlerimiz:</small>
+                                @foreach (var trainer in sampleTrainers)
+                                {
+                                    <span class="badge bg-light text-dark me-1">@trainer</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer bg-transparent border-top">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <a asp-controller="Uyelik" asp-action="UyeOl" class="btn-fc btn-fc-primary w-100">
+                                Bu Subeye Uye Ol
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("UyeOl", "Uyelik")" class="btn-fc btn-fc-primary w-100">
+                                Uye Olmak Icin Giris Yap
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <h4 class="mt-3">Henuz sube eklenmemis</h4>
+            <p class="text-muted">Yakin zamanda yeni subeler eklenecek.</p>
+        </div>
+    }
+</div>

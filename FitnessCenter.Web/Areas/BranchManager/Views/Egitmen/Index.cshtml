@@ -1,0 +1,115 @@
+@model IEnumerable<FitnessCenter.Web.Models.Entities.Egitmen>
+@{
+    ViewData["Title"] = "Egitmenler";
+    var salon = ViewBag.Salon as FitnessCenter.Web.Models.Entities.Salon;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>Egitmenler</h2>
+        <p class="text-muted mb-0">@salon?.Ad - Egitmen Listesi</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ad Soyad</th>
+                        <th>Email</th>
+                        <th>Telefon</th>
+                        <th>Uzmanliklar</th>
+                        <th>Durum</th>
+                        <th>Islemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                Bu subede egitmen bulunamadi.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var e in Model)
+                        {
+                            <tr class="@(!e.Aktif ? "table-secondary" : "")">
+                                <td>
+                                    <strong>@e.AdSoyad</strong>
+                                </td>
+                                <td>@(e.Email ?? "-")</td>
+                                <td>@(e.Telefon ?? "-")</td>
+                                <td>
+                                    @if (e.EgitmenUzmanliklari?.Any() == true)
+                                    {
+                                        @foreach (var eu in e.EgitmenUzmanliklari.Take(2))
+                                        {
+                                            <span class="badge bg-info me-1">@eu.UzmanlikAlani?.Ad</span>
+                                        }
+                                        @if (e.EgitmenUzmanliklari.Count > 2)
+                                        {
+                                            <span class="badge bg-secondary">+@(e.EgitmenUzmanliklari.Count - 2)</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (e.Aktif)
+                                    {
+                                        <span class="badge bg-success">Aktif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Pasif</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@e.Id" class="btn btn-sm btn-outline-primary" title="Detay">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </a>
+                                    <form asp-action="ToggleAktif" asp-route-id="@e.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        @if (e.Aktif)
+                                        {
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Pasif Yap">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                                                </svg>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Aktif Yap">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </button>
+                                        }
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <small class="text-muted">
+        Toplam @Model.Count() egitmen (@Model.Count(e => e.Aktif) aktif)
+    </small>
+</div>

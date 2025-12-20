@@ -49,6 +49,8 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
                 .Include(e => e.Salon)
                 .Include(e => e.EgitmenUzmanliklari!)
                     .ThenInclude(eu => eu.UzmanlikAlani)
+                .Include(e => e.EgitmenHizmetler!)
+                    .ThenInclude(eh => eh.Hizmet)
                 .Include(e => e.Musaitlikler)
                 .FirstOrDefaultAsync(x => x.Id == id);
 

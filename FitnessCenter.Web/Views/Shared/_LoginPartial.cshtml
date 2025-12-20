@@ -193,6 +193,10 @@
                         </a>
                     </li>
                 }
+                else if (User.IsInRole("BranchManager"))
+                {
+                    <!-- BranchManager: Sadece Çıkış göster, diğer menüler gizli -->
+                }
                 else
                 {
                     <!-- Normal Kullanıcı Menü Öğeleri -->

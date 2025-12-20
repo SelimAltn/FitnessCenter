@@ -13,18 +13,10 @@ namespace FitnessCenter.Web.Models.Entities
         public string Ad { get; set; } = null!;
 
 
-        [Required(ErrorMessage = "Süre zorunludur.")]
-        [Range(10, 300, ErrorMessage = "Süre 10 ile 300 dakika arasında olmalıdır.")]
-        [Display(Name = "Süre (Dakika)")]
-        public int SureDakika { get; set; }     
-
-
-
-        [Required(ErrorMessage = "Ücret zorunludur.")]
-        [Range(0, 10000, ErrorMessage = "Ücret 0 ile 10.000 arasında olmalıdır.")]
-        [DataType(DataType.Currency)]
-        [Display(Name = "Ücret (₺)")]
-        public decimal Ucret { get; set; }
+        [Required(ErrorMessage = "Sure zorunludur.")]
+        [Range(10, 300, ErrorMessage = "Sure 10 ile 300 dakika arasinda olmalidir.")]
+        [Display(Name = "Sure (Dakika)")]
+        public int SureDakika { get; set; }
 
 
 
