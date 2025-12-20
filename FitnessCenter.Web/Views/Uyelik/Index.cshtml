@@ -9,6 +9,10 @@
 {
     <div data-toast-message="@TempData["Success"]" data-toast-type="success" style="display:none;"></div>
 }
+@if (TempData["Error"] != null)
+{
+    <div data-toast-message="@TempData["Error"]" data-toast-type="danger" style="display:none;"></div>
+}
 @if (ViewBag.Mesaj != null)
 {
     <div data-toast-message="@ViewBag.Mesaj" data-toast-type="info" style="display:none;"></div>
@@ -79,7 +83,7 @@
                     <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                     <line x1="1" y1="10" x2="23" y2="10"></line>
                 </svg>
-                Aktif Üyelikler
+                Üyeliklerim
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -90,6 +94,7 @@
                                 <th>Başlangıç Tarihi</th>
                                 <th>Bitiş Tarihi</th>
                                 <th>Durum</th>
+                                <th style="width: 150px;">İşlemler</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -114,7 +119,7 @@
                                         {
                                             <span class="badge-fc badge-fc-success">Aktif</span>
                                         }
-                                        else if (u.Durum == "Pasif" || u.Durum == "Süresi Doldu")
+                                        else if (u.Durum == "Pasif" || u.Durum == "Süresi Doldu" || u.Durum == "İptal")
                                         {
                                             <span class="badge-fc badge-fc-secondary">@u.Durum</span>
                                         }
@@ -127,6 +132,19 @@
                                             <span class="badge-fc badge-fc-info">@u.Durum</span>
                                         }
                                     </td>
+                                    <td>
+                                        @if (u.Durum == "Aktif")
+                                        {
+                                            <button type="button" class="btn-fc btn-fc-danger btn-fc-sm" 
+                                                    onclick="showIptalModal(@u.Id, '@u.Salon.Ad')">
+                                                İptal Et
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted-fc">—</span>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -136,3 +154,47 @@
         </div>
     }
 </div>
+
+<!-- İptal Modal -->
+<div class="modal fade" id="iptalModal" tabindex="-1" aria-labelledby="iptalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="iptalModalLabel">Üyelik İptali</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bu üyeliği iptal etmek istediğinize emin misiniz?</p>
+                <p class="text-muted mb-0"><strong id="iptalUyelikBilgi"></strong> şubesindeki üyeliğiniz iptal edilecektir.</p>
+                <div class="alert-fc alert-fc-warning mt-3 py-2">
+                    <small>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        İptal edilen üyelikler geri alınamaz.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-fc btn-fc-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <form asp-action="IptalEt" method="post" class="d-inline">
+                    <input type="hidden" name="id" id="iptalUyelikId" />
+                    <button type="submit" class="btn-fc btn-fc-danger">Evet, İptal Et</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showIptalModal(id, subeAdi) {
+            document.getElementById('iptalUyelikId').value = id;
+            document.getElementById('iptalUyelikBilgi').textContent = subeAdi;
+            var modal = new bootstrap.Modal(document.getElementById('iptalModal'));
+            modal.show();
+        }
+    </script>
+}

@@ -383,6 +383,7 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
                     .ThenInclude(r => r.Uye!)
                         .ThenInclude(u => u.ApplicationUser)
                 .Include(e => e.EgitmenUzmanliklari)
+                .Include(e => e.EgitmenHizmetler)  // EgitmenHizmetler eklendi
                 .Include(e => e.Musaitlikler)
                 .FirstOrDefaultAsync(e => e.Id == id);
 
@@ -410,7 +411,7 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
                                 userId: userId,
                                 baslik: "Randevunuz iptal edildi",
                                 mesaj: $"{egitmen.AdSoyad} isimli eğitmen sistemden kaldırıldığı için {randevu.BaslangicZamani:dd.MM.yyyy HH:mm} tarihli randevunuz iptal edildi.",
-                                tur: "AppointmentCancelledTrainerRemoved",
+                                tur: "TrainerDeleted",
                                 iliskiliId: randevu.Id,
                                 link: "/Randevu"
                             );
@@ -424,6 +425,12 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
                     _context.EgitmenUzmanliklari.RemoveRange(egitmen.EgitmenUzmanliklari);
                 }
 
+                // 2.5 Hizmetleri sil (EgitmenHizmet tablosu)
+                if (egitmen.EgitmenHizmetler != null)
+                {
+                    _context.EgitmenHizmetler.RemoveRange(egitmen.EgitmenHizmetler);
+                }
+
                 // 3. Müsaitlikleri sil
                 if (egitmen.Musaitlikler != null)
                 {
@@ -433,6 +440,27 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
                 // 4. Identity kullanıcısını sil veya deaktif et
                 if (!string.IsNullOrEmpty(egitmen.ApplicationUserId))
                 {
+                    // 4a. Kullanıcının gönderdiği ve aldığı mesajları sil
+                    var mesajlar = await _context.Mesajlar
+                        .Where(m => m.GonderenId == egitmen.ApplicationUserId || m.AliciId == egitmen.ApplicationUserId)
+                        .ToListAsync();
+                    if (mesajlar.Any())
+                    {
+                        _context.Mesajlar.RemoveRange(mesajlar);
+                    }
+
+                    // 4b. Kullanıcının bildirimlerini sil
+                    var bildirimler = await _context.Bildirimler
+                        .Where(b => b.UserId == egitmen.ApplicationUserId)
+                        .ToListAsync();
+                    if (bildirimler.Any())
+                    {
+                        _context.Bildirimler.RemoveRange(bildirimler);
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    // 4c. Identity kullanıcısını sil
                     var user = await _userManager.FindByIdAsync(egitmen.ApplicationUserId);
                     if (user != null)
                     {
@@ -452,7 +480,8 @@ namespace FitnessCenter.Web.Areas.Admin.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                TempData["Error"] = "Silme işlemi sırasında hata: " + ex.Message;
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                TempData["Error"] = "Silme işlemi sırasında hata: " + innerMessage;
                 return RedirectToAction(nameof(Index));
             }
         }

@@ -213,5 +213,46 @@ namespace FitnessCenter.Web.Controllers
             TempData["Success"] = "Üyeliğiniz oluşturuldu. Artık bu şubeden randevu alabilirsiniz.";
             return RedirectToAction(nameof(Index));
         }
+
+        // POST: /Uyelik/IptalEt
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> IptalEt(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var uye = await GetUyeForCurrentUserAsync();
+            if (uye == null)
+            {
+                TempData["Error"] = "Üye kaydınız bulunamadı.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Sadece kendi üyeliğini iptal edebilir
+            var uyelik = await _context.Uyelikler
+                .Include(u => u.Salon)
+                .FirstOrDefaultAsync(u => u.Id == id && u.UyeId == uye.Id);
+
+            if (uyelik == null)
+            {
+                TempData["Error"] = "Üyelik bulunamadı.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (uyelik.Durum != "Aktif")
+            {
+                TempData["Error"] = "Sadece aktif üyelikler iptal edilebilir.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Üyeliği iptal et
+            uyelik.Durum = "İptal";
+            uyelik.BitisTarihi = DateTime.Today;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"{uyelik.Salon?.Ad} şubesindeki üyeliğiniz iptal edildi.";
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

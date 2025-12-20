@@ -108,6 +108,23 @@ namespace FitnessCenter.Web.Controllers
                 .Include(r => r.Egitmen)
                 .Where(r => r.UyeId == uye.Id);
 
+            // ===== GEÇMİŞ ONAYLI RANDEVULARI "YAPILDI" OLARAK GÜNCELLE =====
+            var now = DateTime.Now;
+            var gecmisOnaylilar = await _context.Randevular
+                .Where(r => r.UyeId == uye.Id && 
+                            r.Durum == "Onaylandı" && 
+                            r.BitisZamani < now)
+                .ToListAsync();
+
+            if (gecmisOnaylilar.Any())
+            {
+                foreach (var r in gecmisOnaylilar)
+                {
+                    r.Durum = "Yapıldı";
+                }
+                await _context.SaveChangesAsync();
+            }
+
             if (tarih.HasValue)
             {
                 var d = tarih.Value.Date;
@@ -124,11 +141,21 @@ namespace FitnessCenter.Web.Controllers
                 .OrderByDescending(r => r.BaslangicZamani)
                 .ToListAsync();
 
-            // Filtre dropdown’ları
-            ViewData["EgitmenId"] = new SelectList(
-                await _context.Egitmenler.OrderBy(e => e.AdSoyad).ToListAsync(),
-                "Id", "AdSoyad", egitmenId
-            );
+            // Üyenin aktif üyelikleri olan şube id'leri
+            var aktifSalonIdler = await _context.Uyelikler
+                .Where(x => x.UyeId == uye.Id && x.Durum == "Aktif")
+                .Select(x => x.SalonId)
+                .Distinct()
+                .ToListAsync();
+
+            // Sadece üyenin aktif olduğu salonlardaki eğitmenler
+            var egitmenler = await _context.Egitmenler
+                .Where(e => e.Aktif && e.SalonId.HasValue && aktifSalonIdler.Contains(e.SalonId.Value))
+                .OrderBy(e => e.AdSoyad)
+                .ToListAsync();
+
+            // Filtre dropdown'ları
+            ViewData["EgitmenId"] = new SelectList(egitmenler, "Id", "AdSoyad", egitmenId);
 
             ViewData["HizmetId"] = new SelectList(
                 await _context.Hizmetler.OrderBy(h => h.Ad).ToListAsync(),
@@ -445,6 +472,271 @@ namespace FitnessCenter.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // GET: /Randevu/Detail/{id}
+        [HttpGet]
+        public async Task<IActionResult> Detail(int id)
+        {
+            var uye = await GetCurrentMemberAsync();
+            if (uye == null)
+            {
+                TempData["Error"] = "Sistemde üye kaydınız bulunamadı.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var randevu = await _context.Randevular
+                .Include(r => r.Salon)
+                .Include(r => r.Hizmet)
+                .Include(r => r.Egitmen)
+                .FirstOrDefaultAsync(r => r.Id == id && r.UyeId == uye.Id);
+
+            if (randevu == null)
+            {
+                TempData["Error"] = "Randevu bulunamadı.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(randevu);
+        }
+
+        // GET: /Randevu/Edit/{id}
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var uye = await GetCurrentMemberAsync();
+            if (uye == null)
+            {
+                TempData["Error"] = "Sistemde üye kaydınız bulunamadı.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var randevu = await _context.Randevular
+                .Include(r => r.Salon)
+                .Include(r => r.Hizmet)
+                .Include(r => r.Egitmen)
+                .FirstOrDefaultAsync(r => r.Id == id && r.UyeId == uye.Id);
+
+            if (randevu == null)
+            {
+                TempData["Error"] = "Randevu bulunamadı.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (randevu.Durum == "İptal")
+            {
+                TempData["Error"] = "İptal edilmiş randevular düzenlenemez.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (randevu.Durum == "Yapıldı")
+            {
+                TempData["Error"] = "Tamamlanmış randevular düzenlenemez.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Eğer onaylandıysa uyarı göster
+            if (randevu.Durum == "Onaylandı")
+            {
+                TempData["Warning"] = "Bu randevu onaylanmış durumda. Düzenleme yaparsanız randevu 'Beklemede' durumuna düşecek ve yeniden admin onayı gerekecek.";
+            }
+
+            await DoldurSelectListelerAsync(uye, randevu.SalonId, randevu.HizmetId, randevu.EgitmenId);
+            ViewData["EskiDurum"] = randevu.Durum;
+            
+            return View(randevu);
+        }
+
+        // POST: /Randevu/Edit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Randevu model)
+        {
+            var uye = await GetCurrentMemberAsync();
+            if (uye == null)
+            {
+                TempData["Error"] = "Sistemde üye kaydınız bulunamadı.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var randevu = await _context.Randevular
+                .FirstOrDefaultAsync(r => r.Id == id && r.UyeId == uye.Id);
+
+            if (randevu == null)
+            {
+                TempData["Error"] = "Randevu bulunamadı.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (randevu.Durum == "İptal")
+            {
+                TempData["Error"] = "İptal edilmiş randevular düzenlenemez.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (randevu.Durum == "Yapıldı")
+            {
+                TempData["Error"] = "Tamamlanmış randevular düzenlenemez.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await DoldurSelectListelerAsync(uye, model.SalonId, model.HizmetId, model.EgitmenId);
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Hizmeti bul – süre hesaplamak için
+            var hizmet = await _context.Hizmetler.FirstOrDefaultAsync(h => h.Id == model.HizmetId);
+            if (hizmet == null)
+            {
+                ModelState.AddModelError(string.Empty, "Seçilen hizmet bulunamadı.");
+                return View(model);
+            }
+
+            var baslangic = model.BaslangicZamani;
+            var bitis = baslangic.AddMinutes(hizmet.SureDakika);
+
+            // TimeOfDay değerleri tüm saat kontrollerinde kullanılacak
+            var baslangicTime = baslangic.TimeOfDay;
+            var bitisTime = bitis.TimeOfDay;
+
+            // ---------------- 0) Minimum 3 saat öncesi kontrolü ----------------
+            var minZaman = DateTime.Now.AddHours(3);
+            if (baslangic < minZaman)
+            {
+                var minSaatStr = minZaman.ToString("dd.MM.yyyy HH:mm");
+                ModelState.AddModelError(string.Empty,
+                    $"Randevu en erken 3 saat sonrası için alınabilir. En erken: {minSaatStr}");
+            }
+
+            // ---------------- 0.5) Salon çalışma saatleri kontrolü ----------------
+            var salon = await _context.Salonlar.FindAsync(model.SalonId);
+            if (salon != null && !salon.Is24Hours)
+            {
+                if (salon.AcilisSaati.HasValue && salon.KapanisSaati.HasValue)
+                {
+                    if (baslangicTime < salon.AcilisSaati.Value)
+                    {
+                        ModelState.AddModelError(string.Empty,
+                            $"Randevu başlangıç saati salonun açılış saatinden ({salon.AcilisSaati.Value:hh\\:mm}) önce olamaz.");
+                    }
+                    if (bitisTime > salon.KapanisSaati.Value)
+                    {
+                        ModelState.AddModelError(string.Empty,
+                            $"Randevu bitiş saati salonun kapanış saatinden ({salon.KapanisSaati.Value:hh\\:mm}) sonra olamaz.");
+                    }
+                }
+            }
+
+            // ---------------- 1) Eğitmenin müsaitliği ----------------
+            var gun = baslangic.DayOfWeek;
+
+            bool musaitlikVar = await _context.Musaitlikler.AnyAsync(m =>
+                m.EgitmenId == model.EgitmenId &&
+                m.Gun == gun &&
+                m.BaslangicSaati <= baslangicTime &&
+                m.BitisSaati >= bitisTime
+            );
+
+            if (!musaitlikVar)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Seçilen eğitmen bu tarih ve saatte çalışmıyor. Lütfen eğitmenin müsait olduğu bir zaman seçin.");
+            }
+
+            // ---------------- 2) Aynı eğitmen için çakışan randevu var mı? (Mevcut randevu hariç) ----------------
+            var ayniGundekiRandevular = await _context.Randevular
+                .Where(r =>
+                    r.Id != id &&  // Düzenlenen randevuyu hariç tut
+                    r.EgitmenId == model.EgitmenId &&
+                    r.BaslangicZamani.Date == baslangic.Date &&
+                    r.Durum != "İptal")
+                .ToListAsync();
+
+            bool egitmenCakismaVar = ayniGundekiRandevular.Any(r =>
+                !(bitis <= r.BaslangicZamani || baslangic >= r.BitisZamani));
+
+            if (egitmenCakismaVar)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Bu saat aralığında seçilen eğitmenin başka bir randevusu zaten var.");
+            }
+
+            // ---------------- 3) Aynı üyenin aynı saat aralığında başka randevusu var mı? (Mevcut randevu hariç) ----------------
+            var uyeRandevularAyniGun = await _context.Randevular
+                .Where(r =>
+                    r.Id != id &&  // Düzenlenen randevuyu hariç tut
+                    r.UyeId == uye.Id &&
+                    r.BaslangicZamani.Date == baslangic.Date &&
+                    r.Durum != "İptal")
+                .ToListAsync();
+
+            bool uyeCakismaVar = uyeRandevularAyniGun.Any(r =>
+                !(bitis <= r.BaslangicZamani || baslangic >= r.BitisZamani));
+
+            if (uyeCakismaVar)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Bu saat aralığında size ait başka bir randevu zaten var. " +
+                    "Aynı anda birden fazla eğitmenden randevu alınamaz.");
+            }
+
+            // ---------------- 4) Arka arkaya randevu yok kuralı (eğitmen için) ----------------
+            bool araYok = ayniGundekiRandevular.Any(r =>
+                Math.Abs((r.BaslangicZamani - bitis).TotalMinutes) < MinAraDakika ||
+                Math.Abs((baslangic - r.BitisZamani).TotalMinutes) < MinAraDakika);
+
+            if (araYok)
+            {
+                ModelState.AddModelError(string.Empty,
+                    $"Randevular arasında en az {MinAraDakika} dakika ara olmalıdır.");
+            }
+
+            // Hata varsa formu geri göster
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var eskiDurum = randevu.Durum;
+
+            // Randevu bilgilerini güncelle
+            randevu.SalonId = model.SalonId;
+            randevu.HizmetId = model.HizmetId;
+            randevu.EgitmenId = model.EgitmenId;
+            randevu.BaslangicZamani = baslangic;
+            randevu.BitisZamani = bitis;
+
+            // Eğer önceki durum "Onaylandı" ise, düzenleme sonrası "Beklemede" yap
+            if (eskiDurum == "Onaylandı")
+            {
+                randevu.Durum = "Beklemede";
+                TempData["Info"] = "Randevu düzenlendi. Durum 'Beklemede' olarak güncellendi, admin onayı bekleniyor.";
+
+                // Admin'lere bildirim gönder
+                var adminUsers = await _userManager.GetUsersInRoleAsync("Admin");
+                foreach (var admin in adminUsers)
+                {
+                    await _bildirimService.OlusturAsync(
+                        userId: admin.Id,
+                        baslik: "Randevu düzenlendi (Yeniden onay gerekli)",
+                        mesaj: $"{uye.AdSoyad} - {randevu.BaslangicZamani:dd.MM.yyyy HH:mm}",
+                        tur: "AppointmentEditedNeedsApproval",
+                        iliskiliId: randevu.Id,
+                        link: "/Admin/Randevu?durum=Beklemede"
+                    );
+                }
+            }
+            else
+            {
+                TempData["Success"] = "Randevu başarıyla düzenlendi.";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
         // GET: /Randevu/Calendar
         // FullCalendar.js ile takvim görünümü
         [HttpGet]
@@ -475,9 +767,10 @@ namespace FitnessCenter.Web.Controllers
                     title = r.Hizmet != null ? r.Hizmet.Ad : "Randevu",
                     start = r.BaslangicZamani.ToString("yyyy-MM-ddTHH:mm:ss"),
                     end = r.BitisZamani.ToString("yyyy-MM-ddTHH:mm:ss"),
-                    // Durum renkleri: Yeşil=Onaylandı, Sarı=Beklemede, Kırmızı=İptal
+                    // Durum renkleri: Yeşil=Onaylandı, Sarı=Beklemede, Kırmızı=İptal, Mavi=Yapıldı
                     color = r.Durum == "Onaylandı" ? "#10b981" : 
-                            r.Durum == "Beklemede" ? "#f59e0b" : "#ef4444",
+                            r.Durum == "Beklemede" ? "#f59e0b" : 
+                            r.Durum == "Yapıldı" ? "#3b82f6" : "#ef4444",
                     extendedProps = new
                     {
                         durum = r.Durum,
@@ -489,6 +782,22 @@ namespace FitnessCenter.Web.Controllers
                 .ToListAsync();
 
             return Json(events);
+        }
+
+        // GET: /Randevu/Egitmenlerim
+        // Üyenin aktif şubelerindeki eğitmenleri listele (REST API ile)
+        [HttpGet]
+        public async Task<IActionResult> Egitmenlerim()
+        {
+            var uye = await GetCurrentMemberAsync();
+            if (uye == null)
+            {
+                TempData["Error"] = "Sistemde size bağlı bir üye kaydı bulunamadı. Önce bir şubeye üye olmanız gerekiyor.";
+                return RedirectToAction("UyeOl", "Uyelik");
+            }
+
+            ViewBag.UyeId = uye.Id;
+            return View();
         }
     }
 }

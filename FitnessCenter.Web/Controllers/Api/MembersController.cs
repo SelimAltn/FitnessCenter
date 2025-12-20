@@ -37,6 +37,8 @@ namespace FitnessCenter.Web.Controllers.Api
             [FromQuery] string? from,
             [FromQuery] string? to,
             [FromQuery] string? status,
+            [FromQuery] int? egitmenId = null,
+            [FromQuery] int? hizmetId = null,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
@@ -115,6 +117,8 @@ namespace FitnessCenter.Web.Controllers.Api
                     r.BaslangicZamani,
                     r.BitisZamani,
                     r.Durum,
+                    r.EgitmenId,
+                    r.HizmetId,
                     HizmetAdi = h.Ad,
                     EgitmenAdSoyad = e.AdSoyad,
                     SalonAdi = s.Ad
@@ -135,6 +139,18 @@ namespace FitnessCenter.Web.Controllers.Api
             if (!string.IsNullOrWhiteSpace(status))
             {
                 query = query.Where(x => x.Durum == status);
+            }
+
+            // Eğitmen filtresi
+            if (egitmenId.HasValue)
+            {
+                query = query.Where(x => x.EgitmenId == egitmenId.Value);
+            }
+
+            // Hizmet filtresi
+            if (hizmetId.HasValue)
+            {
+                query = query.Where(x => x.HizmetId == hizmetId.Value);
             }
 
             // ---- Sayfalama ----
@@ -165,6 +181,78 @@ namespace FitnessCenter.Web.Controllers.Api
                 PageSize = pageSize,
                 TotalCount = totalCount,
                 TotalPages = totalPages
+            };
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// GET /api/members/{id}/trainers
+        /// Üyenin aktif üyelik sahibi olduğu salonlardaki eğitmenleri döner.
+        /// RESTful API örneği - JSON formatında eğitmen listesi
+        /// </summary>
+        [HttpGet("{id:int}/trainers")]
+        public async Task<ActionResult<PagedResult<TrainerDto>>> GetMemberTrainers(int id)
+        {
+            // Kullanıcı bu veriyi görmeye yetkili mi?
+            if (!User.IsInRole("Admin"))
+            {
+                var currentUserId = _userManager.GetUserId(User);
+                var uyeKontrol = await _context.Uyeler
+                    .Where(u => u.Id == id && u.ApplicationUserId == currentUserId)
+                    .AnyAsync();
+
+                if (!uyeKontrol)
+                {
+                    return Forbid();
+                }
+            }
+
+            // 1. Üyenin aktif üyelikleri olan şube id'leri
+            var aktifSalonIdler = await _context.Uyelikler
+                .Where(x => x.UyeId == id && x.Durum == "Aktif")
+                .Select(x => x.SalonId)
+                .Distinct()
+                .ToListAsync();
+
+            if (!aktifSalonIdler.Any())
+            {
+                return Ok(new PagedResult<TrainerDto>
+                {
+                    Items = new List<TrainerDto>(),
+                    Page = 1,
+                    PageSize = 50,
+                    TotalCount = 0,
+                    TotalPages = 0
+                });
+            }
+
+            // 2. Bu salonlardaki aktif eğitmenleri getir
+            var trainers = await _context.Egitmenler
+                .Where(e => e.Aktif && e.SalonId.HasValue && aktifSalonIdler.Contains(e.SalonId.Value))
+                .Include(e => e.Salon)
+                .Include(e => e.EgitmenUzmanliklari!)
+                    .ThenInclude(eu => eu.UzmanlikAlani)
+                .OrderBy(e => e.AdSoyad)
+                .Select(e => new TrainerDto
+                {
+                    Id = e.Id,
+                    AdSoyad = e.AdSoyad,
+                    Uzmanlik = e.EgitmenUzmanliklari != null && e.EgitmenUzmanliklari.Any()
+                        ? string.Join(", ", e.EgitmenUzmanliklari.Select(eu => eu.UzmanlikAlani!.Ad))
+                        : null,
+                    SalonAdi = e.Salon != null ? e.Salon.Ad : null,
+                    FotoUrl = null // Egitmen entity'sinde FotoUrl yok
+                })
+                .ToListAsync();
+
+            var result = new PagedResult<TrainerDto>
+            {
+                Items = trainers,
+                Page = 1,
+                PageSize = trainers.Count,
+                TotalCount = trainers.Count,
+                TotalPages = 1
             };
 
             return Ok(result);

@@ -130,6 +130,64 @@ namespace FitnessCenter.Web.Controllers
         }
 
         /// <summary>
+        /// GET: /Ai/Detail/{id} - Geçmiş AI önerisinin detayını gösterir
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Detail(int id)
+        {
+            var uye = await GetCurrentMemberAsync();
+            if (uye == null)
+            {
+                TempData["Error"] = "Sistemde size bağlı bir üye kaydı bulunamadı.";
+                return RedirectToAction("UyeOl", "Uyelik");
+            }
+
+            // Sadece kendi kaydına erişebilsin
+            var aiLog = await _context.AiLoglar
+                .FirstOrDefaultAsync(a => a.Id == id && a.UyeId == uye.Id);
+
+            if (aiLog == null)
+            {
+                TempData["Error"] = "AI öneri kaydı bulunamadı.";
+                return RedirectToAction(nameof(History));
+            }
+
+            // ResponseJson'dan AiResultVm parse et
+            AiResultVm? result = null;
+            if (!string.IsNullOrEmpty(aiLog.ResponseJson))
+            {
+                try
+                {
+                    result = System.Text.Json.JsonSerializer.Deserialize<AiResultVm>(aiLog.ResponseJson, new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse ResponseJson for AiLog {Id}", id);
+                }
+            }
+
+            // Fallback: ResponseJson yoksa veya parse edilemezse basit bir sonuç oluştur
+            if (result == null)
+            {
+                result = new AiResultVm
+                {
+                    IsSuccess = aiLog.IsSuccess,
+                    Summary = aiLog.CevapMetni,
+                    ErrorMessage = aiLog.ErrorMessage,
+                    GeneratedAt = aiLog.OlusturulmaZamani
+                };
+            }
+
+            ViewBag.AiLog = aiLog;
+            ViewBag.IsPhotoMode = aiLog.SoruMetni?.StartsWith("Photo") ?? false;
+            
+            return View(result);
+        }
+
+        /// <summary>
         /// GET: /Ai/Recommend - Form göster
         /// </summary>
         [HttpGet]
@@ -209,6 +267,14 @@ namespace FitnessCenter.Web.Controllers
                 await model.Photo.CopyToAsync(memoryStream);
                 var imageBytes = memoryStream.ToArray();
 
+                // 1a. Kullanıcının yüklediği fotoğrafı diske kaydet (Before image için)
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "ai-photos");
+                Directory.CreateDirectory(uploadsFolder);
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(model.Photo.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+                await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
+                var uploadedPhotoUrl = $"/uploads/ai-photos/{fileName}";
+
                 // 2. Gemini Vision ile analiz et
                 var visionResult = await _visionService.AnalyzeAsync(imageBytes, model.Photo.ContentType);
 
@@ -264,6 +330,9 @@ namespace FitnessCenter.Web.Controllers
                             // Graceful fallback - plan yine gösterilir
                         }
                     }
+
+                    // Photo mode'da kullanıcının yüklediği fotoğrafı BeforeImagePath olarak ata
+                    result.BeforeImagePath = uploadedPhotoUrl;
                 }
             }
             else
@@ -277,6 +346,7 @@ namespace FitnessCenter.Web.Controllers
 
             // ===== GÖRSEL EŞLEŞTİRME (Kural Tabanlı) =====
             // DeepSeek/Groq değişmeden, sadece lokal mapping ile before/after görseller eklenir
+            // Photo modunda BeforeImagePath zaten kullanıcının fotoğrafına ayarlandı, üzerine yazma
             if (result.IsSuccess && result.IsHuman)
             {
                 var imageMapping = _imageMapper.GetTransformationImages(
@@ -284,7 +354,12 @@ namespace FitnessCenter.Web.Controllers
                     model.Hedef,
                     model.Cinsiyet
                 );
-                result.BeforeImagePath = imageMapping.BeforePath;
+                
+                // Sadece data modunda (photo değilse) BeforeImagePath ata
+                if (!model.IsPhotoMode)
+                {
+                    result.BeforeImagePath = imageMapping.BeforePath;
+                }
                 result.AfterImagePath = imageMapping.AfterPath;
                 result.TransformationCaption = imageMapping.Caption;
             }
@@ -324,6 +399,21 @@ namespace FitnessCenter.Web.Controllers
         {
             try
             {
+                // Serialize the full result for later retrieval
+                string? responseJson = null;
+                try
+                {
+                    responseJson = System.Text.Json.JsonSerializer.Serialize(result, new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+                        WriteIndented = false
+                    });
+                }
+                catch
+                {
+                    // Ignore serialization errors
+                }
+
                 var log = new AiLog
                 {
                     UyeId = uyeId,
@@ -332,7 +422,8 @@ namespace FitnessCenter.Web.Controllers
                     IsSuccess = result.IsSuccess,
                     DurationMs = (int)elapsedMs,
                     OlusturulmaZamani = DateTime.UtcNow,
-                    ErrorMessage = result.ErrorMessage
+                    ErrorMessage = result.ErrorMessage,
+                    ResponseJson = responseJson
                 };
 
                 _context.AiLoglar.Add(log);

@@ -1,0 +1,249 @@
+@model FitnessCenter.Web.Models.Entities.Randevu
+
+@{
+    ViewData["Title"] = "Randevu Düzenle";
+    var eskiDurum = ViewData["EskiDurum"] as string;
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h1>Randevu Düzenle</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a asp-action="Index">Randevularım</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Düzenle</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            @if (TempData["Warning"] != null)
+            {
+                <div class="alert-fc alert-fc-warning mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    @TempData["Warning"]
+                </div>
+            }
+
+            <div class="card-fc">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Randevu Bilgilerini Düzenle
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="UyeId" />
+                        <input type="hidden" asp-for="Durum" />
+                        <input type="hidden" id="OriginalEgitmenId" value="@Model.EgitmenId" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert-fc alert-fc-danger mb-3"></div>
+
+                        <div class="row g-3">
+                            <!-- Salon -->
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="SalonId" class="form-fc-label">Şube</label>
+                                    <select asp-for="SalonId" asp-items="@(ViewData["SalonId"] as SelectList)" class="form-fc-control">
+                                        <option value="">Seçiniz</option>
+                                    </select>
+                                    <span asp-validation-for="SalonId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <!-- Hizmet -->
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="HizmetId" class="form-fc-label">Hizmet</label>
+                                    <select asp-for="HizmetId" asp-items="@(ViewData["HizmetId"] as SelectList)" class="form-fc-control">
+                                        <option value="">Seçiniz</option>
+                                    </select>
+                                    <span asp-validation-for="HizmetId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <!-- Tarih ve Saat -->
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="BaslangicZamani" class="form-fc-label">Tarih ve Saat</label>
+                                    <input type="text" 
+                                           id="BaslangicZamaniPicker" 
+                                           class="form-fc-control" 
+                                           placeholder="Tarih ve saat seçiniz"
+                                           value="@Model.BaslangicZamani.ToString("dd/MM/yyyy HH:mm")" />
+                                    <input type="hidden" id="BaslangicZamani" name="BaslangicZamani" value="@Model.BaslangicZamani.ToString("o")" />
+                                    <span asp-validation-for="BaslangicZamani" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <!-- Eğitmen (Dinamik) -->
+                            <div class="col-md-6">
+                                <div class="form-fc-group">
+                                    <label asp-for="EgitmenId" class="form-fc-label">Eğitmen</label>
+                                    <select id="EgitmenId" name="EgitmenId" class="form-fc-control">
+                                        <option value="">Önce şube, hizmet ve tarih/saat seçiniz</option>
+                                    </select>
+                                    <span id="egitmenHint" class="form-fc-hint">Şube, hizmet ve tarih seçtiğinizde müsait eğitmenler listelenecektir</span>
+                                    <span asp-validation-for="EgitmenId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (eskiDurum == "Onaylandı")
+                        {
+                            <div class="alert-fc alert-fc-info mt-3 py-2">
+                                <small>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                    Bu randevu onaylanmış durumda. Kaydettiğinizde durum "Beklemede" olarak değişecek.
+                                </small>
+                            </div>
+                        }
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn-fc btn-fc-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                Değişiklikleri Kaydet
+                            </button>
+                            <a asp-action="Index" class="btn-fc btn-fc-secondary">Vazgeç</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <!-- Flatpickr CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/tr.js"></script>
+
+    <script>
+        $(function () {
+            var flatpickrInstance = null;
+            var hiddenInput = document.getElementById('BaslangicZamani');
+            var originalEgitmenId = parseInt($('#OriginalEgitmenId').val()) || 0;
+            var randevuId = parseInt($('#Id').val()) || 0;
+
+            // Flatpickr initialization
+            flatpickrInstance = flatpickr("#BaslangicZamaniPicker", {
+                enableTime: true,
+                dateFormat: "d/m/Y H:i",
+                altInput: false,
+                time_24hr: true,
+                locale: "tr",
+                minDate: "today",
+                defaultHour: 10,
+                defaultMinute: 0,
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (selectedDates.length > 0) {
+                        hiddenInput.value = selectedDates[0].toISOString();
+                        updateEgitmenler();
+                    }
+                }
+            });
+
+            // Eğitmen listesini güncelle (Edit için özel - mevcut eğitmeni de dahil et)
+            function updateEgitmenler() {
+                var salonId = $("#SalonId").val();
+                var hizmetId = $("#HizmetId").val();
+                var tarihValue = hiddenInput.value;
+
+                var $egitmenSelect = $("#EgitmenId");
+                var $egitmenHint = $("#egitmenHint");
+
+                // 3 alan dolu değilse eğitmen dropdown boş ve disabled
+                if (!salonId || !hizmetId || !tarihValue) {
+                    $egitmenSelect
+                        .empty()
+                        .prop('disabled', true)
+                        .append('<option value="">Önce şube, hizmet ve tarih/saat seçiniz</option>');
+                    $egitmenHint.text('Şube, hizmet ve tarih seçtiğinizde müsait eğitmenler listelenecektir');
+                    return;
+                }
+
+                // 3 alan dolu - eğitmenleri yükle
+                $egitmenSelect.empty().append('<option>Yükleniyor...</option>');
+                $egitmenHint.text('Müsait eğitmenler yükleniyor...');
+
+                $.ajax({
+                    url: '/api/trainers',
+                    method: 'GET',
+                    data: { 
+                        salonId: salonId,
+                        hizmetId: hizmetId,
+                        start: tarihValue,
+                        excludeRandevuId: randevuId  // Mevcut randevuyu çakışma kontrolünden hariç tut
+                    },
+                    success: function (response) {
+                        $egitmenSelect.empty().prop('disabled', false);
+
+                        if (!response.items || response.items.length === 0) {
+                            $egitmenSelect
+                                .prop('disabled', true)
+                                .append('<option value="">Bu kriterlere uygun eğitmen bulunamadı</option>');
+                            $egitmenHint.text('Farklı bir tarih/saat veya hizmet seçmeyi deneyin');
+                            return;
+                        }
+
+                        $egitmenSelect.append('<option value="">Eğitmen seçiniz</option>');
+
+                        response.items.forEach(function (trainer) {
+                            var text = trainer.adSoyad;
+                            if (trainer.uzmanlik) {
+                                text += ' (' + trainer.uzmanlik + ')';
+                            }
+                            var $option = $('<option>', {
+                                value: trainer.id,
+                                text: text
+                            });
+                            // Mevcut eğitmeni seçili yap
+                            if (trainer.id === originalEgitmenId) {
+                                $option.prop('selected', true);
+                            }
+                            $egitmenSelect.append($option);
+                        });
+
+                        $egitmenHint.text(response.items.length + ' müsait eğitmen bulundu');
+                    },
+                    error: function () {
+                        $egitmenSelect
+                            .empty()
+                            .prop('disabled', true)
+                            .append('<option>Hata oluştu</option>');
+                        $egitmenHint.text('Eğitmenler yüklenirken bir hata oluştu');
+                    }
+                });
+            }
+
+            // Salon değiştiğinde
+            $("#SalonId").on("change", function () {
+                updateEgitmenler();
+            });
+
+            // Hizmet değiştiğinde
+            $("#HizmetId").on("change", function () {
+                updateEgitmenler();
+            });
+
+            // Sayfa ilk yüklendiğinde eğitmenleri yükle
+            updateEgitmenler();
+        });
+    </script>
+}

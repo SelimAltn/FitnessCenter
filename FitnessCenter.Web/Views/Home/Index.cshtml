@@ -2,346 +2,500 @@
     ViewData["Title"] = "Ana Sayfa";
 }
 
-<!-- Hero Section -->
-<section class="hero-section">
-    <div class="container">
-        <h1>Fitness Center'a <span class="hero-highlight">Hos Geldiniz</span></h1>
-        <p>
-            Profesyonel egitmenlerimiz ve modern tesislerimizle saglikli yasam yolculugunuzda size eslik ediyoruz.
-        </p>
-        @if (User.Identity != null && User.Identity.IsAuthenticated)
-        {
-            <p class="hero-user-greeting">
-                <small>Merhaba, @User.Identity.Name</small>
+<style>
+/* Page Background with Gradient */
+.home-page-custom body {
+    background: linear-gradient(135deg, #2d7a6e 0%, #4a9b8e 50%, #5eb5a6 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Stats Card Styling */
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Card Enhancements */
+.home-page-custom .card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.home-page-custom .card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.home-page-custom .card-body {
+    padding: 1.5rem;
+}
+
+/* List Group Items */
+.home-page-custom .list-group-item {
+    border-left: none;
+    border-right: none;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    transition: background-color 0.2s ease;
+}
+
+.home-page-custom .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.home-page-custom .list-group-item:first-child {
+    border-top: none;
+}
+
+.home-page-custom .list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* Badge Styling */
+.home-page-custom .badge {
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 0.35em 0.75em;
+}
+
+/* Button Styling */
+.home-page-custom .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.home-page-custom .btn-outline-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.home-page-custom .btn-outline-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* Welcome Section */
+.home-page-custom .mb-4 h2 {
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Location Badge */
+.home-page-custom .badge.bg-primary {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white !important;
+    border-radius: 50px;
+}
+
+/* Empty State Icons */
+.home-page-custom .opacity-50 {
+    opacity: 0.3 !important;
+}
+
+/* Responsive adjustments */
+@@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+/* Shadow utilities */
+.home-page-custom .shadow-sm {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Card hover effect */
+.home-page-custom .card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+}
+</style>
+
+<div class="home-page-custom">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1>Fitness Center'a <span class="hero-highlight">Hos Geldiniz</span></h1>
+            <p>
+                Profesyonel egitmenlerimiz ve modern tesislerimizle saglikli yasam yolculugunuzda size eslik ediyoruz.
             </p>
-        }
-        <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
             @if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                @if (User.IsInRole("Member"))
-                {
-                    <a asp-controller="Randevu" asp-action="Create" class="btn-fc btn-fc-lg hero-btn-light">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                        Randevu Oluştur
-                    </a>
-                    <a asp-controller="Randevu" asp-action="Index" class="btn-fc btn-fc-lg btn-fc-outline-primary" style="border-color: rgba(255,255,255,0.5); color: white;">
-                        Randevularımı Görüntüle
-                    </a>
-                }
-                @if (User.IsInRole("Admin"))
-                {
-                    <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="btn-fc btn-fc-lg hero-btn-light">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 20h9"></path>
-                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                        </svg>
-                        Admin Paneli
-                    </a>
-                }
+                <p class="hero-user-greeting">
+                    <small>Merhaba, @User.Identity.Name</small>
+                </p>
             }
-            else
-            {
-                <a asp-controller="Account" asp-action="Register" class="btn-fc btn-fc-lg hero-btn-light">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="8.5" cy="7" r="4"></circle>
-                        <line x1="20" y1="8" x2="20" y2="14"></line>
-                        <line x1="23" y1="11" x2="17" y2="11"></line>
-                    </svg>
-                    Üye Ol
-                </a>
-                <a asp-controller="Account" asp-action="Login" class="btn-fc btn-fc-lg btn-fc-outline-primary" style="border-color: rgba(255,255,255,0.5); color: white;">
-                    Giriş Yap
-                </a>
-            }
-        </div>
-    </div>
-</section>
-
-<!-- Marquee Strips -->
-<div class="marquee-container">
-    <div class="marquee-content">
-        <span class="marquee-item">Fitness</span>
-        <span class="marquee-item">Pilates</span>
-        <span class="marquee-item">Yoga</span>
-        <span class="marquee-item">Beslenme</span>
-        <span class="marquee-item">Kardiyo</span>
-        <span class="marquee-item">Ağırlık</span>
-        <span class="marquee-item">Kişisel Antrenman</span>
-        <span class="marquee-item">Grup Dersleri</span>
-        <span class="marquee-item">Fitness</span>
-        <span class="marquee-item">Pilates</span>
-        <span class="marquee-item">Yoga</span>
-        <span class="marquee-item">Beslenme</span>
-        <span class="marquee-item">Kardiyo</span>
-        <span class="marquee-item">Ağırlık</span>
-        <span class="marquee-item">Kişisel Antrenman</span>
-        <span class="marquee-item">Grup Dersleri</span>
-    </div>
-</div>
-<div class="marquee-container marquee-reverse">
-    <div class="marquee-content">
-        <span class="marquee-item">Profesyonel Eğitmen</span>
-        <span class="marquee-item">AI Öneri</span>
-        <span class="marquee-item">Modern Tesis</span>
-        <span class="marquee-item">7/24 Takip</span>
-        <span class="marquee-item">Randevu Sistemi</span>
-        <span class="marquee-item">Esnek Saatler</span>
-        <span class="marquee-item">Kişisel Program</span>
-        <span class="marquee-item">Profesyonel Eğitmen</span>
-        <span class="marquee-item">AI Öneri</span>
-        <span class="marquee-item">Modern Tesis</span>
-        <span class="marquee-item">7/24 Takip</span>
-        <span class="marquee-item">Randevu Sistemi</span>
-        <span class="marquee-item">Esnek Saatler</span>
-        <span class="marquee-item">Kişisel Program</span>
-    </div>
-</div>
-
-<!-- Statistics Band -->
-<section class="stats-band">
-    <div class="container">
-        <div class="row">
-            <div class="col-6 col-md-3">
-                <div class="stat-item">
-                    <div class="stat-number">25+</div>
-                    <div class="stat-label">Uzman Eğitmen</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-item">
-                    <div class="stat-number">500+</div>
-                    <div class="stat-label">Aktif Üye</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-item">
-                    <div class="stat-number">1200+</div>
-                    <div class="stat-label">Tamamlanan Seans</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-item">
-                    <div class="stat-number">7/24</div>
-                    <div class="stat-label">Online Takip</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Features Section -->
-<section class="py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2>Neden Fitness Center?</h2>
-            <p class="text-muted-fc">Size en iyi hizmeti sunmak için buradayız</p>
-        </div>
-        
-        <div class="row g-4">
-            <!-- Feature 1 -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card-fc h-100">
-                    <div class="card-body text-center p-4">
-                        <div class="mb-4">
-                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--fc-primary-light), var(--fc-primary)); color: white;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                            </span>
-                        </div>
-                        <h4>Profesyonel Eğitmenler</h4>
-                        <p class="text-muted-fc mb-0">
-                            Alanında uzman, sertifikalı eğitmenlerimizle hedeflerinize ulaşın.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Feature 2 -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card-fc h-100">
-                    <div class="card-body text-center p-4">
-                        <div class="mb-4">
-                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--fc-success-light), var(--fc-success)); color: white;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                </svg>
-                            </span>
-                        </div>
-                        <h4>Kolay Randevu</h4>
-                        <p class="text-muted-fc mb-0">
-                            Online randevu sistemiyle dilediğiniz zaman kolayca randevu alın.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Feature 3 -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card-fc h-100">
-                    <div class="card-body text-center p-4">
-                        <div class="mb-4">
-                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--fc-info-light), var(--fc-info)); color: white;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 2a10 10 0 1 0 10 10"></path>
-                                    <path d="M12 12l8-8"></path>
-                                    <path d="M12 2v10h10"></path>
-                                </svg>
-                            </span>
-                        </div>
-                        <h4>AI Akıllı Öneri</h4>
-                        <p class="text-muted-fc mb-0">
-                            Yapay zeka ile kişisel antrenman ve beslenme önerileri alın.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Feature 4 -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card-fc h-100">
-                    <div class="card-body text-center p-4">
-                        <div class="mb-4">
-                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--fc-warning-light), var(--fc-warning)); color: white;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                </svg>
-                            </span>
-                        </div>
-                        <h4>Modern Tesisler</h4>
-                        <p class="text-muted-fc mb-0">
-                            Son teknoloji ekipmanlarla donatılmış ferah spor salonları.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Testimonials Section -->
-<section class="testimonials-section">
-    <div class="container">
-        <h2>Üyelerimiz Ne Diyor?</h2>
-        <p class="section-subtitle">Binlerce mutlu üyemizden bazıları</p>
-        
-        <div class="testimonial-slider" id="testimonialSlider">
-            <!-- Slide 1 -->
-            <div class="testimonial-slide active">
-                <div class="testimonial-card">
-                    <div class="testimonial-avatar">AY</div>
-                    <div class="testimonial-stars">★★★★★</div>
-                    <p class="testimonial-text">
-                        "FitnessCenter sayesinde 6 ayda 15 kilo verdim. Eğitmenler çok profesyonel ve programlar tam da bana göre hazırlandı."
-                    </p>
-                    <div class="testimonial-name">Ahmet Yılmaz</div>
-                    <div class="testimonial-role">2 yıldır üye</div>
-                </div>
-            </div>
-            
-            <!-- Slide 2 -->
-            <div class="testimonial-slide">
-                <div class="testimonial-card">
-                    <div class="testimonial-avatar">ZK</div>
-                    <div class="testimonial-stars">★★★★★</div>
-                    <p class="testimonial-text">
-                        "AI öneri sistemi harika! Bana özel beslenme ve antrenman programı oluşturdu. Sonuçları hızla görmeye başladım."
-                    </p>
-                    <div class="testimonial-name">Zeynep Kaya</div>
-                    <div class="testimonial-role">1 yıldır üye</div>
-                </div>
-            </div>
-            
-            <!-- Slide 3 -->
-            <div class="testimonial-slide">
-                <div class="testimonial-card">
-                    <div class="testimonial-avatar">MD</div>
-                    <div class="testimonial-stars">★★★★★</div>
-                    <p class="testimonial-text">
-                        "Randevu sistemi çok kolay. Telefondan anında randevu alıyorum ve eğitmenim hemen hatırlatma gönderiyor."
-                    </p>
-                    <div class="testimonial-name">Mehmet Demir</div>
-                    <div class="testimonial-role">6 aydır üye</div>
-                </div>
-            </div>
-            
-            <!-- Slide 4 -->
-            <div class="testimonial-slide">
-                <div class="testimonial-card">
-                    <div class="testimonial-avatar">EA</div>
-                    <div class="testimonial-stars">★★★★★</div>
-                    <p class="testimonial-text">
-                        "Tesisler çok temiz ve modern. Grup derslerini çok seviyorum, motivasyonum her zaman yüksek!"
-                    </p>
-                    <div class="testimonial-name">Elif Aksoy</div>
-                    <div class="testimonial-role">3 yıldır üye</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="testimonial-dots" id="testimonialDots">
-            <span class="testimonial-dot active" data-index="0"></span>
-            <span class="testimonial-dot" data-index="1"></span>
-            <span class="testimonial-dot" data-index="2"></span>
-            <span class="testimonial-dot" data-index="3"></span>
-        </div>
-    </div>
-</section>
-
-<!-- CTA Section -->
-<section class="bg-light-fc py-5">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-8">
-                <h3 class="mb-2">Sağlıklı yaşam için ilk adımı atın</h3>
-                <p class="text-muted-fc mb-0">Hemen üye olun ve ilk antrenmanınızı planlayın.</p>
-            </div>
-            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                @if (User.Identity == null || !User.Identity.IsAuthenticated)
+            <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
                 {
-                    <a asp-controller="Account" asp-action="Register" class="btn-fc btn-fc-primary btn-fc-lg">
-                        Hemen Başla
-                    </a>
+                    @if (User.IsInRole("Member"))
+                    {
+                        <a asp-controller="Randevu" asp-action="Create" class="btn-fc btn-fc-lg hero-btn-light">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            Randevu Oluştur
+                        </a>
+                        <a asp-controller="Randevu" asp-action="Index" class="btn-fc btn-fc-lg btn-fc-outline-primary" style="border-color: rgba(255,255,255,0.5); color: white;">
+                            Randevularımı Görüntüle
+                        </a>
+                    }
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="btn-fc btn-fc-lg hero-btn-light">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                            Admin Paneli
+                        </a>
+                    }
                 }
                 else
                 {
-                    <a asp-controller="Randevu" asp-action="Create" class="btn-fc btn-fc-primary btn-fc-lg">
-                        Randevu Al
+                    <a asp-controller="Account" asp-action="Register" class="btn-fc btn-fc-lg hero-btn-light">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <line x1="20" y1="8" x2="20" y2="14"></line>
+                            <line x1="23" y1="11" x2="17" y2="11"></line>
+                        </svg>
+                        Üye Ol
+                    </a>
+                    <a asp-controller="Account" asp-action="Login" class="btn-fc btn-fc-lg btn-fc-outline-primary" style="border-color: rgba(255,255,255,0.5); color: white;">
+                        Giriş Yap
                     </a>
                 }
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Premium CTA Band -->
-<section class="cta-premium-band">
-    <div class="container">
-        <h3>Bugün başla, yarın farkı hisset!</h3>
-        <p>Binlerce üyemiz gibi siz de sağlıklı yaşam yolculuğunuza başlayın.</p>
-        @if (User.Identity == null || !User.Identity.IsAuthenticated)
-        {
-            <a asp-controller="Account" asp-action="Register" class="btn btn-lg">
-                Ücretsiz Üye Ol
-            </a>
-        }
-        else
-        {
-            <a asp-controller="Ai" asp-action="Recommend" class="btn btn-lg">
-                AI Öneri Al
-            </a>
-        }
+    <!-- Marquee Strips -->
+    <div class="marquee-container">
+        <div class="marquee-content">
+            <span class="marquee-item">Fitness</span>
+            <span class="marquee-item">Pilates</span>
+            <span class="marquee-item">Yoga</span>
+            <span class="marquee-item">Beslenme</span>
+            <span class="marquee-item">Kardiyo</span>
+            <span class="marquee-item">Ağırlık</span>
+            <span class="marquee-item">Kişisel Antrenman</span>
+            <span class="marquee-item">Grup Dersleri</span>
+            <span class="marquee-item">Fitness</span>
+            <span class="marquee-item">Pilates</span>
+            <span class="marquee-item">Yoga</span>
+            <span class="marquee-item">Beslenme</span>
+            <span class="marquee-item">Kardiyo</span>
+            <span class="marquee-item">Ağırlık</span>
+            <span class="marquee-item">Kişisel Antrenman</span>
+            <span class="marquee-item">Grup Dersleri</span>
+        </div>
     </div>
-</section>
+    <div class="marquee-container marquee-reverse">
+        <div class="marquee-content">
+            <span class="marquee-item">Profesyonel Eğitmen</span>
+            <span class="marquee-item">AI Öneri</span>
+            <span class="marquee-item">Modern Tesis</span>
+            <span class="marquee-item">7/24 Takip</span>
+            <span class="marquee-item">Randevu Sistemi</span>
+            <span class="marquee-item">Esnek Saatler</span>
+            <span class="marquee-item">Kişisel Program</span>
+            <span class="marquee-item">Profesyonel Eğitmen</span>
+            <span class="marquee-item">AI Öneri</span>
+            <span class="marquee-item">Modern Tesis</span>
+            <span class="marquee-item">7/24 Takip</span>
+            <span class="marquee-item">Randevu Sistemi</span>
+            <span class="marquee-item">Esnek Saatler</span>
+            <span class="marquee-item">Kişisel Program</span>
+        </div>
+    </div>
 
+    <!-- Statistics Band -->
+    <section class="stats-band">
+        <div class="container">
+            <div class="row">
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">25+</div>
+                        <div class="stat-label">Uzman Eğitmen</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">500+</div>
+                        <div class="stat-label">Aktif Üye</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">1200+</div>
+                        <div class="stat-label">Tamamlanan Seans</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">7/24</div>
+                        <div class="stat-label">Online Takip</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2>Neden Fitness Center?</h2>
+                <p class="text-muted-fc">Size en iyi hizmeti sunmak için buradayız</p>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Feature 1 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card-fc h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-4">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--fc-primary-light), var(--fc-primary)); color: white;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </span>
+                            </div>
+                            <h4>Profesyonel Eğitmenler</h4>
+                            <p class="text-muted-fc mb-0">
+                                Alanında uzman, sertifikalı eğitmenlerimizle hedeflerinize ulaşın.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card-fc h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-4">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--fc-success-light), var(--fc-success)); color: white;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                </span>
+                            </div>
+                            <h4>Kolay Randevu</h4>
+                            <p class="text-muted-fc mb-0">
+                                Online randevu sistemiyle dilediğiniz zaman kolayca randevu alın.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card-fc h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-4">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--fc-info-light), var(--fc-info)); color: white;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 2a10 10 0 1 0 10 10"></path>
+                                        <path d="M12 12l8-8"></path>
+                                        <path d="M12 2v10h10"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                            <h4>AI Akıllı Öneri</h4>
+                            <p class="text-muted-fc mb-0">
+                                Yapay zeka ile kişisel antrenman ve beslenme önerileri alın.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card-fc h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-4">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--fc-warning-light), var(--fc-warning)); color: white;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
+                            <h4>Modern Tesisler</h4>
+                            <p class="text-muted-fc mb-0">
+                                Son teknoloji ekipmanlarla donatılmış ferah spor salonları.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section">
+        <div class="container">
+            <h2>Üyelerimiz Ne Diyor?</h2>
+            <p class="section-subtitle">Binlerce mutlu üyemizden bazıları</p>
+            
+            <div class="testimonial-slider" id="testimonialSlider">
+                <!-- Slide 1 -->
+                <div class="testimonial-slide active">
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">AY</div>
+                        <div class="testimonial-stars">★★★★★</div>
+                        <p class="testimonial-text">
+                            "FitnessCenter sayesinde 6 ayda 15 kilo verdim. Eğitmenler çok profesyonel ve programlar tam da bana göre hazırlandı."
+                        </p>
+                        <div class="testimonial-name">Ahmet Yılmaz</div>
+                        <div class="testimonial-role">2 yıldır üye</div>
+                    </div>
+                </div>
+                
+                <!-- Slide 2 -->
+                <div class="testimonial-slide">
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">ZK</div>
+                        <div class="testimonial-stars">★★★★★</div>
+                        <p class="testimonial-text">
+                            "AI öneri sistemi harika! Bana özel beslenme ve antrenman programı oluşturdu. Sonuçları hızla görmeye başladım."
+                        </p>
+                        <div class="testimonial-name">Zeynep Kaya</div>
+                        <div class="testimonial-role">1 yıldır üye</div>
+                    </div>
+                </div>
+                
+                <!-- Slide 3 -->
+                <div class="testimonial-slide">
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">MD</div>
+                        <div class="testimonial-stars">★★★★★</div>
+                        <p class="testimonial-text">
+                            "Randevu sistemi çok kolay. Telefondan anında randevu alıyorum ve eğitmenim hemen hatırlatma gönderiyor."
+                        </p>
+                        <div class="testimonial-name">Mehmet Demir</div>
+                        <div class="testimonial-role">6 aydır üye</div>
+                    </div>
+                </div>
+                
+                <!-- Slide 4 -->
+                <div class="testimonial-slide">
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">EA</div>
+                        <div class="testimonial-stars">★★★★★</div>
+                        <p class="testimonial-text">
+                            "Tesisler çok temiz ve modern. Grup derslerini çok seviyorum, motivasyonum her zaman yüksek!"
+                        </p>
+                        <div class="testimonial-name">Elif Aksoy</div>
+                        <div class="testimonial-role">3 yıldır üye</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="testimonial-dots" id="testimonialDots">
+                <span class="testimonial-dot active" data-index="0"></span>
+                <span class="testimonial-dot" data-index="1"></span>
+                <span class="testimonial-dot" data-index="2"></span>
+                <span class="testimonial-dot" data-index="3"></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="bg-light-fc py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h3 class="mb-2">Sağlıklı yaşam için ilk adımı atın</h3>
+                    <p class="text-muted-fc mb-0">Hemen üye olun ve ilk antrenmanınızı planlayın.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    @if (User.Identity == null || !User.Identity.IsAuthenticated)
+                    {
+                        <a asp-controller="Account" asp-action="Register" class="btn-fc btn-fc-primary btn-fc-lg">
+                            Hemen Başla
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Randevu" asp-action="Create" class="btn-fc btn-fc-primary btn-fc-lg">
+                            Randevu Al
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Premium CTA Band -->
+    <section class="cta-premium-band">
+        <div class="container">
+            <h3>Bugün başla, yarın farkı hisset!</h3>
+            <p>Binlerce üyemiz gibi siz de sağlıklı yaşam yolculuğunuza başlayın.</p>
+            @if (User.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                <a asp-controller="Account" asp-action="Register" class="btn btn-lg">
+                    Ücretsiz Üye Ol
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Ai" asp-action="Recommend" class="btn btn-lg">
+                    AI Öneri Al
+                </a>
+            }
+        </div>
+    </section>
+</div>

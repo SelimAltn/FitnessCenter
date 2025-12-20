@@ -18,72 +18,277 @@
     
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        .auth-split-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .auth-visual-panel {
+            flex: 1;
+            background: linear-gradient(180deg, 
+                #0d503c 0%, 
+                #116b4e 25%, 
+                #1a8754 50%, 
+                #20a066 75%,
+                #28c078 100%);
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-visual-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('/images/gym-register-bg.jpg') center/cover no-repeat;
+            opacity: 0.15;
+        }
+        .auth-visual-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 3rem;
+            color: white;
+            text-align: center;
+        }
+        .auth-visual-content h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .auth-visual-content p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 400px;
+        }
+        .auth-visual-logo {
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .auth-visual-logo img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .auth-form-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: var(--fc-bg);
+        }
+        .auth-form-wrapper {
+            width: 100%;
+            max-width: 420px;
+        }
+        .password-toggle-wrapper {
+            position: relative;
+        }
+        .password-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--fc-gray-500);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .password-toggle-btn:hover {
+            color: var(--fc-primary);
+        }
+        .feature-list {
+            text-align: left;
+            margin-top: 2rem;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.9;
+        }
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        @@media (min-width: 992px) {
+            .auth-visual-panel {
+                display: block;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <!-- Logo -->
-            <div class="auth-logo">
-                <a href="/" style="text-decoration: none;">
-                    <div class="d-flex align-items-center justify-content-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--fc-primary);">
-                            <path d="M6.5 6.5a2.5 2.5 0 0 1 5 0v11a2.5 2.5 0 0 1-5 0v-11z"/>
-                            <path d="M17.5 6.5a2.5 2.5 0 0 0-5 0v11a2.5 2.5 0 0 0 5 0v-11z"/>
-                            <path d="M4 12h4"/>
-                            <path d="M16 12h4"/>
-                        </svg>
-                        <h1>Fitness Center</h1>
+    <div class="auth-split-container">
+        <!-- Visual Panel (Desktop Only) -->
+        <div class="auth-visual-panel">
+            <div class="auth-visual-content">
+                <div class="auth-visual-logo">
+                    <img src="/img/sau-logo.png" alt="SAÜ Logo" onerror="this.parentElement.innerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'40\\' height=\\'40\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'#1a8754\\' stroke-width=\\'2\\'><path d=\\'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\\'/><circle cx=\\'8.5\\' cy=\\'7\\' r=\\'4\\'/><line x1=\\'20\\' y1=\\'8\\' x2=\\'20\\' y2=\\'14\\'/><line x1=\\'23\\' y1=\\'11\\' x2=\\'17\\' y2=\\'11\\'/></svg>'">
+                </div>
+                <h2>Aramıza Katılın!</h2>
+                <p>Fitness Center ailesine katılarak sağlıklı yaşam yolculuğunuza bugün başlayın.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                        <span>Profesyonel eğitmenlerle çalışma</span>
                     </div>
-                </a>
+                    <div class="feature-item">
+                        <span class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                        <span>AI destekli kişisel öneriler</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                        <span>Kolay online randevu sistemi</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                        <span>Tüm şubelere erişim</span>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <!-- Title -->
-            <div class="auth-title">
-                <h2>Hesap Oluşturun</h2>
-                <p>Fitness Center ailesine katılın</p>
-            </div>
-
-            <!-- Form -->
-            <form asp-action="Register" method="post">
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div asp-validation-summary="All" class="alert-fc alert-fc-danger mb-4"></div>
-                }
-
-                <div class="form-fc-group">
-                    <label asp-for="KullaniciAdi" class="form-fc-label">Kullanıcı Adı</label>
-                    <input asp-for="KullaniciAdi" class="form-fc-control" placeholder="kullaniciadi" autofocus />
+        <!-- Form Panel -->
+        <div class="auth-form-panel">
+            <div class="auth-form-wrapper">
+                <!-- Logo -->
+                <div class="auth-logo">
+                    <a href="/" style="text-decoration: none;">
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--fc-primary);">
+                                <path d="M6.5 6.5a2.5 2.5 0 0 1 5 0v11a2.5 2.5 0 0 1-5 0v-11z"/>
+                                <path d="M17.5 6.5a2.5 2.5 0 0 0-5 0v11a2.5 2.5 0 0 0 5 0v-11z"/>
+                                <path d="M4 12h4"/>
+                                <path d="M16 12h4"/>
+                            </svg>
+                            <h1>Fitness Center</h1>
+                        </div>
+                    </a>
                 </div>
 
-                <div class="form-fc-group">
-                    <label asp-for="Email" class="form-fc-label">E-posta Adresi</label>
-                    <input asp-for="Email" type="email" class="form-fc-control" placeholder="ornek@email.com" />
+                <!-- Title -->
+                <div class="auth-title">
+                    <h2>Hesap Oluşturun</h2>
+                    <p>Ücretsiz üye olun ve hemen başlayın</p>
                 </div>
 
-                <div class="form-fc-group">
-                    <label asp-for="Sifre" class="form-fc-label">Şifre</label>
-                    <input asp-for="Sifre" type="password" class="form-fc-control" placeholder="En az 6 karakter" />
+                <!-- Form -->
+                <form asp-action="Register" method="post">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div asp-validation-summary="All" class="alert-fc alert-fc-danger mb-4"></div>
+                    }
+
+                    <div class="form-fc-group">
+                        <label asp-for="KullaniciAdi" class="form-fc-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            Kullanıcı Adı
+                        </label>
+                        <input asp-for="KullaniciAdi" class="form-fc-control" placeholder="kullaniciadi" autofocus />
+                    </div>
+
+                    <div class="form-fc-group">
+                        <label asp-for="Email" class="form-fc-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            E-posta Adresi
+                        </label>
+                        <input asp-for="Email" type="email" class="form-fc-control" placeholder="ornek@email.com" />
+                    </div>
+
+                    <div class="form-fc-group">
+                        <label asp-for="Sifre" class="form-fc-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                            Şifre
+                        </label>
+                        <div class="password-toggle-wrapper">
+                            <input asp-for="Sifre" type="password" class="form-fc-control" placeholder="En az 6 karakter" id="passwordInput" />
+                            <button type="button" class="password-toggle-btn" onclick="togglePassword('passwordInput', 'eyeIcon1')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="eyeIcon1">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-fc-group">
+                        <label asp-for="SifreTekrar" class="form-fc-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                            Şifre Tekrar
+                        </label>
+                        <div class="password-toggle-wrapper">
+                            <input asp-for="SifreTekrar" type="password" class="form-fc-control" placeholder="Şifrenizi tekrar girin" id="passwordConfirmInput" />
+                            <button type="button" class="password-toggle-btn" onclick="togglePassword('passwordConfirmInput', 'eyeIcon2')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="eyeIcon2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-fc btn-fc-primary btn-fc-lg w-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <line x1="20" y1="8" x2="20" y2="14"></line>
+                            <line x1="23" y1="11" x2="17" y2="11"></line>
+                        </svg>
+                        Kayıt Ol
+                    </button>
+                </form>
+
+                <!-- Footer -->
+                <div class="auth-footer">
+                    Zaten hesabınız var mı? <a asp-controller="Account" asp-action="Login">Giriş yapın</a>
                 </div>
-
-                <div class="form-fc-group">
-                    <label asp-for="SifreTekrar" class="form-fc-label">Şifre Tekrar</label>
-                    <input asp-for="SifreTekrar" type="password" class="form-fc-control" placeholder="Şifrenizi tekrar girin" />
-                </div>
-
-                <button type="submit" class="btn-fc btn-fc-primary btn-fc-lg w-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="8.5" cy="7" r="4"></circle>
-                        <line x1="20" y1="8" x2="20" y2="14"></line>
-                        <line x1="23" y1="11" x2="17" y2="11"></line>
-                    </svg>
-                    Kayıt Ol
-                </button>
-            </form>
-
-            <!-- Footer -->
-            <div class="auth-footer">
-                Zaten hesabınız var mı? <a asp-controller="Account" asp-action="Login">Giriş yapın</a>
             </div>
         </div>
     </div>
@@ -91,5 +296,18 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+            } else {
+                input.type = 'password';
+                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+            }
+        }
+    </script>
 </body>
 </html>

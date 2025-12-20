@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "Randevularım";
     var seciliTarih = ViewData["SeciliTarih"] as string;
-    var uyeId = Model.FirstOrDefault()?.UyeId ?? 0;
 }
 
 <!-- Toast Data for JS (hidden, will be converted to toasts) -->
@@ -90,141 +89,124 @@
         </form>
     </div>
 
-    <!-- Content -->
-    @if (!Model.Any())
-    {
-        <!-- Empty State -->
-        <div class="card-fc">
-            <div class="card-body">
-                <div class="empty-state">
-                    <div class="empty-state-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                    </div>
-                    <h3 class="empty-state-title">Henüz randevunuz yok</h3>
-                    <p class="empty-state-text">
-                        Spor eğitmenlerimizle randevu oluşturarak sağlıklı yaşam yolculuğunuza başlayın.
-                    </p>
-                    <a asp-action="Create" class="btn-fc btn-fc-primary btn-fc-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        İlk Randevunuzu Oluşturun
-                    </a>
-                </div>
-            </div>
+    <!-- Appointments Table -->
+    <div class="card-fc">
+        <div class="card-header d-flex align-items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            Randevularım
         </div>
-    }
-    else
-    {
-        <!-- Appointments Table -->
-        <div class="card-fc">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table-fc table-fc-sticky">
-                        <thead>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table-fc table-fc-sticky" id="randevuTable">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Saat</th>
+                            <th>Salon</th>
+                            <th>Hizmet</th>
+                            <th>Eğitmen</th>
+                            <th>Durum</th>
+                            <th style="width: 180px;">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
                             <tr>
-                                <th>Tarih</th>
-                                <th>Saat</th>
-                                <th>Salon</th>
-                                <th>Hizmet</th>
-                                <th>Eğitmen</th>
-                                <th>Durum</th>
-                                <th style="width: 120px;">İşlemler</th>
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="empty-state">
+                                        <div class="empty-state-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                                            </svg>
+                                        </div>
+                                        <h3 class="empty-state-title">Randevu bulunamadı</h3>
+                                        <p class="empty-state-text">Seçtiğiniz kriterlere uygun randevu bulunmuyor veya henüz randevunuz yok.</p>
+                                        <a href="/Randevu/Create" class="btn-fc btn-fc-primary btn-fc-lg">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>
+                                            Yeni Randevu Oluştur
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var r in Model)
+                        }
+                        else
+                        {
+                            @foreach (var item in Model)
                             {
+                                var durumBadge = item.Durum switch
+                                {
+                                    "Onaylandı" => "badge-fc-success",
+                                    "İptal" => "badge-fc-danger",
+                                    "Yapıldı" => "badge-fc-info",
+                                    _ => "badge-fc-warning"
+                                };
                                 <tr>
+                                    <td><strong>@item.BaslangicZamani.ToString("dd MMM yyyy")</strong></td>
+                                    <td>@item.BaslangicZamani.ToString("HH:mm") - @item.BitisZamani.ToString("HH:mm")</td>
+                                    <td>@item.Salon?.Ad</td>
+                                    <td>@item.Hizmet?.Ad</td>
+                                    <td>@item.Egitmen?.AdSoyad</td>
+                                    <td><span class="badge-fc @durumBadge">@item.Durum</span></td>
                                     <td>
-                                        <strong>@r.BaslangicZamani.ToString("dd MMM yyyy")</strong>
-                                    </td>
-                                    <td>
-                                        @r.BaslangicZamani.ToString("HH:mm") - @r.BitisZamani.ToString("HH:mm")
-                                    </td>
-                                    <td>@r.Salon?.Ad</td>
-                                    <td>@r.Hizmet?.Ad</td>
-                                    <td>@r.Egitmen?.AdSoyad</td>
-                                    <td>
-                                        @if (r.Durum == "Onaylandı")
+                                        @if (item.Durum != "İptal" && item.Durum != "Yapıldı")
                                         {
-                                            <span class="badge-fc badge-fc-success">Onaylandı</span>
-                                        }
-                                        else if (r.Durum == "İptal")
-                                        {
-                                            <span class="badge-fc badge-fc-danger">İptal</span>
+                                            <div class="d-flex gap-1 flex-wrap">
+                                                <a href="/Randevu/Detail/@item.Id" class="btn-fc btn-fc-info btn-fc-sm">Detay</a>
+                                                <a href="/Randevu/Edit/@item.Id" class="btn-fc btn-fc-secondary btn-fc-sm">Düzenle</a>
+                                                <button type="button" class="btn-fc btn-fc-danger btn-fc-sm"
+                                                        onclick="showIptalModal(@item.Id, '@item.BaslangicZamani.ToString("dd.MM.yyyy HH:mm") - @item.Hizmet?.Ad')">
+                                                    İptal
+                                                </button>
+                                            </div>
                                         }
                                         else
                                         {
-                                            <span class="badge-fc badge-fc-warning">Beklemede</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (r.Durum != "İptal")
-                                        {
-                                            <form asp-action="IptalEt" method="post" class="d-inline">
-                                                <input type="hidden" name="id" value="@r.Id" />
-                                                <button type="submit" 
-                                                        class="btn-fc btn-fc-danger btn-fc-sm"
-                                                        data-confirm="Bu randevuyu iptal etmek istediğinize emin misiniz?"
-                                                        data-confirm-title="Randevu İptali"
-                                                        data-confirm-text="Evet, İptal Et">
-                                                    İptal Et
-                                                </button>
-                                            </form>
+                                            <a href="/Randevu/Detail/@item.Id" class="btn-fc btn-fc-info btn-fc-sm">Detay</a>
                                         }
                                     </td>
                                 </tr>
                             }
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- API Data Section -->
-        <div class="card-fc mt-4">
-            <div class="card-header d-flex align-items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                </svg>
-                Randevularım (API'den Gelen)
+<!-- İptal Modal -->
+<div class="modal fade" id="iptalModal" tabindex="-1" aria-labelledby="iptalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="iptalModalLabel">Randevu İptali</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table-fc" id="apiRandevuTable">
-                        <thead>
-                            <tr>
-                                <th>Tarih</th>
-                                <th>Başlangıç</th>
-                                <th>Bitiş</th>
-                                <th>Hizmet</th>
-                                <th>Eğitmen</th>
-                                <th>Salon</th>
-                                <th>Durum</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="7" class="text-center text-muted-fc py-4">
-                                    <div class="spinner-border spinner-border-sm me-2" role="status">
-                                        <span class="visually-hidden">Yükleniyor...</span>
-                                    </div>
-                                    Veriler yükleniyor...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="modal-body">
+                <p>Bu randevuyu iptal etmek istediğinize emin misiniz?</p>
+                <p class="text-muted mb-0" id="iptalRandevuBilgi"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-fc btn-fc-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <form asp-action="IptalEt" method="post" class="d-inline">
+                    <input type="hidden" name="id" id="iptalRandevuId" />
+                    <button type="submit" class="btn-fc btn-fc-danger">Evet, İptal Et</button>
+                </form>
             </div>
         </div>
-    }
+    </div>
 </div>
 
 @section Scripts {
@@ -233,57 +215,11 @@
     }
 
     <script>
-        $(function () {
-            var uyeId = @uyeId;
-
-            if (!uyeId || uyeId === 0) {
-                console.warn("API için üye Id bulunamadı.");
-                return;
-            }
-
-            $.ajax({
-                url: '/api/members/' + uyeId + '/appointments',
-                method: 'GET',
-                success: function (response) {
-                    var rows = "";
-
-                    if (!response.items || response.items.length === 0) {
-                        rows = '<tr><td colspan="7" class="text-center text-muted-fc py-4">Bu üyeye ait randevu bulunamadı.</td></tr>';
-                    } else {
-                        response.items.forEach(function (item) {
-                            var baslangic = new Date(item.baslangicZamani);
-                            var bitis = new Date(item.bitisZamani);
-                            
-                            var durumBadge = '';
-                            if (item.durum === 'Onaylandı') {
-                                durumBadge = '<span class="badge-fc badge-fc-success">Onaylandı</span>';
-                            } else if (item.durum === 'İptal') {
-                                durumBadge = '<span class="badge-fc badge-fc-danger">İptal</span>';
-                            } else {
-                                durumBadge = '<span class="badge-fc badge-fc-warning">Beklemede</span>';
-                            }
-
-                            rows += `
-                                <tr>
-                                    <td><strong>${baslangic.toLocaleDateString('tr-TR')}</strong></td>
-                                    <td>${baslangic.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'})}</td>
-                                    <td>${bitis.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'})}</td>
-                                    <td>${item.hizmetAdi}</td>
-                                    <td>${item.egitmenAdSoyad}</td>
-                                    <td>${item.salonAdi}</td>
-                                    <td>${durumBadge}</td>
-                                </tr>`;
-                        });
-                    }
-
-                    $("#apiRandevuTable tbody").html(rows);
-                },
-                error: function () {
-                    $("#apiRandevuTable tbody").html(
-                        '<tr><td colspan="7" class="text-center text-danger-fc py-4">Randevular yüklenirken bir hata oluştu.</td></tr>'
-                    );
-                }
-            });
-        });
+        function showIptalModal(id, bilgi) {
+            document.getElementById('iptalRandevuId').value = id;
+            document.getElementById('iptalRandevuBilgi').textContent = bilgi;
+            var modal = new bootstrap.Modal(document.getElementById('iptalModal'));
+            modal.show();
+        }
     </script>
 }

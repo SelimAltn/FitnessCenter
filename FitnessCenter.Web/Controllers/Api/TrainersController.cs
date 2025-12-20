@@ -22,26 +22,14 @@ namespace FitnessCenter.Web.Controllers.Api
         }
 
         /// <summary>
-        /// Uygun eğitmenleri listeler. Randevu oluşturma için kullanılır.
-        /// 
-        /// 4 Koşul:
-        /// A) Şubede çalışmalı (SalonId)
-        /// B) Hizmeti verebilmeli (EgitmenHizmet)
-        /// C) Seçilen tarih/saatte müsait olmalı (Musaitlik)
-        /// D) Çakışan randevusu olmamalı
-        /// 
-        /// Parametreler:
-        /// - salonId (zorunlu): Şube ID
-        /// - hizmetId (zorunlu): Hizmet ID  
-        /// - start (zorunlu): Randevu başlangıç zamanı (ISO 8601 format)
-        /// 
-        /// Response: [{ id, adSoyad }]
+        
         /// </summary>
         [HttpGet]
         public async Task<ActionResult<PagedResult<TrainerDto>>> GetAvailableTrainers(
             [FromQuery] int? salonId = null,
             [FromQuery] int? hizmetId = null,
             [FromQuery] string? start = null,
+            [FromQuery] int? excludeRandevuId = null,  // Edit modunda mevcut randevuyu hariç tut
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 50)
         {
@@ -112,15 +100,23 @@ namespace FitnessCenter.Web.Controllers.Api
             var uygunEgitmenIdler = await query.Select(e => e.Id).ToListAsync();
 
             // ---- Koşul D: Çakışan randevusu olmamalı ----
-            // Aynı gündeki randevuları kontrol et
-            var cakisanRandevuEgitmenIdler = await _context.Randevular
+            // Aynı gündeki randevuları kontrol et (Edit modunda mevcut randevuyu hariç tut)
+            var conflictQuery = _context.Randevular
                 .Where(r =>
                     uygunEgitmenIdler.Contains(r.EgitmenId) &&
                     r.BaslangicZamani.Date == startDateTime.Date &&
                     r.Durum != "İptal" &&
                     // Çakışma kontrolü: existingStart < newEnd AND existingEnd > newStart
                     r.BaslangicZamani < endDateTime &&
-                    r.BitisZamani > startDateTime)
+                    r.BitisZamani > startDateTime);
+
+            // Edit modunda mevcut randevuyu çakışma kontrolünden hariç tut
+            if (excludeRandevuId.HasValue)
+            {
+                conflictQuery = conflictQuery.Where(r => r.Id != excludeRandevuId.Value);
+            }
+
+            var cakisanRandevuEgitmenIdler = await conflictQuery
                 .Select(r => r.EgitmenId)
                 .Distinct()
                 .ToListAsync();
@@ -132,7 +128,8 @@ namespace FitnessCenter.Web.Controllers.Api
 
             // Final listeyi al
             var items = await _context.Egitmenler
-                .Where(e => finalEgitmenIdler.Contains(e.Id))
+                .Where(e => finalEgitmenIdler.Contains(e.Id)) // filtereme                
+            
                 .Include(e => e.EgitmenUzmanliklari!)
                     .ThenInclude(eu => eu.UzmanlikAlani)
                 .OrderBy(e => e.AdSoyad)

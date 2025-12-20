@@ -1,119 +1,135 @@
-# FitnessCenter — Spor Salonu Yönetim & Randevu Sistemi (ASP.NET Core MVC)
+# FitnessCenter – Web Programlama Proje Ödevi
 
-Bu proje, Web Programlama dersi kapsamında **ASP.NET Core MVC** kullanılarak geliştirilmiş bir **Fitness Center Yönetim ve Randevu Sistemi**dir.  
-Sistem; **üyelik giriş/kayıt**, **rol bazlı yetkilendirme**, **Hizmet–Eğitmen–Müsaitlik–Randevu** yönetimi ve **LINQ filtreli REST API** uç noktaları ile çalışır.
-
----
-
-## ✅ Projede Yapılanlar (Özet)
-
-### 1) Kimlik Doğrulama & Rol Bazlı Yetki
-- Login / Register / Logout akışı eklendi.
-- Navbar ve ekranlar rol bazlı gösterildi.
-- Policy tabanlı koruma uygulandı (örn. `MemberOnly`).
-- Varsayılan **Admin hesabı ve roller** seed edildi.
-
-### 2) Veritabanı & EF Core
-- Entity Framework Core kuruldu.
-- İlk migration alındı ve veritabanı şeması oluşturuldu.
-- Temel tablolar: Hizmet, Eğitmen, Müsaitlik, Randevu (ve ilişkiler).
-
-### 3) CRUD Modülleri + Doğrulama
-- **Hizmet** CRUD (listele/ekle/güncelle/sil).
-- **Eğitmen** CRUD (listele/ekle/güncelle/sil).
-- Form doğrulamaları ve temel validasyonlar eklendi.
-
-### 4) Randevu Motoru (Appointment Engine)
-- Eğitmen **müsaitlik saatleri** üzerinden randevu alma altyapısı.
-- Randevu oluştururken:
-  - çakışma (overlap) kontrolü
-  - tarih/saat uygunluğu kontrolü
-  - minimum ara kuralı (arka arkaya randevu engeli) gibi validasyonlar
-- “Randevularım” sayfası üzerinden üyenin randevuları listelenir.
-
-### 5) REST API (LINQ Filtreli) + Sayfalama + ProblemDetails
-- Projenin en az bir kısmında veritabanı iletişimi **REST API** ile sağlandı.
-- API tarafında LINQ sorguları ile filtreleme yapıldı.
-- Sayfalama (pagination) eklendi.
-- Hata sözleşmesi için **ProblemDetails** yapısı kullanıldı.
-
-### 6) API Authorization + Swagger
-- API uç noktalarına Authorization eklendi.
-- Swagger dokümantasyonu projeye eklendi ve API’ler Swagger üzerinden test edilebilir hale getirildi.
+Bu proje, **Sakarya Üniversitesi Bilgisayar Mühendisliği Web Programlama dersi** kapsamında geliştirilmiş bir **Spor Salonu (Fitness Center) Yönetim ve Randevu Sistemi**dir.  
+Uygulama, ASP.NET Core MVC mimarisi kullanılarak geliştirilmiş olup rol tabanlı yetkilendirme, randevu motoru, REST API ve yapay zekâ entegrasyonu içermektedir.
 
 ---
 
-## 👥 Roller
+## 📌 Projenin Amacı
 
-### Admin
-- Email: `ogrencinumarasi@sakarya.edu.tr`
-- Şifre: `sau`
+Bu projenin amacı; bir veya birden fazla spor salonunun:
+- Şube yönetimi  
+- Eğitmen ve hizmet tanımları  
+- Üyelik ve randevu süreçleri  
+- Takvim tabanlı randevu takibi  
+- Yapay zekâ destekli kişisel antrenman ve beslenme önerileri  
 
-### Üye (Member)
-- Register sayfasından oluşturulur.
-- Üye ekranları policy ile korunur (örn. `MemberOnly`).
-
----
-
-## 🔌 Örnek API Uç Noktaları
-
-Aşağıdaki senaryolar LINQ filtreleme ile desteklenir:
-- Belirli bir tarihte uygun eğitmenleri getirme
-- Üyenin randevularını getirme (`Randevularım` sayfasında kullanıldı)
-- Listeleme işlemlerinde sayfalama
-
-> Not: Endpoint adları projedeki controller’lara göre değişebilir.
+gibi işlemlerinin **tek bir web sistemi üzerinden** yönetilmesini sağlamaktır.
 
 ---
 
-## 🧰 Kullanılan Teknolojiler
-- ASP.NET Core MVC (C#)
-- Entity Framework Core + LINQ
-- SQL Server / PostgreSQL (connection string’e göre)
-- Bootstrap 5, HTML, CSS, JavaScript
+## 🛠️ Kullanılan Teknolojiler
+
+- **Framework:** ASP.NET Core 8.0 MVC  
+- **Dil:** C#  
+- **ORM:** Entity Framework Core (Code-First)  
+- **Veritabanı:** SQL Server (LocalDB)  
+- **Kimlik Doğrulama:** ASP.NET Core Identity  
+- **Yetkilendirme:** Policy tabanlı Authorization  
+- **Arayüz:** Bootstrap 5, jQuery  
+- **Takvim:** FullCalendar.js  
+- **REST API:** ASP.NET Core Web API + LINQ  
+- **API Dokümantasyonu:** Swagger (Development ortamında)
 
 ---
 
-## 🚀 Kurulum & Çalıştırma
+## 🧠 Yapay Zekâ Entegrasyonu
 
-1) Projeyi klonla
-```bash
-git clone <repo-link>
-cd <proje-klasoru>
-````
+Projede üç farklı yapay zekâ servisi entegre edilmiştir:
 
-2. Veritabanını hazırla
+### 1️⃣ Groq Vision API
+- Kullanıcının yüklediği fotoğrafı analiz eder  
+- Fotoğrafta insan olup olmadığını kontrol eder  
+- Fiziksel özellikler hakkında özet üretir  
 
-* `appsettings.json` içindeki connection string’i düzenle
-* Migration’ları uygula:
+### 2️⃣ DeepSeek API
+- Fotoğraf analizi veya kullanıcı ölçü bilgilerini kullanır  
+- Türkçe olarak:
+  - Haftalık antrenman planı  
+  - Beslenme önerileri  
+  üretir  
 
-```bash
-dotnet ef database update
-```
-
-3. Çalıştır
-
-```bash
-dotnet run
-```
-
-4. Tarayıcıdan aç
-
-* `https://localhost:<port>/`
+### 3️⃣ OpenAI Image API
+- Image-to-image yöntemi ile çalışır  
+- Kullanıcının “before” fotoğrafını referans alır  
+- Hedefe göre (kilo verme / kaslanma vb.) **after görseli** üretir  
 
 ---
 
-## 📌 Proje Notları
+## 👥 Kullanıcı Rolleri
 
-* Admin paneli ve üye ekranları rol/policy ile ayrılmıştır.
-* Randevu oluşturma sürecinde çakışma ve uygunluk kontrolleri yapılır.
-* Swagger üzerinden API test edilebilir.
+Sistem dört ana rol içermektedir:
 
+- **Admin:**  
+  Tüm sistem yönetimi (şubeler, eğitmenler, üyeler, randevular, destek talepleri)
 
-## 📄 Lisans
+- **Member (Üye):**  
+  Üyelik, randevu oluşturma, takvim görüntüleme ve AI modülü kullanımı
 
-Bu proje, Sakarya Üniversitesi Bilgisayar Mühendisliği Bölümü  
-**Web Programlama** dersi kapsamında **Selim Altın** tarafından geliştirilmiştir.
+- **Trainer (Eğitmen):**  
+  Kendi randevularını ve mesajlarını yönetme
 
-Proje, **akademik ve eğitim amaçlıdır**.  
-İzinsiz ticari kullanım veya kopyalanması uygun değildir.
+- **BranchManager (Şube Müdürü):**  
+  Yalnızca kendi şubesine ait yönetim işlemleri
+
+Yetkilendirme işlemleri `Policy` yapısı ile uygulanmıştır.
+
+---
+
+## 📅 Randevu Sistemi
+
+- Üyeler yalnızca **aktif üyelikleri bulunan şubelerden** randevu alabilir  
+- Eğitmen uygunluğu:
+  - Şube bilgisi  
+  - Hizmet yetkinliği  
+  - Müsaitlik saatleri  
+  - Çakışan randevu kontrolü  
+- Randevular **Beklemede / Onaylandı / İptal** durumlarına sahiptir  
+- Admin ve BranchManager randevuları onaylayabilir  
+
+---
+
+## 🔗 REST API ve LINQ Filtreleme
+
+Projenin belirli bölümlerinde REST API kullanılmıştır.  
+API üzerinden LINQ sorguları ile filtreleme yapılmaktadır:
+
+- Uygun eğitmenleri getirme  
+- Üyenin randevularını tarih ve duruma göre listeleme  
+
+Swagger arayüzü development ortamında aktiftir.
+
+---
+
+## 🧩 Sistem Mimarisi
+
+- **Controllers:** İş akışları  
+- **Models / Entities:** Veritabanı modelleri  
+- **Data / Context:** DbContext, Migration, Seed  
+- **Services:** AI servisleri ve yardımcı sınıflar  
+- **Views:** Razor Pages  
+- **Areas:** Admin, Trainer ve BranchManager panelleri  
+
+---
+
+## 👤 Geliştirici Bilgileri
+
+- **Ad Soyad:** Selim Altın  
+- **Bölüm:** Bilgisayar Mühendisliği 
+- **Ders:** Web Programlama  
+- **Üniversite:** Sakarya Üniversitesi  
+- **Danışman:** Öğr. Gör. Dr. Ahmet Şanslı  
+
+---
+
+## 📂 GitHub
+
+🔗 **Proje Bağlantısı:**  
+https://github.com/SelimAltn/FitnessCenter
+
+---
+
+## 📝 Not
+
+Bu proje, Web Programlama dersi kapsamında **bireysel** olarak geliştirilmiş olup,  
+rol tabanlı yetkilendirme, randevu motoru, REST API ve çoklu yapay zekâ entegrasyonu içeren **kapsamlı bir web uygulamasıdır**.
